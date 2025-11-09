@@ -2,19 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Fill notches / iOS safe areas; disable zoom (optional) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>Mysterious Room — Album Promo</title>
   <style>
-    /* Fullscreen on phones, no browser-UI gaps */
-    html, body { height: 100dvh; width: 100vw; }
+    /* Fullscreen with modern viewport units; no scroll or overscroll glow */
+    html, body { height: 100svh; width: 100vw; }
     body {
       margin: 0;
-      overflow: hidden;
       background: #000;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none; /* no page panning/zooming; still captures pointer/touch */
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
     canvas { display: block; }
-    /* iOS motion permission button (only shown when needed) */
     #enableMotion {
       position: fixed; inset: auto 16px 16px auto; z-index: 10;
       padding: 10px 14px; border-radius: 12px; border: 1px solid #6aa2ff33;
@@ -41,19 +43,49 @@
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    // ======= Basic setup =======
+    // ======= Renderer =======
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const vpW0 = (window.visualViewport?.width  || window.innerWidth);
+    const vpH0 = (window.visualViewport?.height || window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(vpW0, vpH0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25; // refined by profile below
     renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
+    // ======= Scene & Camera =======
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0d1220, 18, 40);
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(55, vpW0 / vpH0, 0.1, 100);
     camera.position.set(0, 0, 7.5);
+
+    // ======= Device/layout profile (DEFINED EARLY) =======
+    let IS_PORTRAIT = window.innerHeight >= window.innerWidth;
+    let IS_COARSE   = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    function isPhone(){ return IS_COARSE; }
+
+    function updateLayoutProfile(){
+      IS_PORTRAIT = window.innerHeight >= window.innerWidth;
+      IS_COARSE   = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+      // Size to the *visual* viewport to avoid iOS toolbars causing gaps
+      const vw = (window.visualViewport?.width  || window.innerWidth);
+      const vh = (window.visualViewport?.height || window.innerHeight);
+      renderer.setSize(vw, vh);
+
+      // Slightly lower pixel ratio cap on phones
+      const prCap = IS_COARSE ? 1.5 : 1.8;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
+
+      // Nudge exposure a bit higher on phones
+      renderer.toneMappingExposure = IS_COARSE ? 1.35 : 1.25;
+
+      updateCameraCover();
+      if (typeof applyVaseScale === 'function') applyVaseScale();
+    }
 
     // ======= Room texture / material =======
     const textureURL = "/reilly-album-cvr.jpeg"; // or "./reilly-album-cvr.jpeg"
@@ -69,12 +101,15 @@
       console.error("Texture load failed:", textureURL, err);
     });
 
+    // Brighter walls: emissive lift for visibility
     const wallMat = new THREE.MeshStandardMaterial({
       map: tex,
       side: THREE.BackSide,
-      roughness: 0.85,
+      roughness: 0.8,
       metalness: 0.0,
-      envMapIntensity: 0.15
+      emissive: new THREE.Color(0x2a365c),
+      emissiveIntensity: 0.28,
+      envMapIntensity: 0.18
     });
 
     function applyTextureZoom(texture, zoom = 1.0) {
@@ -122,47 +157,38 @@
     })(roomGeo);
 
     const room = new THREE.Mesh(roomGeo, wallMat);
-    room.position.set(0, 0, -ROOM_D * 0.5); // front face ~ z=0 on desktop
+    room.position.set(0, 0, -ROOM_D * 0.5); // desktop: front face ~ z=0
     scene.add(room);
 
-    // Contrasting borders
+    // Borders with more contrast
     const edgeGeo = new THREE.EdgesGeometry(roomGeo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0xEAF0FF, transparent: true, opacity: 0.8 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xF0F6FF, transparent: true, opacity: 1.0 });
     const edges = new THREE.LineSegments(edgeGeo, edgeMat);
     edges.position.copy(room.position);
     scene.add(edges);
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xbbc6ff, 0.55));
-    const rim = new THREE.DirectionalLight(0xeff5ff, 0.85);
-    rim.position.set(-1.5, 2.5, 1.5);
+    // ======= Lighting (brighter + contrast) =======
+    // Exposure will be refined by updateLayoutProfile(); this initial set is safe.
+    scene.add(new THREE.HemisphereLight(0x9fbfff, 0x202a44, 0.45)); // soft sky/ground
+    const rim = new THREE.DirectionalLight(0xeef3ff, 1.0);
+    rim.position.set(-1.4, 2.2, 1.6);
     scene.add(rim);
+    // Focus light to make the top pop
+    const key = new THREE.PointLight(0xffffff, 0.7, 18, 2.0);
+    key.position.set(1.5, -ROOM_H * 0.1, room.position.z + ROOM_D * 0.05);
+    scene.add(key);
 
-    // ======= Device/layout profile =======
-    let IS_PORTRAIT = window.innerHeight >= window.innerWidth;
-    let IS_COARSE   = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-
-    function updateLayoutProfile(){
-      IS_PORTRAIT = window.innerHeight >= window.innerWidth;
-      IS_COARSE   = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      const prCap = IS_COARSE ? 1.5 : 1.8; // lower cap on phones for perf
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
-      updateCameraCover();
-      if (typeof applyVaseScale === 'function') applyVaseScale();
-    }
-
-    // ======= Dynamic envmap for glassy reflections (portable settings) =======
+    // ======= Dynamic envmap for glass reflections (mobile-friendly) =======
     const cubeRT = new THREE.WebGLCubeRenderTarget(256, {
       generateMipmaps: true,
       minFilter: THREE.LinearMipmapLinearFilter,
       magFilter: THREE.LinearFilter
-      // (avoid HalfFloatType for broader mobile compatibility)
     });
     cubeRT.texture.colorSpace = THREE.SRGBColorSpace;
     const cubeCam = new THREE.CubeCamera(0.1, 100, cubeRT);
     scene.add(cubeCam);
 
-    // ======= Load & set up the spinning conal vase (GLB) =======
+    // ======= Load spinning top (GLB) =======
     const VASE_URL = "./spintop.glb";
     const gltfLoader = new GLTFLoader();
     const vaseGroup = new THREE.Group();
@@ -191,7 +217,7 @@
 
     function applyVaseScale(){
       if(!vase) return;
-      const mult = (IS_COARSE && IS_PORTRAIT) ? 1.6 : 1.0; // larger on phones in portrait
+      const mult = (IS_COARSE && IS_PORTRAIT) ? 1.7 : 1.0; // a touch larger on phones
       vaseScaleMult = mult;
       vase.scale.setScalar(vaseBaseScale * vaseScaleMult * userScaleMult);
     }
@@ -205,16 +231,16 @@
         const glassParams = {
           color: 0xffffff,
           metalness: 0.0,
-          roughness: 0.05,
+          roughness: 0.03,           // crisper reflections
           transmission: 1.0,
-          thickness: 0.7,
-          ior: 1.5,
+          thickness: 1.0,
+          ior: 1.52,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.05,
-          attenuationColor: new THREE.Color(0xa0c8ff),
-          attenuationDistance: 2.5,
+          clearcoatRoughness: 0.04,
+          attenuationColor: new THREE.Color(0xa8c9ff),
+          attenuationDistance: 2.0,
           envMap: cubeRT.texture,
-          envMapIntensity: 1.2
+          envMapIntensity: 1.8       // brighter reflections for contrast
         };
         vase.traverse(n=>{
           if(n.isMesh){
@@ -269,37 +295,19 @@
     window.addEventListener('touchmove', onSwipeMove, {passive:true});
     window.addEventListener('touchend', onSwipeUp, {passive:true});
 
-    function updateVase(dt){
-      if(!vaseReady) return;
-      angVel *= Math.pow(DAMPING, (dt*60));
-      const signedFloor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
-      if(Math.abs(angVel) < Math.abs(signedFloor)) angVel = signedFloor;
-
-      vaseGroup.rotation.y += (angVel) * dt;
-
-      const targetTilt = TILT_FINAL;
-      tilt += (targetTilt - tilt) * Math.min(1, dt*2.5);
-
-      const wobbleFreq = Math.max(0.8, Math.abs(angVel)*2.2);
-      wobblePhase += wobbleFreq * dt;
-      const wobbleAmp = THREE.MathUtils.clamp(0.12 - Math.min(0.1, Math.abs(angVel)*0.08), 0.02, 0.08);
-
-      vaseGroup.rotation.x = tilt + Math.sin(wobblePhase) * wobbleAmp;
-      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * wobbleAmp * 0.6;
-    }
-
-    // ======= Room tilt input: gyro on phones, pointer on desktop =======
+    // ======= Room tilt: gyro on phones, pointer on desktop =======
     let targetRX = 0, targetRY = 0;  // radians
     const MAX_TILT = 0.085;          // ~5°
 
     const enableMotionBtn = document.getElementById('enableMotion');
-    let useGyro = false;
     let baseBeta = null, baseGamma = null;
     let pointerMoveAttached = false;
 
     function onPointerMoveDesktop(e) {
-      const x = (e.clientX / window.innerWidth) * 2 - 1;
-      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      const vw = (window.visualViewport?.width  || window.innerWidth);
+      const vh = (window.visualViewport?.height || window.innerHeight);
+      const x = (e.clientX / vw) * 2 - 1;
+      const y = (e.clientY / vh) * 2 - 1;
       targetRY = x * MAX_TILT;
       targetRX = -y * MAX_TILT * 0.6;
     }
@@ -316,7 +324,7 @@
     }
 
     function setupInputMode(){
-      // clear old listeners
+      // Clear old listeners
       if (pointerMoveAttached) {
         window.removeEventListener('pointermove', onPointerMoveDesktop);
         pointerMoveAttached = false;
@@ -325,7 +333,6 @@
       enableMotionBtn.style.display = 'none';
 
       if (IS_COARSE && IS_PORTRAIT && window.DeviceOrientationEvent) {
-        // iOS permission flow
         const needsPerm = typeof DeviceOrientationEvent.requestPermission === 'function';
         if (needsPerm) {
           enableMotionBtn.style.display = 'block';
@@ -334,32 +341,23 @@
               const resp = await DeviceOrientationEvent.requestPermission();
               if (resp === 'granted') {
                 window.addEventListener('deviceorientation', onDeviceOrientation, true);
-                useGyro = true;
                 enableMotionBtn.remove();
               }
             } catch (err) { console.warn(err); }
           };
         } else {
-          // Android/others
           window.addEventListener('deviceorientation', onDeviceOrientation, true);
-          useGyro = true;
         }
       } else {
         window.addEventListener('pointermove', onPointerMoveDesktop, { passive: true });
         pointerMoveAttached = true;
-        useGyro = false;
       }
     }
     setupInputMode();
 
-    // ======= Resize & orientation handling =======
-    function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      updateLayoutProfile();  // also refreshes camera cover & scale
-      setupInputMode();       // re-evaluate input mode on orientation changes
-    }
-    window.addEventListener('resize', onResize);
+    // ======= Disable page scrolling programmatically as backup =======
+    window.addEventListener('touchmove', (e)=>{ e.preventDefault(); }, { passive: false });
+    window.addEventListener('wheel',      (e)=>{ e.preventDefault(); }, { passive: false });
 
     // ======= Camera FOV cover (no background gaps) =======
     function updateCameraCover() {
@@ -370,26 +368,64 @@
         ? (room.position.z + (ROOM_D * 0.5))   // phones: true front face
         : (room.position.z + (ROOM_D * 0.0));  // desktop: your current setting
 
+      const vw = (window.visualViewport?.width  || window.innerWidth);
+      const vh = (window.visualViewport?.height || window.innerHeight);
+      const aspect = vw / vh;
+
       const distance = Math.max(0.0001, camZ - openingZ);
-      const aspect = window.innerWidth / window.innerHeight;
       const halfH = ROOM_H * 0.5;
       const halfW = ROOM_W * 0.5;
       const requiredHalfHeight = Math.max(halfH, halfW / aspect);
       const vFov = 2 * Math.atan(requiredHalfHeight / distance) * 180 / Math.PI;
-      camera.fov = vFov * 1.06; // overscan to eliminate clear color
+
+      camera.fov = vFov * 1.12; // overscan to guarantee full bleed on odd ratios
       camera.updateProjectionMatrix();
     }
-    updateLayoutProfile(); // includes updateCameraCover()
 
-    // ======= Render loop =======
+    // ======= Resize & orientation =======
+    function onResize() {
+      const vw = (window.visualViewport?.width  || window.innerWidth);
+      const vh = (window.visualViewport?.height || window.innerHeight);
+      camera.aspect = vw / vh;
+      renderer.setSize(vw, vh);
+      updateLayoutProfile();  // refresh cover & scale/exposure
+      setupInputMode();       // re-evaluate input mode on orientation changes
+    }
+    window.addEventListener('resize', onResize);
+
+    // Initial layout pass (after room/materials exist)
+    updateLayoutProfile();
+
+    // ======= Render-time helpers (single definitions) =======
     const clock = new THREE.Clock();
     const __tmpVec3 = new THREE.Vector3();
 
+    // Single, final definition of updateVase (no duplicates)
+    function updateVase(dt){
+      if(!vaseReady) return;
+      // decay spin toward floor
+      angVel *= Math.pow(DAMPING, (dt*60));
+      const signedFloor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
+      if(Math.abs(angVel) < Math.abs(signedFloor)) angVel = signedFloor;
+
+      // integrate yaw
+      vaseGroup.rotation.y += (angVel) * dt;
+
+      // lean + wobble
+      tilt += (TILT_FINAL - tilt) * Math.min(1, dt*2.5);
+      const wobbleFreq = Math.max(0.8, Math.abs(angVel)*2.2);
+      wobblePhase += wobbleFreq * dt;
+      const wobbleAmp = THREE.MathUtils.clamp(0.12 - Math.min(0.1, Math.abs(angVel)*0.08), 0.02, 0.08);
+      vaseGroup.rotation.x = tilt + Math.sin(wobblePhase) * wobbleAmp;
+      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * wobbleAmp * 0.6;
+    }
+
+    // ======= Render loop =======
     function animate() {
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.033);
 
-      // update env map for glass reflections (avoid self-capture)
+      // Update envmap for the glass (avoid self-capture)
       if (vaseReady && vase) {
         vase.visible = false;
         cubeCam.position.copy(vaseGroup.getWorldPosition(__tmpVec3));
@@ -397,7 +433,7 @@
         vase.visible = true;
       }
 
-      // smooth room tilt
+      // Smooth room tilt
       room.rotation.x += (targetRX - room.rotation.x) * 0.06;
       room.rotation.y += (targetRY - room.rotation.y) * 0.06;
       edges.rotation.copy(room.rotation);
