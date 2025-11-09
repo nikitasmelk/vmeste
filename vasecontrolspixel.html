@@ -57,6 +57,7 @@
     }
 
     @media (max-width: 600px) {
+      /* Make section accordions collapsed by default on phones via HTML, and ensure panel never covers everything */
       .panel { width: min(94vw, 420px); max-height: 70dvh; }
     }
   </style>
@@ -89,20 +90,6 @@
       <div class="row"><label>Image Zoom</label><input id="zoomNum" type="number" step="0.01"><input id="zoom" type="range" min="0.5" max="3.0" step="0.01"></div>
       <div class="row"><label>Border Opacity</label><input id="edgeNum" type="number" step="0.01"><input id="edge" type="range" min="0" max="1" step="0.01"></div>
       <div class="row"><label>Wall Emissive</label><input id="emisNum" type="number" step="0.01"><input id="emis" type="range" min="0" max="1" step="0.01"></div>
-    </details>
-
-    <details open>
-      <summary>Lights / Brightness</summary>
-      <div class="row"><label>Exposure</label><input id="expNum" type="number" step="0.01"><input id="exp" type="range" min="0.6" max="2.2" step="0.01"></div>
-      <div class="row"><label>Ambient</label><input id="ambNum" type="number" step="0.01"><input id="amb" type="range" min="0" max="2.0" step="0.01"></div>
-      <div class="row"><label>Hemisphere</label><input id="hemiNum" type="number" step="0.01"><input id="hemi" type="range" min="0" max="2.0" step="0.01"></div>
-      <div class="row"><label>Rim Light</label><input id="rimNum" type="number" step="0.01"><input id="rim" type="range" min="0" max="3.0" step="0.01"></div>
-      <div class="row"><label>Key Light</label><input id="keyINum" type="number" step="0.01"><input id="keyI" type="range" min="0" max="3.0" step="0.01"></div>
-      <hr style="border:none;border-top:1px solid #5c75b42a; margin:8px 0;">
-      <div class="row"><label>Vase Light Intensity</label><input id="vliNum" type="number" step="0.1"><input id="vli" type="range" min="0" max="6" step="0.1"></div>
-      <div class="row"><label>Vase Light Distance</label><input id="vldNum" type="number" step="0.1"><input id="vld" type="range" min="1" max="20" step="0.1"></div>
-      <div class="row"><label>Vase Light Decay</label><input id="vlcNum" type="number" step="0.1"><input id="vlc" type="range" min="0.1" max="4" step="0.1"></div>
-      <div class="row"><label>Vase Light Y</label><input id="vlyNum" type="number" step="0.01"><input id="vly" type="range" min="-1" max="1" step="0.01"></div>
     </details>
 
     <details>
@@ -158,12 +145,11 @@
 
     /* ---------- renderer ---------- */
     const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-    renderer.physicallyCorrectLights = true; // realistic falloff for lights
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
     renderer.setSize(vw(), vh(), false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = isPortrait() ? 1.38 : 1.25; // will be user-controlled
+    renderer.toneMappingExposure = isPortrait() ? 1.38 : 1.25; // a touch brighter in portrait
     renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
@@ -198,6 +184,7 @@
 
     let wallShaderRef = null;
     wallMat.onBeforeCompile = (shader)=>{
+      // declare uniforms in the shader (fixes your compile error)
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <common>',
         `#include <common>
@@ -205,6 +192,7 @@
          uniform float uDispAmp;
          uniform float uDispSpeed;`
       );
+      // add our UV warp
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <map_fragment>',
         `#ifdef USE_MAP
@@ -220,6 +208,7 @@
           diffuseColor *= sampledDiffuseColor;
         #endif`
       );
+      // provide uniform values
       shader.uniforms.uTime      = { value: 0.0 };
       shader.uniforms.uDispAmp   = { value: 0.02 };
       shader.uniforms.uDispSpeed = { value: 1.5 };
@@ -258,6 +247,7 @@
 
     const roomGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
     const room = new THREE.Mesh(roomGeo, wallMat);
+    // front face ~ z=0 when position is -ROOM_D*0.5
     room.position.set(0, 0, -ROOM_D * 0.5);
     scene.add(room);
 
@@ -269,15 +259,9 @@
     scene.add(edges);
 
     /* ---------- lights ---------- */
-    const ambient = new THREE.AmbientLight(0xdde6ff, 0.25);  // new: ambient baseline
-    scene.add(ambient);
-
-    const hemi = new THREE.HemisphereLight(0x9fbfff, 0x202a44, 0.45);
-    scene.add(hemi);
-
+    scene.add(new THREE.HemisphereLight(0x9fbfff, 0x202a44, 0.45));
     const rim = new THREE.DirectionalLight(0xeef3ff, 1.0);
     rim.position.set(-1.4, 2.2, 1.6); scene.add(rim);
-
     const key = new THREE.PointLight(0xffffff, 0.75, 18, 2.0);
     key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
     scene.add(key);
@@ -289,7 +273,6 @@
 
     const vaseGroup = new THREE.Group(); scene.add(vaseGroup);
     let vase=null, vaseReady=false;
-    let vaseLight=null; // inner light reference
 
     const VASE_URL = "./spintop.glb";
     const gltf = new GLTFLoader();
@@ -308,25 +291,10 @@
       applyVaseScale();
       vaseGroup.add(vase);
       placeOnFloor(vaseGroup);
+      // push deeper into room by default (toward back wall)
       vaseGroup.position.z = room.position.z - ROOM_D * 0.30;
-
-      // NEW: glowing point light inside the vase
-      vaseLight = new THREE.PointLight(0x88c6ff, 2.4, 7.0, 2.0);
-      vaseLight.position.set(0, 0.38, 0);
-      vaseGroup.add(vaseLight);
-      // tiny emissive core for visual hotspot
-      const core = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(0.09, 1),
-        new THREE.MeshPhysicalMaterial({
-          color: 0xffffff, emissive: 0x66aaff, emissiveIntensity: 3.2,
-          transmission: 0.5, thickness: 0.3, roughness: 0.2, metalness: 0.0, ior: 1.3
-        })
-      );
-      vaseLight.add(core);
-
       vaseReady = true;
       syncVasePositionInputs();
-      bindVaseLightUI(); // hook up vase light sliders now that it exists
     });
 
     function placeOnFloor(obj){
@@ -474,7 +442,7 @@
     function updateLayout(){
       renderer.setSize(vw(), vh(), false);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPortrait() ? 1.5 : 1.8));
-      // DO NOT override toneMappingExposure here; user controls it
+      renderer.toneMappingExposure = isPortrait() ? 1.38 : 1.25;
       resizePost();
       updateCameraCover();
       applyVaseScale();
@@ -515,7 +483,10 @@
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.033);
 
-      if (wallShaderRef){ wallShaderRef.uniforms.uTime.value += dt; }
+      // update wall shader uniforms (animates displacement)
+      if (wallShaderRef){
+        wallShaderRef.uniforms.uTime.value += dt;
+      }
 
       // update env map for glass at vase position
       if (vaseReady && vase){
@@ -542,13 +513,13 @@
 
     /* ---------- UI binding ---------- */
     const $ = id => document.getElementById(id);
+    // quick toggle
     const panel = $('panel'), gear = $('gear');
     gear.onclick = ()=> {
       const vis = panel.style.display !== 'none';
       panel.style.display = vis ? 'none' : 'block';
     };
 
-    // Params (now includes lights)
     const params = {
       width: ROOM_W, height: ROOM_H, depth: ROOM_D,
       roomZ: room.position.z,
@@ -557,29 +528,18 @@
       edgeOpacity: edges.material.opacity,
       emissive: wallMat.emissiveIntensity,
 
-      // Lights
-      exposure: renderer.toneMappingExposure,
-      ambientI: ambient.intensity,
-      hemiI: hemi.intensity,
-      rimI: rim.intensity,
-      keyI: key.intensity,
-
-      // Vase
       vaseMul: 1.2,
       vaseTall: 1.3,
       vaseZ: vaseGroup.position.z,
       vaseY: vaseGroup.position.y,
 
-      // Spin
       damping: DAMPING,
       minSpin: MIN_SPIN,
       impulse: IMPULSE_SCALE,
 
-      // Post
       pixelSize: 6,
       dither: 0.25,
 
-      // Walls FX
       dispAmp: 0.02,
       dispSpeed: 1.5
     };
@@ -604,35 +564,26 @@
       edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
 
       key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
-      placeOnFloor(vaseGroup);
+      placeOnFloor(vaseGroup); // keep on floor
       updateLayout();
     }
 
-    // Size
     bindRange('wNum','w','width',  rebuildRoom);
     bindRange('hNum','h','height', rebuildRoom);
     bindRange('dNum','d','depth',  rebuildRoom);
 
-    // Framing
     bindRange('zNum','z','roomZ', (v)=>{
       room.position.z = v; edges.position.copy(room.position);
       updateLayout();
     });
+
     bindRange('ovNum','ov','overscan', (v)=>{
       PORTRAIT_OVERSCAN = v; updateLayout();
     });
 
-    // Appearance
     bindRange('zoomNum','zoom','zoom', v=> applyTextureZoom(tex, v));
     bindRange('edgeNum','edge','edgeOpacity', v=>{ edges.material.opacity = Math.max(0, Math.min(1, v)); edges.material.needsUpdate=true; });
     bindRange('emisNum','emis','emissive', v=>{ wallMat.emissiveIntensity = Math.max(0, v); wallMat.needsUpdate=true; });
-
-    // Lights / Brightness
-    bindRange('expNum','exp','exposure', v=>{ renderer.toneMappingExposure = Math.max(0.01, v); });
-    bindRange('ambNum','amb','ambientI', v=>{ ambient.intensity = Math.max(0, v); });
-    bindRange('hemiNum','hemi','hemiI', v=>{ hemi.intensity = Math.max(0, v); });
-    bindRange('rimNum','rim','rimI', v=>{ rim.intensity = Math.max(0, v); });
-    bindRange('keyINum','keyI','keyI', v=>{ key.intensity = Math.max(0, v); });
 
     // Vase
     bindRange('vaseNum','vase','vaseMul', v=>{ userScaleMult = Math.max(0.05, v); applyVaseScale(); });
@@ -674,22 +625,6 @@
       document.getElementById('ov').value = document.getElementById('ovNum').value = 1.10;
       updateLayout();
     };
-
-    // Bind vase light controls (after GLB loads)
-    function bindVaseLightUI(){
-      if (!vaseLight) return; // not ready yet
-      const set = (numId, rangeId, getVal, setVal)=>{
-        const num=$(numId), range=$(rangeId);
-        const init=getVal(); num.value=init; range.value=init;
-        const sync=(v)=>{ v=+v; setVal(v); num.value=v; range.value=v; };
-        num.addEventListener('change', e=>sync(e.target.value));
-        range.addEventListener('input', e=>sync(e.target.value));
-      };
-      set('vliNum','vli', ()=>vaseLight.intensity, v=> vaseLight.intensity = Math.max(0, v));
-      set('vldNum','vld', ()=>vaseLight.distance,  v=> vaseLight.distance  = Math.max(0, v));
-      set('vlcNum','vlc', ()=>vaseLight.decay,     v=> vaseLight.decay     = Math.max(0.01, v));
-      set('vlyNum','vly', ()=>vaseLight.position.y,v=> vaseLight.position.y = v);
-    }
 
   </script>
 </body>
