@@ -3,418 +3,271 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Battle Balls — Vertical MP4 Recorder</title>
+<title>Battle Balls — Instant Render w/ Audio</title>
 <style>
-  :root { --bg1:#0f1020; --bg2:#1a1d36; --accent:#9ef0ff; --accent2:#ff7ad9; --good:#45ff9a; --gold:#ffd166; }
+  :root { --bg1:#0f1020; --bg2:#1a1d36; --good:#45ff9a; --good2:#8affff; --pink:#ff9fd3; --pink2:#ff7ad9; }
   html,body{height:100%;margin:0;background:radial-gradient(1200px 700px at 20% 10%, #222a, transparent), linear-gradient(160deg,var(--bg1),var(--bg2)); color:#eef; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
-  .wrap{max-width:900px; margin:16px auto; padding:0 12px;}
-  h1{font-weight:800; letter-spacing:.4px; margin:0 0 10px; font-size: clamp(18px, 2.6vw, 26px);}
-  .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:8px 0 12px; background:#ffffff0f; border:1px solid #ffffff18; padding:8px 10px; border-radius:14px; box-shadow: 0 10px 30px #0006 inset, 0 6px 18px #0004;}
-  .file{display:flex; align-items:center; gap:8px; padding:6px 8px; background:#ffffff08; border:1px dashed #ffffff22; border-radius:10px; font-size:14px;}
+  .wrap{max-width:980px; margin:16px auto; padding:0 12px;}
+  h1{font-weight:800; letter-spacing:.3px; margin:0 0 10px; font-size: clamp(18px, 2.6vw, 28px);}
+  .controls{display:grid; grid-template-columns:repeat(12,1fr); gap:10px; align-items:center; margin:10px 0 12px;
+    background:#ffffff0f; border:1px solid #ffffff18; padding:10px; border-radius:14px; box-shadow: 0 10px 30px #0006 inset, 0 6px 18px #0004;}
+  .controls > *{min-width:0}
+  .file,.field{grid-column: span 3; display:flex; align-items:center; gap:8px; padding:6px 8px; background:#ffffff08; border:1px dashed #ffffff22; border-radius:10px; font-size:14px;}
+  .field input[type="text"]{flex:1; padding:8px 10px; border-radius:8px; border:1px solid #ffffff2a; background:#ffffff10; color:#eef;}
   input[type="file"]{color:#cfe; max-width:180px}
-  input[type="text"]{padding:10px 12px; border-radius:10px; border:1px solid #ffffff2a; background:#ffffff10; color:#eef; min-width:220px}
-  button{padding:10px 14px; border-radius:12px; border:1px solid #ffffff2a; background:linear-gradient(#ffffff24,#ffffff10); color:#eef; font-weight:700; letter-spacing:.2px; cursor:pointer; transition:.15s transform,.15s filter; font-size:14px;}
-  button:hover{filter:brightness(1.1)} button:active{transform:translateY(1px)}
-  .bars{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0 8px;}
-  .bar{background:#00000040; border:1px solid #ffffff1a; border-radius:12px; padding:8px 10px; position:relative; overflow:hidden; box-shadow:0 8px 24px #0006 inset,0 1px 0 #ffffff10;}
-  .bar .label{font-size:12px; opacity:.85; margin-bottom:6px; display:flex; align-items:center; gap:6px;}
-  .hp-track{height:12px; border-radius:999px; background:#ffffff12; overflow:hidden;}
-  .hp-fill{height:100%; width:100%; background:linear-gradient(90deg,var(--good),#8affff); transition:width .2s ease-out;}
-  .hp-fill.b{background:linear-gradient(90deg,#ff9fd3,var(--accent2))}
-  .badge{display:inline-block; padding:2px 6px; border-radius:8px; background:#ffffff18; border:1px solid #ffffff26; font-size:11px;}
-  .saw-badge{color:#111; background:var(--gold); border-color:#0003; font-weight:800;}
-  .stage{border:1px solid #ffffff1f; background:linear-gradient(180deg,#0c0f1b,#0a0c17); border-radius:18px; padding:8px; box-shadow:0 16px 40px #0007,0 6px 20px #0006 inset;}
-  .stage-wrap{position:relative; width:100%; aspect-ratio:16/9;}
-  @media (max-width:700px){ .stage-wrap{aspect-ratio:9/16;} }
-  canvas{display:block; width:100%; height:100%; border-radius:12px;}
-  .overlay{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; font-weight:900; text-shadow:0 0 18px #000,0 0 40px #000;}
-  .winner{font-size:clamp(22px,4.8vw,44px);} .tiny{font-size:12px; opacity:.7; margin-top:6px}
-  #exportCanvas{display:none}
+  .wide{grid-column: span 6;}
+  .btnrow{grid-column: span 12; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  button{padding:10px 14px; border-radius:12px; border:1px solid #ffffff2a; background:linear-gradient(#ffffff24,#ffffff10);
+    color:#eef; font-weight:700; letter-spacing:.2px; cursor:pointer; transition:.15s transform,.15s filter; font-size:14px;}
+  button:hover{filter:brightness(1.08)} button:active{transform:translateY(1px)}
+  small{opacity:.8}
+  .progress{margin-top:10px; display:none; align-items:center; gap:10px}
+  .bar{height:10px; background:#0006; border:1px solid #ffffff22; border-radius:999px; width:320px; overflow:hidden}
+  .fill{height:100%; width:0%; background:linear-gradient(90deg,var(--good),var(--good2))}
+  #exportCanvas{ position:fixed; left:-99999px; top:-99999px; width:1px; height:1px; opacity:0; pointer-events:none; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Battle Balls — Vertical MP4 Recorder</h1>
+  <h1>Battle Balls — Instant Vertical Video (WebM + Audio)</h1>
   <div class="controls">
-    <span class="file">Ball A <input id="imgA" type="file" accept="image/*"></span>
-    <span class="file">Ball B <input id="imgB" type="file" accept="image/*"></span>
-    <input type="text" id="titleInput" placeholder="Video title (e.g., Battle Balls — E01)" />
-    <button id="startBtn">Start</button>
-    <button id="resetBtn">Reset</button>
-    <span class="badge">Title & bars are baked into the video</span>
-  </div>
-
-  <div class="bars">
-    <div class="bar" id="barA">
-      <div class="label">Ball A <span id="sawA" class="badge" style="display:none;">SAW</span></div>
-      <div class="hp-track"><div class="hp-fill" id="hpA" style="width:100%"></div></div>
-    </div>
-    <div class="bar" id="barB">
-      <div class="label">Ball B <span id="sawB" class="badge saw-badge" style="display:none;">SAW</span></div>
-      <div class="hp-track"><div class="hp-fill b" id="hpB" style="width:100%"></div></div>
+    <span class="file">Ball A Image <input id="imgA" type="file" accept="image/*"></span>
+    <span class="file">Ball B Image <input id="imgB" type="file" accept="image/*"></span>
+    <span class="field"><span>Title</span><input id="titleInput" type="text" placeholder="Video title (e.g., Battle Balls — E01)"></span>
+    <span class="field"><span>Name A</span><input id="nameA" type="text" placeholder="e.g., Draco"></span>
+    <span class="field"><span>Name B</span><input id="nameB" type="text" placeholder="e.g., Nimbus"></span>
+    <span class="field"><span>FPS</span><input id="fpsInput" type="number" min="20" max="60" step="1" value="30" style="width:90px"></span>
+    <span class="field"><span>Mux Speed</span><input id="muxRate" type="number" min="1" max="8" step="1" value="4" style="width:90px"></span>
+    <div class="btnrow">
+      <button id="renderBtn">Render Video (with audio)</button>
+      <small>Tip: Higher <b>Mux Speed</b> = faster finish. If your machine struggles, try 2–3×.</small>
     </div>
   </div>
 
-  <div class="stage">
-    <div class="stage-wrap" id="stageWrap">
-      <canvas id="game"></canvas>
-      <div class="overlay" id="overlay" style="display:none;">
-        <div>
-          <div class="winner" id="winnerText"></div>
-          <div class="tiny">Press Reset to play again</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 9:16 export canvas (bigger for nicer uploads) -->
+  <!-- Offscreen canvases -->
+  <canvas id="gameCanvas" width="720" height="1280"></canvas>
   <canvas id="exportCanvas" width="1080" height="1920"></canvas>
+
+  <div class="progress" id="progressRow">
+    <div class="bar"><div class="fill" id="progFill"></div></div>
+    <div id="progText">0%</div>
+  </div>
 </div>
 
 <script>
+/* ===== Whammy-like tiny WebM builder (VP8 frames from image/webp) ===== */
+const Whammy = (function(){
+  function numToBuffer(num){ const parts=[]; while(num>0){ parts.push(num & 0xff); num>>=8; } return new Uint8Array(parts.reverse()); }
+  function strToBuffer(str){ const arr=new Uint8Array(str.length); for(let i=0;i<str.length;i++) arr[i]=str.charCodeAt(i); return arr; }
+  function concatBuffers(arr){ let len=0; for(const a of arr) len+=a.length; const out=new Uint8Array(len); let off=0; for(const a of arr){ out.set(a,off); off+=a.length; } return out; }
+  function parseRIFF(str){
+    let o=0; const R=s=>{const v=str.substr(o,s); o+=s; return v}, U=()=>{const v=str.charCodeAt(o)+(str.charCodeAt(o+1)<<8)+(str.charCodeAt(o+2)<<16)+(str.charCodeAt(o+3)<<24); o+=4; return v; };
+    if(R(4)!=="RIFF") throw "Invalid WebP"; U(); if(R(4)!=="WEBP") throw "Invalid WEBP";
+    const chunks={}; while(o<str.length){ const f=R(4), sz=U(); chunks[f]=R(sz); } return chunks;
+  }
+  function parseWebP(riff){ const vp8=riff["VP8 "]; if(!vp8) throw "Not VP8"; return vp8.substr(10); }
+  function makeSimpleBlock(track, tc, flags, data){
+    const tcA=new Int16Array([tc]); const tcB=new Uint8Array(tcA.buffer);
+    return concatBuffers([ new Uint8Array([0xA3]), numToBuffer(1+2+1+data.length), new Uint8Array([(track&0x7f)|0x80]), new Uint8Array([tcB[1],tcB[0]]), new Uint8Array([flags]), data ]);
+  }
+  function fromImageArray(frames, fps){
+    const EBML=[{id:0x1a45dfa3,data:[{id:0x4286,data:1},{id:0x42f7,data:1},{id:0x42f2,data:4},{id:0x42f3,data:8},{id:0x4282,data:"webm"},{id:0x4287,data:2},{id:0x4285,data:2}]},
+      {id:0x18538067,data:[{id:0x1549a966,data:[{id:0x2ad7b1,data:numToBuffer(1e6)},{id:0x4d80,data:"whammy"},{id:0x7ba9,data:"whammy"},{id:0x4489,data:numToBuffer(Math.round(frames[frames.length-1].time*1e6))}]},
+        {id:0x1654ae6b,data:[{id:0xae,data:[{id:0xd7,data:1},{id:0x73c5,data:1},{id:0x9c,data:0},{id:0x22b59c,data:"und"},{id:0x86,data:"V_VP8"},{id:0x258688,data:"webm"},{id:0x83,data:1},{id:0xe0,data:[{id:0xb0,data:frames[0].w},{id:0xba,data:frames[0].h}]}]}]},
+        {id:0x1f43b675,data:[] }]}];
+    let clusterTime=0; EBML[1].data[2].data.push({id:0xe7,data:numToBuffer(clusterTime)});
+    for(const f of frames){
+      const riff=parseRIFF(f.data), vp8= strToBuffer(parseWebP(riff));
+      const block=makeSimpleBlock(1, Math.round(f.time*1000 - clusterTime), 0x80, vp8);
+      EBML[1].data[2].data.push({id:0xa3,data:block.subarray(1)});
+    }
+    function idToBuf(id){ const parts=[]; while(id>0){ parts.push(id&0xff); id>>=8; } return new Uint8Array(parts.reverse()); }
+    function gen(json){ const out=[]; for(const node of json){ let data=node.data; if(Array.isArray(data)) data=gen(data); if(typeof data==="string") data=strToBuffer(data); if(typeof data==="number") data=numToBuffer(data);
+      let size=data.length, bytes=1; for(;bytes<=8;bytes++){ if(size < (1<<(7*bytes))-1) break; } size += (1<<(7*bytes)) -1;
+      const sizeBytes=new Uint8Array(bytes); for(let o=bytes-1;o>=0;o--){ sizeBytes[o]=size & 0xff; size>>=8; }
+      out.push(idToBuf(node.id)); out.push(sizeBytes); out.push(data);
+    } return concatBuffers(out); }
+    return new Blob([gen(EBML)],{type:'video/webm'});
+  }
+  return { fromImageArray };
+})();
+
+/* ===== Instant fight sim + audio + fast mux ===== */
 (() => {
-  // ======= VIDEO/UX PREFS =======
-  const PREFER_MP4 = true; // will try H.264/AAC first (Safari iOS usually OK), then fall back to WebM
-
-  // ======= QUICK-FIGHT + DYNAMIC SIZE/SPEED =======
-  let W = 360, H = 640;
-  const MAX_HP = 5;
-  const R_MAX = 44, R_MIN = 22;
-
-  const BASE_SPEED = 6.3;
-  const SPEED_EXP  = 1.85;
-  const SPEED_CAP_BASE = 13.5;
-
-  const KNOCKBACK = 1.35;
-  const KNOCKBACK_SAW = 1.85;
-  const COLLISION_COOLDOWN = 150;
-  const SAW_RESPAWN   = [1500, 4000];
-  const HEART_RESPAWN = [11000, 18000];
+  // ---------- Tunables ----------
+  const EXPORT_W = 1080, EXPORT_H = 1920;  // 9:16
+  const TITLE_H = 120, MARGIN = 18;
+  const MAX_HP = 5, R_MAX = 44, R_MIN = 22;
+  const BASE_SPEED = 6.3, SPEED_EXP = 1.85, SPEED_CAP_BASE = 13.5;
+  const KNOCKBACK = 1.35, KNOCKBACK_SAW = 1.85, COLLISION_COOLDOWN = 140;
   const ITEM_SIZE = 28;
 
-  function radiusForHP(h){ h=Math.max(1,Math.min(MAX_HP,h)); return R_MIN + (R_MAX-R_MIN)*(h-1)/(MAX_HP-1); }
-  function targetSpeedFor(b){ const r=radiusForHP(b.hp); return BASE_SPEED*Math.pow(R_MAX/r,SPEED_EXP); }
-  function speedCapFor(b){ const r=radiusForHP(b.hp); return SPEED_CAP_BASE*Math.pow(R_MAX/r,SPEED_EXP); }
-
-  // ======= DOM =======
-  const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
-  const stageWrap = document.getElementById('stageWrap');
+  // DOM
+  const gameCanvas = document.getElementById('gameCanvas'), g = gameCanvas.getContext('2d');
+  const exportCanvas = document.getElementById('exportCanvas'), ex = exportCanvas.getContext('2d');
   const imgAInput = document.getElementById('imgA'), imgBInput = document.getElementById('imgB');
   const titleInput = document.getElementById('titleInput');
-  const startBtn = document.getElementById('startBtn'), resetBtn = document.getElementById('resetBtn');
-  const hpAEl = document.getElementById('hpA'), hpBEl = document.getElementById('hpB');
-  const sawAEl = document.getElementById('sawA'), sawBEl = document.getElementById('sawB');
-  const overlay = document.getElementById('overlay'), winnerText = document.getElementById('winnerText');
+  const nameAInput = document.getElementById('nameA'), nameBInput = document.getElementById('nameB');
+  const fpsInput = document.getElementById('fpsInput'), muxRateInput = document.getElementById('muxRate');
+  const renderBtn = document.getElementById('renderBtn');
+  const progRow = document.getElementById('progressRow'), progFill = document.getElementById('progFill'), progText = document.getElementById('progText');
 
-  const exportCanvas = document.getElementById('exportCanvas'), ex = exportCanvas.getContext('2d');
-  const EXPORT_W = exportCanvas.width, EXPORT_H = exportCanvas.height;
-  const TITLE_H = 120; // compact title so arena dominates
-  const MARGIN = 18;
-
-  // ======= HiDPI stage =======
-  function scaleCanvas(){
-    const rect = stageWrap.getBoundingClientRect();
-    W = Math.max(240, Math.floor(rect.width));
-    H = Math.max(360, Math.floor(rect.height));
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-    canvas.width = Math.floor(W*dpr); canvas.height = Math.floor(H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  new ResizeObserver(scaleCanvas).observe(stageWrap);
-  window.addEventListener('orientationchange', ()=>setTimeout(scaleCanvas,200));
-  scaleCanvas();
-
-  // ======= AUDIO (routed to recorder) =======
-  let ACtx, masterGain, mediaDest;
-  function ensureAudio(){
-    if(!ACtx){
-      ACtx = new (window.AudioContext||window.webkitAudioContext)();
-      masterGain = ACtx.createGain(); masterGain.gain.value=1; masterGain.connect(ACtx.destination);
-    }
-    if(ACtx.state==='suspended') ACtx.resume();
-  }
-  window.addEventListener('pointerdown', ensureAudio, { once:true, passive:true });
-
-  function beep({freq=440,dur=0.1,type='sine',gain=0.08,sweepTo=null}){
-    if(!ACtx) return; const t0=ACtx.currentTime;
-    const o=ACtx.createOscillator(), g=ACtx.createGain(); o.type=type; o.frequency.value=freq;
-    if(sweepTo) o.frequency.linearRampToValueAtTime(sweepTo,t0+dur);
-    g.gain.value=gain; g.gain.setValueAtTime(gain,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-    o.connect(g).connect(masterGain); o.start(t0); o.stop(t0+dur);
-  }
-  function noiseBurst({dur=0.45,gain=0.14}){
-    if(!ACtx) return; const n=Math.floor(ACtx.sampleRate*dur), b=ACtx.createBuffer(1,n,ACtx.sampleRate), d=b.getChannelData(0);
-    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n); const s=ACtx.createBufferSource(); s.buffer=b; const g=ACtx.createGain(); g.gain.value=gain; s.connect(g).connect(masterGain); s.start();
-  }
-  const sounds = {
-    sawPickup(){ beep({freq:220,dur:0.08,type:'square',gain:0.06,sweepTo:800}); setTimeout(()=>beep({freq:360,dur:0.11,type:'sawtooth',gain:0.05,sweepTo:1000}),60); },
-    heart(){ beep({freq:523,dur:0.07,type:'triangle',gain:0.06}); setTimeout(()=>beep({freq:659,dur:0.08,type:'triangle',gain:0.06}),90); setTimeout(()=>beep({freq:784,dur:0.10,type:'triangle',gain:0.07}),180); },
-    hit(){ beep({freq:120,dur:0.06,type:'sine',gain:0.09}); },
-    firework(){ beep({freq:320,dur:0.65,type:'sine',gain:0.045,sweepTo:1250}); setTimeout(()=>noiseBurst({dur:0.32,gain:0.16}),140); }
-  };
-
-  // ======= STATE =======
+  // Assets
   const imgA = new Image(), imgB = new Image();
   let imgALoaded=false, imgBLoaded=false;
   imgAInput.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(!f) return; imgA.src=URL.createObjectURL(f); imgA.onload=()=>imgALoaded=true; });
   imgBInput.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(!f) return; imgB.src=URL.createObjectURL(f); imgB.onload=()=>imgBLoaded=true; });
 
-  function rand(min,max){ return Math.random()*(max-min)+min; }
-
-  const balls = [
-    { name:'A', x:0, y:0, vx:0, vy:0, hp:MAX_HP, sharp:false, img:imgA, imgLoaded:()=>imgALoaded, color:'#9ef0ff' },
-    { name:'B', x:0, y:0, vx:0, vy:0, hp:MAX_HP, sharp:false, img:imgB, imgLoaded:()=>imgBLoaded, color:'#ff7ad9' }
-  ];
-  let lastHitTime = 0, running=false, winner=null;
-  const items = { saw:null, heart:null };
-  let sawTimer=null, heartTimer=null;
-
-  // Screen shake (recorded)
-  let shakeTime=0, shakeAmp=0;
-  function triggerShake(){ shakeTime = 180; shakeAmp = 6; }
-  function getShakeOffset(){ if(shakeTime<=0) return {x:0,y:0}; const a=shakeAmp*(shakeTime/180); return {x:(Math.random()*2-1)*a, y:(Math.random()*2-1)*a}; }
-
-  function scheduleItem(which){
-    const [lo,hi] = which==='saw' ? SAW_RESPAWN : HEART_RESPAWN;
-    const delay = Math.floor(rand(lo,hi));
-    const timer = setTimeout(()=>{
-      const pad=40; let x=rand(pad,W-pad), y=rand(pad,H-pad);
-      if(which==='saw' && items.heart){ const dx=x-items.heart.x, dy=y-items.heart.y; if(Math.hypot(dx,dy)<ITEM_SIZE*2){ x=Math.min(W-pad,x+ITEM_SIZE*2); } }
-      if(which==='heart' && items.saw){ const dx=x-items.saw.x, dy=y-items.saw.y; if(Math.hypot(dx,dy)<ITEM_SIZE*2){ x=Math.max(pad,x-ITEM_SIZE*2); } }
-      items[which]={x,y}; scheduleItem(which);
-    }, delay);
-    if(which==='saw') sawTimer=timer; else heartTimer=timer;
-  }
-  function spawnSawNow(){ const pad=40; items.saw = { x: rand(pad,W-pad), y: rand(pad,H-pad) }; }
-
-  function updateUI(){
-    hpAEl.style.width = `${(balls[0].hp/MAX_HP)*100}%`;
-    hpBEl.style.width = `${(balls[1].hp/MAX_HP)*100}%`;
-    sawAEl.style.display = balls[0].sharp ? 'inline-block' : 'none';
-    sawBEl.style.display = balls[1].sharp ? 'inline-block' : 'none';
-  }
-
-  function resetGame(){
-    balls[0].hp=MAX_HP; balls[1].hp=MAX_HP;
-    balls[0].x=W*0.3; balls[0].y=H*0.35; setSpeedToTarget(balls[0], +1, -0.6);
-    balls[1].x=W*0.7; balls[1].y=H*0.65; setSpeedToTarget(balls[1], -0.95, +0.85);
-    balls[0].sharp=false; balls[1].sharp=false;
-    items.saw=null; items.heart=null; particles.length=0;
-    winner=null; running=false; overlay.style.display='none'; updateUI();
-    if(sawTimer) clearTimeout(sawTimer); if(heartTimer) clearTimeout(heartTimer);
-    shakeTime=0; shakeAmp=0;
-  }
-
-  // Speed helpers
-  function setSpeedToTarget(b, dx=1, dy=0){ const t=targetSpeedFor(b), L=Math.hypot(dx,dy)||1; b.vx=(dx/L)*t; b.vy=(dy/L)*t; }
+  // Helpers
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const rand=(a,b)=>Math.random()*(b-a)+a;
+  const radiusForHP=hp=>{ hp=clamp(hp,1,MAX_HP); return R_MIN + (R_MAX-R_MIN)*(hp-1)/(MAX_HP-1); };
+  const targetSpeedFor=b=> BASE_SPEED*Math.pow(R_MAX / radiusForHP(b.hp), SPEED_EXP);
+  const speedCapFor=b=> SPEED_CAP_BASE*Math.pow(R_MAX / radiusForHP(b.hp), SPEED_EXP);
   function rescaleSpeedToTarget(b){ const t=targetSpeedFor(b), s=Math.hypot(b.vx,b.vy); if(s<1e-6){ const a=Math.random()*Math.PI*2; b.vx=Math.cos(a)*t; b.vy=Math.sin(a)*t; } else { const k=t/s; b.vx*=k; b.vy*=k; } }
   function clampVel(b){ const cap=speedCapFor(b), s=Math.hypot(b.vx,b.vy); if(s>cap){ const k=cap/(s||1e-6); b.vx*=k; b.vy*=k; } }
-
-  // Physics
-  function circleCollision(a,b){ return Math.hypot(b.x-a.x,b.y-a.y) < radiusForHP(a.hp)+radiusForHP(b.hp); }
-  function resolveElastic(a,b,factor=1){
+  const circleCollision=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y) < radiusForHP(a.hp)+radiusForHP(b.hp);
+  function resolveElastic(a,b,f=1){
     const r1=radiusForHP(a.hp), r2=radiusForHP(b.hp);
-    const dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy)||0.0001;
+    const dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy)||1e-6;
     const nx=dx/dist, ny=dy/dist, tx=-ny, ty=nx;
     const v1n=a.vx*nx + a.vy*ny, v1t=a.vx*tx + a.vy*ty, v2n=b.vx*nx + b.vy*ny, v2t=b.vx*tx + b.vy*ty;
-    const v1nAfter = v2n*factor, v2nAfter = v1n*factor;
+    const v1nAfter = v2n*f, v2nAfter = v1n*f;
     a.vx=v1t*tx + v1nAfter*nx; a.vy=v1t*ty + v1nAfter*ny;
     b.vx=v2t*tx + v2nAfter*nx; b.vy=v2t*ty + v2nAfter*ny;
     const overlap=(r1+r2-dist), sep=overlap/2+0.2; a.x-=nx*sep; a.y-=ny*sep; b.x+=nx*sep; b.y+=ny*sep;
     clampVel(a); clampVel(b);
   }
 
-  // Particles
-  const particles=[];
-  function spawnFirework(x,y,color){
-    for(let i=0;i<100;i++){ const ang=Math.random()*Math.PI*2, spd=rand(1.2,4.8);
-      particles.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:rand(0.7,1.3),age:0,size:rand(1.4,3.2),color}); }
-    sounds.firework();
+  // Pretty arena
+  function drawGrid(){
+    g.save(); g.globalAlpha=0.12; const W=gameCanvas.width, H=gameCanvas.height;
+    const step=Math.max(32,Math.min(48,Math.floor(Math.min(W,H)/12)));
+    g.strokeStyle='#ffffff22'; g.lineWidth=1;
+    for(let x=step;x<W;x+=step){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+    for(let y=step;y<H;y+=step){ g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+    g.globalAlpha=1; const grd=g.createLinearGradient(0,0,0,H); grd.addColorStop(0,'#ffffff18'); grd.addColorStop(1,'#ffffff06'); g.strokeStyle=grd; g.lineWidth=2; g.strokeRect(1,1,W-2,H-2); g.restore();
   }
-  function updateParticles(dt){ for(let p of particles){ p.age+=dt; p.x+=p.vx; p.y+=p.vy; p.vy+=0.02; } for(let i=particles.length-1;i>=0;i--){ if(particles[i].age>particles[i].life) particles.splice(i,1); } }
-  function drawParticles(){ for(let p of particles){ const a=Math.max(0,1-p.age/p.life); ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; } }
-
-  // Drawing (arena)
   function drawItem(x,y,type){
-    ctx.save(); ctx.translate(x,y);
+    g.save(); g.translate(x,y);
     if(type==='saw'){
-      ctx.fillStyle='#ddd'; ctx.strokeStyle='#0009'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,ITEM_SIZE*0.6,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      for(let i=0;i<12;i++){ const a=i*(Math.PI*2/12), r1=ITEM_SIZE*0.6, r2=ITEM_SIZE*0.9; ctx.beginPath(); ctx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1); ctx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2); ctx.stroke(); }
-      ctx.fillStyle='#999'; ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
-      ctx.shadowBlur=14; ctx.shadowColor='#ffd16666'; ctx.beginPath(); ctx.arc(0,0,ITEM_SIZE*0.9,0,Math.PI*2); ctx.strokeStyle='#ffd16644'; ctx.stroke();
+      g.fillStyle='#ddd'; g.strokeStyle='#0009'; g.lineWidth=2;
+      g.beginPath(); g.arc(0,0, ITEM_SIZE*0.6, 0, Math.PI*2); g.fill(); g.stroke();
+      for (let i=0;i<12;i++){ const a=i*(Math.PI*2/12), r1=ITEM_SIZE*0.6, r2=ITEM_SIZE*0.9; g.beginPath(); g.moveTo(Math.cos(a)*r1,Math.sin(a)*r1); g.lineTo(Math.cos(a)*r2,Math.sin(a)*r2); g.stroke(); }
+      g.fillStyle='#999'; g.beginPath(); g.arc(0,0, 5, 0, Math.PI*2); g.fill();
+      g.shadowBlur = 14; g.shadowColor = '#ffd16666'; g.beginPath(); g.arc(0,0, ITEM_SIZE*0.9, 0, Math.PI*2); g.strokeStyle='#ffd16644'; g.stroke();
     } else {
-      ctx.fillStyle='#ff6fae'; ctx.strokeStyle='#0008'; ctx.lineWidth=2; const s=ITEM_SIZE*0.05;
-      ctx.beginPath();
-      ctx.moveTo(0,6*s); ctx.bezierCurveTo(0,6*s,-6*s,0,-6*s,-4*s); ctx.bezierCurveTo(-6*s,-8*s,-2*s,-8*s,0,-4*s);
-      ctx.bezierCurveTo(2*s,-8*s,6*s,-8*s,6*s,-4*s); ctx.bezierCurveTo(6*s,0,0,6*s,0,6*s);
-      ctx.fill(); ctx.stroke(); ctx.shadowBlur=12; ctx.shadowColor='#ff6fae66'; ctx.fill();
+      g.fillStyle = '#ff6fae'; g.strokeStyle = '#0008'; g.lineWidth = 2;
+      const s = ITEM_SIZE*0.05;
+      g.beginPath();
+      g.moveTo(0, 6*s);
+      g.bezierCurveTo(0, 6*s, -6*s, 0, -6*s, -4*s);
+      g.bezierCurveTo(-6*s, -8*s, -2*s, -8*s, 0, -4*s);
+      g.bezierCurveTo(2*s, -8*s, 6*s, -8*s, 6*s, -4*s);
+      g.bezierCurveTo(6*s, 0, 0, 6*s, 0, 6*s);
+      g.fill(); g.stroke(); g.shadowBlur = 12; g.shadowColor = '#ff6fae66'; g.fill();
     }
-    ctx.restore();
+    g.restore();
   }
   function drawBall(b){
-    const r=radiusForHP(b.hp);
-    ctx.save(); ctx.shadowBlur=b.sharp?22:14; ctx.shadowColor=b.sharp?'#ffd166':'#000';
-    ctx.beginPath(); ctx.arc(b.x,b.y,r+(b.sharp?1.5:0),0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill(); ctx.restore();
-    ctx.save(); ctx.beginPath(); ctx.arc(b.x,b.y,r,0,Math.PI*2); ctx.closePath(); ctx.clip();
-    const img=b.img;
-    if(img && b.imgLoaded()){ const iw=img.width, ih=img.height, sc=Math.max((2*r)/iw,(2*r)/ih); ctx.drawImage(img, b.x-iw*sc/2, b.y-ih*sc/2, iw*sc, ih*sc); }
-    else { const g=ctx.createLinearGradient(b.x-r,b.y-r,b.x+r,b.y+r); g.addColorStop(0,'#ffffff22'); g.addColorStop(1,b.color+'55'); ctx.fillStyle=g; ctx.fillRect(b.x-r,b.y-r,r*2,r*2); }
-    ctx.restore();
-    ctx.beginPath(); ctx.arc(b.x,b.y,r,0,Math.PI*2); ctx.strokeStyle=b.sharp?'#ffd166':'#ffffff33'; ctx.lineWidth=b.sharp?3:2; ctx.stroke();
-  }
-  function drawGrid(){
-    ctx.save(); ctx.globalAlpha=0.12; const step=Math.max(32,Math.min(48,Math.floor(Math.min(W,H)/12)));
-    ctx.strokeStyle='#ffffff22'; ctx.lineWidth=1;
-    for(let x=step;x<W;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for(let y=step;y<H;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-    ctx.globalAlpha=1; const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#ffffff18'); g.addColorStop(1,'#ffffff06'); ctx.strokeStyle=g; ctx.lineWidth=2; ctx.strokeRect(1,1,W-2,H-2); ctx.restore();
+    if (b.removed) return;
+    const r = radiusForHP(b.hp);
+    g.save(); g.shadowBlur=b.sharp?22:14; g.shadowColor=b.sharp?'#ffd166':'#000';
+    g.beginPath(); g.arc(b.x,b.y,r+(b.sharp?1.5:0),0,Math.PI*2); g.fillStyle='#000'; g.fill(); g.restore();
+    g.save(); g.beginPath(); g.arc(b.x,b.y,r,0,Math.PI*2); g.closePath(); g.clip();
+    if(b.img && b.imgLoaded()){ const iw=b.img.width, ih=b.img.height, sc=Math.max((2*r)/iw,(2*r)/ih); g.drawImage(b.img, b.x-iw*sc/2, b.y-ih*sc/2, iw*sc, ih*sc); }
+    else { const gr=g.createLinearGradient(b.x-r,b.y-r,b.x+r,b.y+r); gr.addColorStop(0,'#ffffff22'); gr.addColorStop(1,b.color+'55'); g.fillStyle=gr; g.fillRect(b.x-r,b.y-r,r*2,r*2); }
+    g.restore();
+    g.beginPath(); g.arc(b.x,b.y,r,0,Math.PI*2); g.strokeStyle=b.sharp?'#ffd166':'#ffffff33'; g.lineWidth=b.sharp?3:2; g.stroke();
   }
 
-  // ======= Export compositor: funky title + arena (fills most), plus health bars =======
+  // Funky title
   function drawFunkyTitle(yCenter){
     const text=(titleInput.value||'Battle Balls').slice(0,120);
-    const baseSize = 64;
-    // gradient fill
+    const base=64;
     const grad = ex.createLinearGradient(0, yCenter-40, EXPORT_W, yCenter+40);
     grad.addColorStop(0, '#ffec78'); grad.addColorStop(0.5, '#ffa7ef'); grad.addColorStop(1, '#8af7ff');
     ex.textAlign='center'; ex.textBaseline='middle';
-    // per-letter wiggle
-    const chars = [...text];
-    const startX = EXPORT_W/2 - (chars.length * baseSize * 0.28);
-    let x = startX;
-    for (let i=0;i<chars.length;i++){
-      const ch = chars[i];
-      const wob = Math.sin((performance.now()*0.004)+(i*0.6))*6;
-      const rot = Math.sin((performance.now()*0.002)+(i*0.8))*0.08;
-      ex.save();
-      ex.translate(x, yCenter + wob);
-      ex.rotate(rot);
-      ex.font = `900 ${baseSize}px "Marker Felt", "Chalkduster", "Comic Sans MS", "Segoe Print", system-ui, sans-serif`;
-      ex.fillStyle = grad;
-      ex.shadowColor = '#000'; ex.shadowBlur = 14;
-      ex.fillText(ch, 0, 0);
-      ex.restore();
-      x += baseSize * 0.56;
+    const chars=[...text]; const startX = EXPORT_W/2 - (chars.length * base * 0.28); let x=startX; const t=performance.now();
+    for(let i=0;i<chars.length;i++){
+      const wob=Math.sin((t*0.004)+(i*0.6))*6, rot=Math.sin((t*0.002)+(i*0.8))*0.08;
+      ex.save(); ex.translate(x, yCenter+wob); ex.rotate(rot);
+      ex.font=`900 ${base}px "Marker Felt","Chalkduster","Comic Sans MS","Segoe Print",system-ui,sans-serif`;
+      ex.fillStyle=grad; ex.shadowColor='#000'; ex.shadowBlur=14; ex.fillText(chars[i],0,0); ex.restore(); x += base*0.56;
     }
   }
-  function drawVideoBars(dx, dy, dw){
-    const barW = dw, barH = 28, gap = 10;
-    const radius = 12;
 
-    function drawBar(y, frac, isB, saw){
-      // track
-      ex.fillStyle = '#00000066';
-      roundRect(ex, dx, y, barW, barH, radius, true, false);
-      // fill
-      const w = Math.max(0, Math.min(barW, barW * frac));
-      const grad = ex.createLinearGradient(dx, y, dx+barW, y);
-      if (isB) { grad.addColorStop(0,'#ff9fd3'); grad.addColorStop(1,'#ff7ad9'); }
-      else     { grad.addColorStop(0,'#45ff9a'); grad.addColorStop(1,'#8affff'); }
-      ex.fillStyle = grad;
-      roundRect(ex, dx, y, w, barH, radius, true, false);
-
-      // SAW badge
-      if (saw){
-        ex.fillStyle = '#ffd166';
-        ex.strokeStyle = '#00000066';
-        ex.lineWidth = 2;
-        roundRect(ex, dx + barW - 62, y-18, 58, barH+18, 10, true, true);
-        ex.fillStyle = '#111';
-        ex.font = 'bold 18px system-ui, sans-serif';
-        ex.textAlign='center'; ex.textBaseline='middle';
-        ex.fillText('SAW', dx + barW - 33, y + barH/2);
-      }
+  // Bars row (side-by-side) using typed names
+  function drawBarsRow(y, nameA, nameB, fracA, fracB, sawA, sawB){
+    const pad=MARGIN, gap=22, cellW=(EXPORT_W-pad*2-gap)/2, barH=30, radius=12;
+    function rr(ctx,x,y,w,h,r,f,s){ if(w<2*r)r=w/2; if(h<2*r)r=h/2; ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); if(f)ctx.fill(); if(s)ctx.stroke(); }
+    function cell(x,label,frac,c1,c2,saw){
+      ex.font='700 22px system-ui,sans-serif'; ex.textAlign='left'; ex.textBaseline='alphabetic'; ex.fillStyle='#e8f6ff';
+      ex.fillText(label, x, y-6);
+      const tx=x, ty=y+4, tw=cellW, th=barH;
+      ex.fillStyle='#00000066'; rr(ex,tx,ty,tw,th,radius,true,false);
+      const w=Math.max(0,Math.min(tw,tw*frac)), grad=ex.createLinearGradient(tx,ty,tx+tw,ty);
+      grad.addColorStop(0,c1); grad.addColorStop(1,c2); ex.fillStyle=grad; rr(ex,tx,ty,w,th,radius,true,false);
+      if(saw){ const bx=tx+tw-64, by=ty-18, bw=60, bh=th+18; ex.fillStyle='#ffd166'; ex.strokeStyle='#0006'; ex.lineWidth=2; rr(ex,bx,by,bw,bh,10,true,true); ex.fillStyle='#111'; ex.font='bold 18px system-ui,sans-serif'; ex.textAlign='center'; ex.textBaseline='middle'; ex.fillText('SAW', bx+bw/2, ty+th/2); }
     }
-
-    const fracA = balls[0].hp / MAX_HP;
-    const fracB = balls[1].hp / MAX_HP;
-    drawBar(dy + 12, fracA, false, !!balls[0].sharp);
-    drawBar(dy + 12 + barH + gap, fracB, true,  !!balls[1].sharp);
-  }
-  function roundRect(ctx, x, y, w, h, r, fill, stroke){
-    if (w<2*r) r = w/2; if (h<2*r) r = h/2;
-    ctx.beginPath();
-    ctx.moveTo(x+r, y);
-    ctx.arcTo(x+w, y,   x+w, y+h, r);
-    ctx.arcTo(x+w, y+h, x,   y+h, r);
-    ctx.arcTo(x,   y+h, x,   y,   r);
-    ctx.arcTo(x,   y,   x+w, y,   r);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
+    cell(pad, nameA, fracA, '#45ff9a', '#8affff', sawA);
+    cell(pad+cellW+gap, nameB, fracB, '#ff9fd3', '#ff7ad9', sawB);
   }
 
-  function renderExportFrame(){
-    // bg
-    ex.clearRect(0,0,EXPORT_W,EXPORT_H);
-    const bg=ex.createLinearGradient(0,0,0,EXPORT_H); bg.addColorStop(0,'#0f1020'); bg.addColorStop(1,'#1a1d36'); ex.fillStyle=bg; ex.fillRect(0,0,EXPORT_W,EXPORT_H);
-
-    // funky title (top)
-    drawFunkyTitle(TITLE_H/2);
-
-    // divider
-    ex.strokeStyle='#ffffff22'; ex.lineWidth=2; ex.beginPath(); ex.moveTo(MARGIN, TITLE_H); ex.lineTo(EXPORT_W-MARGIN,TITLE_H); ex.stroke();
-
-    // arena — make it dominate the frame
-    let dx=0, dy=0, dw=0, dh=0;
-    {
-      const availW=EXPORT_W - MARGIN*2, availH=EXPORT_H - TITLE_H - MARGIN*1.5;
-      const srcW=canvas.width, srcH=canvas.height, srcAspect=srcW/srcH, dstAspect=availW/availH;
-      dw = availW; dh = availH;
-      if(srcAspect>dstAspect) dh = dw/srcAspect; else dw = dh*srcAspect;
-      const shake = (shakeTime>0) ? getShakeOffset() : {x:0,y:0};
-      dx = (EXPORT_W-dw)/2 + shake.x;
-      dy = TITLE_H + (availH-dh)/2 + shake.y;
-      ex.drawImage(canvas, 0,0,srcW,srcH, dx, dy, dw, dh);
-      if (shakeTime>0) shakeTime -= 16.7;
+  // Shockwave + particles for obliteration
+  const fx = { particles:[], shockwaves:[], screenFlash:0 };
+  function spawnObliteration(x,y,colorA,colorB){
+    fx.screenFlash = 0.35; // seconds
+    fx.shockwaves.push({x,y,r:6,dr:22,life:0.7,age:0});
+    for(let i=0;i<220;i++){
+      const ang=Math.random()*Math.PI*2, spd=rand(90,420);
+      fx.particles.push({x,y, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd, life:rand(0.5,1.1), age:0, size:rand(1.5,3.5), color:(i%2===0)?colorA:colorB});
     }
+  }
+  function updateFX(dt){ for(let p of fx.particles){ p.age+=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=40*dt; } for(let i=fx.particles.length-1;i>=0;i--){ if(fx.particles[i].age>fx.particles[i].life) fx.particles.splice(i,1); }
+    for(let s of fx.shockwaves){ s.age+=dt; s.r += s.dr*dt*60; } for(let i=fx.shockwaves.length-1;i>=0;i--){ if(fx.shockwaves[i].age>s.life) fx.shockwaves.splice(i,1); }
+    if(fx.screenFlash>0) fx.screenFlash -= dt;
+  }
+  function drawParticles(){ for(let p of fx.particles){ const a=Math.max(0,1-p.age/p.life); g.globalAlpha=a; g.fillStyle=p.color; g.beginPath(); g.arc(p.x,p.y,p.size,0,Math.PI*2); g.fill(); g.globalAlpha=1; } }
 
-    // overlay health bars ON the video (top of arena)
-    drawVideoBars(dx + 12, dy + 12, dw - 24);
+  // Audio event timeline
+  const audioEvents = []; // {t,type} where type in ['saw','heart','hit','boom']
+
+  // Fight state
+  const state = {
+    W: gameCanvas.width, H: gameCanvas.height, t:0,
+    balls: [
+      { name:'A', x:0, y:0, vx:0, vy:0, hp:MAX_HP, sharp:false, img:imgA, imgLoaded:()=>imgALoaded, color:'#9ef0ff', removed:false },
+      { name:'B', x:0, y:0, vx:0, vy:0, hp:MAX_HP, sharp:false, img:imgB, imgLoaded:()=>imgBLoaded, color:'#ff7ad9', removed:false }
+    ],
+    items: { saw:null, heart:null },
+    lastHitTime: -9999,
+    winner: null,
+  };
+  function setSpeedToTarget(b, dx=1, dy=0){ const t=targetSpeedFor(b), L=Math.hypot(dx,dy)||1; b.vx=(dx/L)*t; b.vy=(dy/L)*t; }
+  function resetFight(nameA, nameB){
+    state.t=0;
+    state.balls[0].name=nameA||'Ball A';
+    state.balls[1].name=nameB||'Ball B';
+    for(const b of state.balls){ b.hp=MAX_HP; b.removed=false; b.sharp=false; }
+    state.balls[0].x=state.W*0.3; state.balls[0].y=state.H*0.35; setSpeedToTarget(state.balls[0], +1, -0.6);
+    state.balls[1].x=state.W*0.7; state.balls[1].y=state.H*0.65; setSpeedToTarget(state.balls[1], -0.95, +0.85);
+    state.items.saw={ x:rand(60,state.W-60), y:rand(60,state.H-60) };
+    state.items.heart=null;
+    state.winner=null;
+    fx.particles.length=0; fx.shockwaves.length=0; fx.screenFlash=0;
+    audioEvents.length=0;
   }
 
-  // ======= Recorder =======
-  let recorder=null, chunks=[];
-  function getSupportedMimeType(){
-    const mp4s=['video/mp4;codecs=h264,aac','video/mp4'];
-    const webms=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-    const order = PREFER_MP4 ? [...mp4s, ...webms] : [...webms, ...mp4s];
-    for (const t of order){ if (MediaRecorder.isTypeSupported(t)) return t; }
-    return '';
-  }
-  function startRecording(){
-    if(recorder) return; ensureAudio();
-    if(!mediaDest) mediaDest=ACtx.createMediaStreamDestination();
-    try{ masterGain.disconnect(); }catch{}
-    masterGain.connect(ACtx.destination); masterGain.connect(mediaDest);
+  function stepPhysics(dt){
+    const {W,H,balls,items} = state;
+    state.t += dt;
 
-    const fps=60, videoStream=exportCanvas.captureStream(fps), combined=new MediaStream();
-    videoStream.getVideoTracks().forEach(t=>combined.addTrack(t));
-    const audioTrack=mediaDest.stream.getAudioTracks()[0]; if(audioTrack) combined.addTrack(audioTrack);
-
-    const mime=getSupportedMimeType();
-    recorder=new MediaRecorder(combined,{ mimeType:mime||undefined, videoBitsPerSecond:8_000_000 });
-    chunks=[]; recorder.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
-    recorder.onstop=()=>{
-      const type=recorder.mimeType||'video/webm', blob=new Blob(chunks,{type}), url=URL.createObjectURL(blob);
-      const ext = type.includes('mp4') ? 'mp4' : 'webm';
-      const slug=(titleInput.value||'Battle Balls').trim().replace(/[^a-z0-9\-]+/gi,'_').slice(0,50)||'Battle_Balls';
-      const a=document.createElement('a'); a.href=url; a.download=`${slug}_${new Date().toISOString().replace(/[:.]/g,'-')}.${ext}`;
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000); recorder=null;
-    };
-    recorder.start();
-  }
-  function stopRecording(){ if(recorder && recorder.state!=='inactive') recorder.stop(); }
-
-  // ======= Loop =======
-  let last=0;
-  function loop(ts){
-    if(!running && winner==null){ requestAnimationFrame(loop); return; }
-    if(!last) last=ts; const dt=(ts-last)/1000; last=ts;
-
+    // move
     for(const b of balls){
+      if(b.removed) continue;
       const r=radiusForHP(b.hp);
-      b.x+=b.vx; b.y+=b.vy;
+      b.x+=b.vx*dt*60; b.y+=b.vy*dt*60;
       if(b.x<r){ b.x=r; b.vx=Math.abs(b.vx); }
       if(b.x>W-r){ b.x=W-r; b.vx=-Math.abs(b.vx); }
       if(b.y<r){ b.y=r; b.vy=Math.abs(b.vy); }
@@ -422,76 +275,263 @@
       clampVel(b);
     }
 
+    // items
     for(const b of balls){
+      if(b.removed) continue;
       const r=radiusForHP(b.hp);
       if(items.saw && Math.hypot(b.x-items.saw.x,b.y-items.saw.y) < r + ITEM_SIZE*0.6){
-        balls[0].sharp=false; balls[1].sharp=false; b.sharp=true; items.saw=null; sounds.sawPickup(); updateUI();
+        balls[0].sharp=false; balls[1].sharp=false; b.sharp=true; items.saw=null;
+        audioEvents.push({t:state.t, type:'saw'});
       }
       if(items.heart && Math.hypot(b.x-items.heart.x,b.y-items.heart.y) < r + ITEM_SIZE*0.4){
-        if(b.hp<MAX_HP){ b.hp++; rescaleSpeedToTarget(b); sounds.heart(); updateUI(); }
+        if(b.hp<MAX_HP){ b.hp++; rescaleSpeedToTarget(b); audioEvents.push({t:state.t, type:'heart'}); }
         items.heart=null;
       }
     }
+    if(!items.heart && Math.random()<0.01){ items.heart = { x: rand(60,W-60), y: rand(60,H-60) }; }
 
-    let kbFactor=KNOCKBACK;
+    // collisions
     if(circleCollision(balls[0],balls[1])){
-      const now=performance.now();
-      if(now-lastHitTime>COLLISION_COOLDOWN){
+      const now=state.t*1000;
+      let kb = KNOCKBACK;
+      if(now - state.lastHitTime > COLLISION_COOLDOWN){
         const a=balls[0], b=balls[1];
-        if(a.sharp && !b.sharp){ b.hp=Math.max(0,b.hp-1); a.sharp=false; rescaleSpeedToTarget(b); rescaleSpeedToTarget(a); updateUI(); sounds.hit(); kbFactor=KNOCKBACK_SAW; triggerShake(); }
-        else if(b.sharp && !a.sharp){ a.hp=Math.max(0,a.hp-1); b.sharp=false; rescaleSpeedToTarget(a); rescaleSpeedToTarget(b); updateUI(); sounds.hit(); kbFactor=KNOCKBACK_SAW; triggerShake(); }
-        lastHitTime=now;
+        if(!a.removed && !b.removed){
+          if(a.sharp && !b.sharp){ b.hp=Math.max(0,b.hp-1); a.sharp=false; rescaleSpeedToTarget(b); rescaleSpeedToTarget(a); audioEvents.push({t:state.t, type:'hit'}); kb=KNOCKBACK_SAW; }
+          else if(b.sharp && !a.sharp){ a.hp=Math.max(0,a.hp-1); b.sharp=false; rescaleSpeedToTarget(a); rescaleSpeedToTarget(b); audioEvents.push({t:state.t, type:'hit'}); kb=KNOCKBACK_SAW; }
+        }
+        state.lastHitTime = now;
       }
-      resolveElastic(balls[0],balls[1],kbFactor);
+      resolveElastic(balls[0],balls[1],kb);
     }
 
-    if(!winner && (balls[0].hp<=0 || balls[1].hp<=0)){
-      const loser = balls[0].hp<=0 ? balls[0] : balls[1];
+    // winner + obliteration
+    if(!state.winner && ((balls[0].hp<=0 && !balls[0].removed) || (balls[1].hp<=0 && !balls[1].removed))){
+      const loser = (balls[0].hp<=0 && !balls[0].removed) ? balls[0] : balls[1];
       const win = loser===balls[0] ? balls[1] : balls[0];
-      winner = win.name; running=false;
-      spawnFirework(loser.x,loser.y, winner==='A' ? '#9ef0ff' : '#ff7ad9');
-      overlay.style.display='grid'; winnerText.textContent=`Ball ${winner} wins!`;
-      setTimeout(stopRecording, 600);
+      state.winner = win.name;
+      spawnObliteration(loser.x, loser.y, '#ffffff', win===balls[0] ? '#9ef0ff' : '#ff7ad9');
+      audioEvents.push({t:state.t, type:'boom'});
+      loser.removed = true;
     }
 
-    // draw arena
-    ctx.clearRect(0,0,W,H);
+    updateFX(dt);
+  }
+
+  // Compose export frame (title + side-by-side bars + big arena + winner caption when done)
+  function composeExportFrame(nameA, nameB){
+    // BG
+    ex.clearRect(0,0,EXPORT_W,EXPORT_H);
+    const bg=ex.createLinearGradient(0,0,0,EXPORT_H); bg.addColorStop(0,'#0f1020'); bg.addColorStop(1,'#1a1d36'); ex.fillStyle=bg; ex.fillRect(0,0,EXPORT_W,EXPORT_H);
+    if (fx.screenFlash>0){ const a=Math.min(0.75, fx.screenFlash*1.8); ex.fillStyle=`rgba(255,255,255,${a})`; ex.fillRect(0,0,EXPORT_W,EXPORT_H); }
+
+    // title
+    drawFunkyTitle(TITLE_H/2);
+    ex.strokeStyle='#ffffff22'; ex.lineWidth=2; ex.beginPath(); ex.moveTo(MARGIN,TITLE_H); ex.lineTo(EXPORT_W-MARGIN,TITLE_H); ex.stroke();
+
+    // bars row
+    const fracA=(state.balls[0].hp||0)/MAX_HP, fracB=(state.balls[1].hp||0)/MAX_HP;
+    drawBarsRow(TITLE_H+52, nameA, nameB, fracA, fracB, state.balls[0].sharp && !state.balls[0].removed, state.balls[1].sharp && !state.balls[1].removed);
+
+    // arena
+    const availTop = TITLE_H + 52 + 30 + 18;
+    const availH = EXPORT_H - availTop - MARGIN;
+    const availW = EXPORT_W - MARGIN*2;
+    const srcW=gameCanvas.width, srcH=gameCanvas.height, srcAspect=srcW/srcH, dstAspect=availW/availH;
+    let dw=availW, dh=availH; if(srcAspect>dstAspect) dh=dw/srcAspect; else dw=dh*srcAspect;
+    const dx=(EXPORT_W-dw)/2, dy=availTop + (availH-dh)/2;
+    ex.drawImage(gameCanvas, 0,0,srcW,srcH, dx, dy, dw, dh);
+
+    // shockwaves on export
+    for(let s of fx.shockwaves){
+      const t = Math.max(0,1 - s.age/s.life);
+      ex.strokeStyle = `rgba(255,255,255,${0.35*t})`;
+      ex.lineWidth = 6*t;
+      ex.beginPath();
+      ex.arc(dx + (s.x / srcW)*dw, dy + (s.y / srcH)*dh, s.r * (dw/srcW), 0, Math.PI*2);
+      ex.stroke();
+    }
+
+    // Winner caption (if decided)
+    if(state.winner){
+      const winnerName = state.winner;
+      ex.save();
+      ex.font = '900 60px system-ui, sans-serif';
+      ex.textAlign='center'; ex.textBaseline='middle';
+      ex.shadowColor='#000'; ex.shadowBlur=24; ex.fillStyle='#ffffff';
+      ex.fillText(`${winnerName} WINS!`, EXPORT_W/2, dy + dh*0.12);
+      ex.restore();
+    }
+  }
+
+  // Draw one game frame
+  function drawGameFrame(){
+    g.clearRect(0,0,gameCanvas.width,gameCanvas.height);
     drawGrid();
-    if(items.heart) drawItem(items.heart.x, items.heart.y, 'heart');
-    if(items.saw)   drawItem(items.saw.x,   items.saw.y,   'saw');
-    drawBall(balls[0]); drawBall(balls[1]);
-    updateParticles(dt); drawParticles();
-
-    // compose export
-    renderExportFrame();
-
-    requestAnimationFrame(loop);
+    const it=state.items;
+    if(it.heart) drawItem(it.heart.x, it.heart.y, 'heart');
+    if(it.saw)   drawItem(it.saw.x,   it.saw.y,   'saw');
+    drawBall(state.balls[0]); drawBall(state.balls[1]);
+    drawParticles();
   }
 
-  // ======= Controls =======
-  function startRound(){
-    ensureAudio();
-    if(!running && !winner){
-      running=true; last=0;
-      spawnSawNow();               // immediate saw
-      scheduleItem('saw'); scheduleItem('heart');
-      startRecording();
+  // Offline audio render from events
+  async function renderAudioBuffer(durationSec){
+    const sr=48000;
+    const actx=new OfflineAudioContext(2, Math.ceil(durationSec*sr), sr);
+    // little helper
+    const tone = (t0,dur,freq,type='sine',gain=0.07, sweepTo=null) => {
+      const o=actx.createOscillator(); o.type=type; o.frequency.value=freq; if(sweepTo) o.frequency.linearRampToValueAtTime(sweepTo, t0+dur);
+      const g=actx.createGain(); g.gain.setValueAtTime(gain, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+dur);
+    };
+    const noise = (t0,dur,gain=0.15) => {
+      const nSamps=Math.floor(sr*dur), buf=actx.createBuffer(1,nSamps,sr), data=buf.getChannelData(0);
+      for(let i=0;i<nSamps;i++) data[i]=(Math.random()*2-1)*(1 - i/nSamps);
+      const src=actx.createBufferSource(); src.buffer=buf;
+      const g=actx.createGain(); g.gain.setValueAtTime(gain, t0); g.gain.linearRampToValueAtTime(0.0, t0+dur);
+      src.connect(g).connect(actx.destination); src.start(t0);
+    };
+
+    for(const ev of audioEvents){
+      const t=clamp(ev.t,0,durationSec-0.01);
+      if(ev.type==='saw'){ tone(t,0.08,220,'square',0.06,800); tone(t+0.06,0.11,360,'sawtooth',0.05,1000); }
+      if(ev.type==='heart'){ tone(t,0.07,523,'triangle',0.06); tone(t+0.09,0.08,659,'triangle',0.06); tone(t+0.18,0.10,784,'triangle',0.07); }
+      if(ev.type==='hit'){ tone(t,0.06,120,'sine',0.09); }
+      if(ev.type==='boom'){ tone(t,0.65,320,'sine',0.05,1250); noise(t+0.14,0.32,0.16); }
     }
+    return actx.startRendering();
   }
-  startBtn.addEventListener('click', startRound);
-  resetBtn.addEventListener('click', ()=>{
-    ensureAudio();
-    stopRecording();
-    resetGame();
-    running=true; last=0;
-    spawnSawNow();
-    scheduleItem('saw'); scheduleItem('heart');
-    startRecording();
-  });
 
-  // boot
-  requestAnimationFrame(loop);
-  resetGame();
+  // Main render with audio and fast mux
+  async function renderInstantWithAudio(){
+    const FPS = clamp(+fpsInput.value || 30, 20, 60);
+    const muxRate = clamp(+muxRateInput.value || 4, 1, 8);
+    const nameA = (nameAInput.value||'Ball A').trim() || 'Ball A';
+    const nameB = (nameBInput.value||'Ball B').trim() || 'Ball B';
+
+    // Prep
+    resetFight(nameA, nameB);
+    renderBtn.disabled = true; progRow.style.display='flex'; progFill.style.width='0%'; progText.textContent='Simulating…';
+
+    // Simulate & frame out until winner + short random outro
+    const frames = [];
+    const dt = 1 / FPS;
+    let outroLeft = 0;
+    while(true){
+      // step sim
+      stepPhysics(dt);
+      // draw layers
+      drawGameFrame();
+      composeExportFrame(nameA, nameB);
+      // capture frame as WebP (VP8) — quality 0.9
+      const durl = exportCanvas.toDataURL('image/webp',0.9);
+      const base = durl.split(',')[1];
+      frames.push({ data: atob(base), time: frames.length * (1000/FPS) / 1000.0, w: EXPORT_W, h: EXPORT_H });
+
+      // winner logic for organic duration
+      if(state.winner){
+        if(outroLeft === 0) outroLeft = rand(0.8, 1.6); // seconds
+        else {
+          outroLeft -= dt;
+          if(outroLeft <= 0) break;
+        }
+      }
+
+      // progress tick
+      if (frames.length % Math.max(1, Math.floor(FPS/2)) === 0){
+        progText.textContent = `Simulating… ${frames.length}f`;
+        await new Promise(r=>setTimeout(r,0)); // yield to UI
+      }
+      // safety cap (in case no one ever wins; extremely unlikely)
+      if (frames.length > FPS*30) break; // max ~30s
+    }
+
+    // Encode silent video
+    progText.textContent='Encoding video…';
+    await new Promise(r=>setTimeout(r,0));
+    const silentBlob = Whammy.fromImageArray(frames, FPS);
+
+    // Render audio buffer (duration = sim length)
+    const durationSec = frames.length / FPS;
+    progText.textContent='Rendering audio…';
+    const audioBuffer = await renderAudioBuffer(durationSec);
+
+    // Fast mux: play silent video at N× speed + play audio buffer at same rate, record combined
+    progText.textContent='Muxing (fast)…';
+    const finalBlob = await fastMux(silentBlob, audioBuffer, muxRate);
+
+    // Download
+    const title = (titleInput.value||'Battle Balls').trim().replace(/[^a-z0-9\-]+/gi,'_').slice(0,60) || 'Battle_Balls';
+    const url = URL.createObjectURL(finalBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${title}_${new Date().toISOString().replace(/[:.]/g,'-')}.webm`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+
+    // Done
+    progFill.style.width='100%'; progText.textContent='Done';
+    setTimeout(()=>{ progRow.style.display='none'; }, 800);
+    renderBtn.disabled = false;
+  }
+
+  async function fastMux(silentVideoBlob, audioBuffer, rate){
+    // Create hidden video
+    const video = document.createElement('video');
+    video.muted = true; video.playsInline = true; video.src = URL.createObjectURL(silentVideoBlob);
+    video.style.position='fixed'; video.style.left='-99999px'; video.style.top='-99999px';
+    document.body.appendChild(video);
+    await video.play().catch(()=>{}); // prime
+    video.pause();
+    video.playbackRate = rate;
+
+    // Capture video stream
+    const vStream = video.captureStream ? video.captureStream() : video.mozCaptureStream();
+    const vTrack = vStream.getVideoTracks()[0];
+
+    // Build live audio from the offline buffer
+    const AC = new (window.AudioContext || window.webkitAudioContext)();
+    const dest = AC.createMediaStreamDestination();
+    const src = AC.createBufferSource();
+    src.buffer = audioBuffer;
+    src.playbackRate.value = rate;
+    src.connect(dest);
+    // (Optional) don’t route to speakers to keep it quiet while muxing
+    // src.connect(AC.destination); // uncomment if you want to hear it
+
+    const combined = new MediaStream();
+    if (vTrack) combined.addTrack(vTrack);
+    const aTrack = dest.stream.getAudioTracks()[0]; if (aTrack) combined.addTrack(aTrack);
+
+    // Recorder
+    const mime = getBestMime();
+    const rec = new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+    const chunks=[];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const done = new Promise(res=> rec.onstop = () => res(new Blob(chunks, {type: rec.mimeType || 'video/webm'})));
+
+    // start both
+    rec.start();
+    const tStart = AC.currentTime + 0.05;
+    src.start(tStart);
+    await video.play(); // starts immediately at the set playbackRate
+
+    await new Promise(res=> video.onended = res);
+    rec.stop();
+    src.stop();
+    AC.close();
+    video.remove();
+    return await done;
+  }
+
+  function getBestMime(){
+    const order = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    for (const t of order){ if (MediaRecorder.isTypeSupported(t)) return t; }
+    return '';
+  }
+
+  document.getElementById('renderBtn').addEventListener('click', renderInstantWithAudio);
+
 })();
 </script>
 </body>

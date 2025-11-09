@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mysterious Room — Album Promo</title>
+  <style>
+    /* Page reset */
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    /* Overlay UI (optional hint, can be removed) */
+    .hint {
+      position: fixed; inset: auto 16px 16px 16px;
+      color: #b7c0ff; letter-spacing: 0.04em; user-select: none;
+      font-size: 12px; opacity: .65; text-align: center;
+      mix-blend-mode: screen;
+    }
+
+    /* Canvas fills the screen */
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  
+
+  <!-- Three.js via CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // ======= Basic setup =======
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Pixel ratio will be refined by updateLayoutProfile() for mobile vs desktop
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 1);
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0d1220, 18, 40); // subtle atmospheric depth
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 7.5); // We stand right in front of the “screen wall”
+
+    // ======= Texture / Material =======
+    const textureURL = "/reilly-album-cvr.jpeg"; // if this 404s locally, try "./reilly-album-cvr.jpeg" instead // <-- replace with your album art image path or URL
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin("anonymous");
+
+    const tex = loader.load(textureURL, () => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      applyTextureZoom(tex, 1.0);
+    }, undefined, (err) => {
+      console.error("Texture load failed:", textureURL, err);
+    });
+
+    // Single material used for all inner faces so each wall shows the full image.
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: tex,
+      side: THREE.BackSide, // Render the INSIDE faces of the box (we are inside the room)
+      roughness: 0.85,
+      metalness: 0.0,
+      envMapIntensity: 0.15
+    });
+
+    // ======= Texture zoom helper =======
+    function applyTextureZoom(texture, zoom = 1.0) {
+      // zoom > 1.0 makes the image appear bigger by cropping in and stretching to the face extents
+      const r = 1 / Math.max(zoom, 0.0001);
+      texture.center.set(0.5, 0.5);
+      texture.repeat.set(r, r);
+      texture.offset.set((1 - r) * 0.5, (1 - r) * 0.5);
+      texture.needsUpdate = true;
+    }
+
+    // expose a setter for live tweaking via console
+    window.setImageZoom = (z) => applyTextureZoom(tex, z);
+
+    // ======= Room geometry =======
+    // Treat the screen as one of the walls: we align the box so that the front face coincides with the camera plane.
+    // A slightly larger room improves perspective and keeps all other faces visible.
+    const ROOM_W = 12, ROOM_H = 7.2, ROOM_D = 10; // cinematic proportions
+    const roomGeo = new THREE.BoxGeometry(ROOM_W, ROOM_H, ROOM_D, 1, 1, 1);
+
+    // Remap UVs so ONE image is stretched across ALL interior surfaces (each face shows a different portion)
+    // Atlas layout (normalized UV):
+    //   columns = 4, rows = 3, tile = 1/4 x 1/3
+    //       [   ][Top][   ][   ]
+    //       [Left][Front][Right][Back]
+    //       [   ][Bottom][   ][   ]
+    // Face order in BoxGeometry groups: +X, -X, +Y, -Y, +Z, -Z
+    (function unwrapRoomUVs(geo){
+      const tileW = 1/4, tileH = 1/3;
+      const regions = {
+        px: {u0: 2*tileW, v0: 1*tileH}, // Right
+        nx: {u0: 0*tileW, v0: 1*tileH}, // Left
+        py: {u0: 1*tileW, v0: 2*tileH}, // Top
+        ny: {u0: 1*tileW, v0: 0*tileH}, // Bottom
+        pz: {u0: 1*tileW, v0: 1*tileH}, // Front
+        nz: {u0: 3*tileW, v0: 1*tileH}, // Back
+      };
+      const setFaceUV = (arr, offset, u0, v0, u1, v1, flipH=false, flipV=false) => {
+        let A = [u0, v0], B = [u1, v0], C = [u1, v1], D = [u0, v1];
+        if (flipH) { [A,B,C,D] = [[B[0],B[1]],[A[0],A[1]],[D[0],D[1]],[C[0],C[1]]]; }
+        if (flipV) { [A,B,C,D] = [[D[0],D[1]],[C[0],C[1]],[B[0],B[1]],[A[0],A[1]]]; }
+        const uvs = [A[0],A[1],  B[0],B[1],  D[0],D[1],  B[0],B[1],  C[0],C[1],  D[0],D[1]];
+        for (let i=0;i<uvs.length;i++) arr[offset+i]=uvs[i];
+      };
+      const uv = geo.getAttribute('uv');
+      const arr = uv.array;
+      const faces = [regions.px, regions.nx, regions.py, regions.ny, regions.pz, regions.nz];
+      const stride = 6 * 2; // 6 verts per face, 2 floats per UV
+      for (let f=0; f<6; f++) {
+        const r = faces[f];
+        const u0 = r.u0, v0 = r.v0, u1 = r.u0 + tileW, v1 = r.v0 + tileH;
+        const off = f * stride;
+        const flipH = true, flipV = false; // BackSide -> flip horizontally for readability
+        setFaceUV(arr, off, u0, v0, u1, v1, flipH, flipV);
+      }
+      uv.needsUpdate = true;
+    })(roomGeo);
+
+    const room = new THREE.Mesh(roomGeo, wallMat);
+    room.position.set(0, 0, -ROOM_D * 0.5); // front face sits near z≈0, camera is just outside, looking in
+    scene.add(room);
+
+    // ======= Contrasting borders =======
+    // Add edges to emphasize wall boundaries and give a graphic, high-contrast look.
+    const edgeGeo = new THREE.EdgesGeometry(roomGeo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xEAF0FF, transparent: true, opacity: 0.8 });
+    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+    edges.position.copy(room.position);
+    scene.add(edges);
+
+    // ======= Lighting =======
+    scene.add(new THREE.AmbientLight(0xbbc6ff, 0.55));
+    const rim = new THREE.DirectionalLight(0xeff5ff, 0.85);
+    rim.position.set(-1.5, 2.5, 1.5);
+    scene.add(rim);
+
+    // ======= Device/layout profile =======
+    let IS_PORTRAIT = window.innerHeight >= window.innerWidth;
+    let IS_COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+    function updateLayoutProfile(){
+      IS_PORTRAIT = window.innerHeight >= window.innerWidth;
+      IS_COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const prCap = IS_COARSE ? 1.5 : 1.8; // lower cap on phones
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
+      updateLayoutProfile();
+      applyVaseScale && applyVaseScale();
+    }
+
+    // ======= Load & set up the spinning conal vase =======
+    const VASE_URL = "./spintop.glb"; // recommend .glb (glTF 2.0). Keep model reasonably low-poly for mobile
+    const gltfLoader = new GLTFLoader();
+    const vaseGroup = new THREE.Group();
+    scene.add(vaseGroup);
+    let vase = null, vaseReady = false;
+
+    function placeOnFloor(obj){
+      obj.updateMatrixWorld(true);
+      const bbox = new THREE.Box3().setFromObject(obj);
+      const floorY = -ROOM_H * 0.5 + 0.02; // slight lift to avoid z-fighting
+      const dy = floorY - bbox.min.y;
+      obj.position.y += dy;
+    }
+
+    function autoScaleToRoom(obj){
+      const bbox = new THREE.Box3().setFromObject(obj);
+      const size = new THREE.Vector3(); bbox.getSize(size);
+      const maxTarget = Math.min(ROOM_H * 0.35, ROOM_W * 0.35);
+      const s = maxTarget / Math.max(size.x, size.y, size.z);
+      return s; // return base scale only
+    }
+
+    gltfLoader.load(
+      VASE_URL,
+      (gltf)=>{
+        vase = gltf.scene;
+        vase.traverse(n=>{ if(n.isMesh){ n.material.side = THREE.FrontSide; n.castShadow=false; n.receiveShadow=false; }});
+        vaseBaseScale = autoScaleToRoom(vase);
+        applyVaseScale();
+        vaseGroup.add(vase);
+        placeOnFloor(vaseGroup);
+        vaseGroup.position.z = room.position.z + ROOM_D * 0.10;
+        vaseReady = true;
+      },
+      undefined,
+      (err)=>{ console.error("Failed to load vase GLB:", err); }
+    ); 
+
+    // Scale management for mobile portrait emphasis
+    let vaseBaseScale = 1.0; // computed from autoScaleToRoom
+    let vaseScaleMult = 1.0; // boosted on phones in portrait
+
+    function applyVaseScale(){
+      if(!vase) return;
+      const mult = (IS_COARSE && IS_PORTRAIT) ? 1.6 : 1.0; // larger on phones portrait
+      vaseScaleMult = mult;
+      vase.scale.setScalar(vaseBaseScale * vaseScaleMult);
+    }
+
+    // Spin physics-like state
+    let angVel = 0.0;             // angular velocity around Y (rad/s)
+    const DAMPING = 0.992;        // exponential decay per frame
+    const MIN_SPIN = 0.18;        // asymptotic slow spin floor
+    let tilt = 0.0;               // radians (x-axis tilt)
+    const TILT_FINAL = THREE.MathUtils.degToRad(7); // final lean angle like a top
+    let wobblePhase = 0.0;
+
+    // Swipe/drag impulses
+    let dragging = false; let lastX = 0; let lastT = 0;
+    const IMPULSE_SCALE = 0.0035; // tune impulse from px/ms to rad/s
+
+    function getPointerX(e){
+      if (e.touches && e.touches.length) return e.touches[0].clientX;
+      if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
+      if (typeof e.clientX === 'number') return e.clientX;
+      return 0;
+    }
+
+    function onPointerDown(e){
+      dragging = true;
+      lastX = getPointerX(e);
+      lastT = performance.now();
+    }
+    function onPointerMoveSpin(e){
+      if(!dragging) return;
+      const now = performance.now();
+      const x = getPointerX(e);
+      const dx = x - lastX;
+      const dt = Math.max(1, now - lastT);
+      angVel += (dx / dt) * IMPULSE_SCALE;
+      lastX = x; lastT = now;
+    }
+    function onPointerUp(){ dragging = false; }
+
+    window.addEventListener('mousedown', onPointerDown, {passive:true});
+    window.addEventListener('mousemove', onPointerMoveSpin, {passive:true});
+    window.addEventListener('mouseup', onPointerUp, {passive:true});
+    window.addEventListener('touchstart', onPointerDown, {passive:true});
+    window.addEventListener('touchmove', onPointerMoveSpin, {passive:true});
+    window.addEventListener('touchend', onPointerUp, {passive:true});
+
+    function updateVase(dt){
+      if(!vaseReady) return;
+      // Decay and clamp to a slow base spin floor
+      angVel *= Math.pow(DAMPING, (dt*60));
+      const signedFloor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
+      if(Math.abs(angVel) < Math.abs(signedFloor)) angVel = signedFloor;
+
+      // Integrate rotation
+      vaseGroup.rotation.y += (angVel) * dt;
+
+      // Wobble + tilt dynamics: faster spin = smaller wobble; as it slows, it leans to TILT_FINAL
+      const targetTilt = TILT_FINAL; // could be speed-dependent if you want
+      tilt += (targetTilt - tilt) * Math.min(1, dt*2.5);
+
+      const wobbleFreq = Math.max(0.8, Math.abs(angVel)*2.2);
+      wobblePhase += wobbleFreq * dt;
+      const wobbleAmp = THREE.MathUtils.clamp(0.12 - Math.min(0.1, Math.abs(angVel)*0.08), 0.02, 0.08);
+
+      vaseGroup.rotation.x = tilt + Math.sin(wobblePhase) * wobbleAmp;
+      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * wobbleAmp * 0.6;
+    }
+
+    const floorGlow = new THREE.PointLight(0x9ec3ff, 0.55, 22, 2.0);
+    floorGlow.position.set(0, -ROOM_H * 0.45, -ROOM_D * 0.28);
+    scene.add(floorGlow);
+
+    // ======= Subtle parallax tilt driven by pointer =======
+    let targetRX = 0, targetRY = 0; // target rotations (radians)
+    const MAX_TILT = 0.085; // ~5°
+
+    function onPointerMove(e) {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;   // [-1, 1]
+      const y = (e.clientY / window.innerHeight) * 2 - 1;  // [-1, 1]
+      // Invert Y for natural feel
+      targetRY = x * MAX_TILT;       // yaw left/right
+      targetRX = -y * MAX_TILT * 0.6; // pitch up/down (slightly less than yaw)
+    }
+
+    window.addEventListener('pointermove', onPointerMove);
+    // (room tilt handler above is separate from spin swipe handlers)
+
+    // Gentle auto-drift when idle for extra mystique
+    let t = 0;
+
+    // ======= Resize handling =======
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      updateLayoutProfile();
+    }
+    window.addEventListener('resize', onResize);
+
+    // ======= Camera FOV cover (no background gaps) =======
+    function updateCameraCover() {
+      const camZ = camera.position.z;
+      // Opening plane is the "screen wall" (front face) at: room.position.z + ROOM_D/2
+      const openingZ = room.position.z + (ROOM_D * 0.1);
+      const distance = Math.max(0.0001, camZ - openingZ);
+      const aspect = window.innerWidth / window.innerHeight;
+      const halfH = ROOM_H * 0.5;
+      const halfW = ROOM_W * 0.5;
+      const requiredHalfHeight = Math.max(halfH, halfW / aspect);
+      const vFov = 2 * Math.atan(requiredHalfHeight / distance) * 180 / Math.PI;
+      camera.fov = vFov * 1.06; // overscan so no background is visible
+      camera.updateProjectionMatrix();
+    }
+
+    updateCameraCover();
+
+    // ======= Render loop =======
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.033);
+      t += dt;
+
+      // Smoothly interpolate toward target rotation
+      room.rotation.x += (targetRX - room.rotation.x) * 0.06;
+      room.rotation.y += (targetRY - room.rotation.y) * 0.06;
+      edges.rotation.copy(room.rotation);
+
+      // Idle drift if pointer not moving much
+      if (Math.abs(targetRX) < 0.0005 && Math.abs(targetRY) < 0.0005) {
+        const idleRx = Math.sin(t * 0.2) * 0.012;
+        const idleRy = Math.cos(t * 0.18) * 0.015;
+        room.rotation.x += (idleRx - room.rotation.x) * 0.02;
+        room.rotation.y += (idleRy - room.rotation.y) * 0.02;
+        edges.rotation.copy(room.rotation);
+      }
+
+      updateVase(dt);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // ======= Helpful dev toggles (open console) =======
+    // window.__room = room; window.__scene = scene; window.__camera = camera;
+  </script>
+</body>
+</html>
