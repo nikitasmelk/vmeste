@@ -6,7 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
   />
-  <title>Mysterious Room — Album Promo (popup on spin)</title>
+  <title>Mysterious Room — Album Promo (popup + vase color/metal)</title>
   <style>
     /* Full viewport & lock scroll */
     html, body { height: 100dvh; width: 100vw; }
@@ -17,7 +17,7 @@
     }
     canvas { display: block; width: 100vw !important; height: 100dvh !important; }
 
-    /* Control panel (unchanged except toggle) */
+    /* Control panel */
     .panel {
       position: fixed; top: 12px; left: 12px; z-index: 20;
       width: min(94vw, 420px);
@@ -79,7 +79,7 @@
     .popup-wrap {
       position: fixed; inset: 0; z-index: 30; display: none;
       align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.35); /* subtle dim */
+      background: rgba(0,0,0,0.35);
       backdrop-filter: blur(2px);
     }
     .popup {
@@ -88,7 +88,6 @@
       max-width: 92vw;
       padding: 16px 14px 14px;
       border-radius: 16px;
-      /* blocky / pixel grid frame */
       background:
         repeating-linear-gradient(0deg, #1a2350 0 2px, #0e1638 2px 4px),
         linear-gradient(180deg, #122058cc, #0a1234cc);
@@ -123,7 +122,6 @@
     .btn-tile:active { transform: translateY(1px) scale(0.995); }
     .btn-label { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
 
-    /* Stylized logos (SVG) get slight pixel vibe via drop shadows */
     .logo { width: 32px; height: 32px; filter: drop-shadow(0 0 8px #88a7ff55); }
 
     .popup-close {
@@ -137,7 +135,6 @@
     }
     .popup-close:active { transform: translateY(1px) scale(0.98); }
 
-    /* Phone-friendly sizing */
     @media (max-width: 600px) {
       .popup { width: min(94vw, 440px); border-width: 2px; }
       .popup-buttons { gap: 8px; }
@@ -148,7 +145,7 @@
 </head>
 <body>
 
-  <!-- Controls panel (same structure as your last working build) -->
+  <!-- Controls -->
   <div class="panel" id="panel">
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="vaseTab">vase</button>
@@ -258,6 +255,26 @@
         <div class="row"><label>Clearcoat</label><input id="glassCCNum" type="number" step="0.01"><input id="glassCC" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>CC Roughness</label><input id="glassCCRNum" type="number" step="0.01"><input id="glassCCR" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Env Intensity</label><input id="glassEnvNum" type="number" step="0.01"><input id="glassEnv" type="range" min="0" max="4" step="0.01"></div>
+
+        <!-- NEW: metalness + colors -->
+        <div class="row"><label>Metalness</label>
+          <input id="glassMetalNum" type="number" step="0.01">
+          <input id="glassMetal" type="range" min="0" max="1" step="0.01">
+        </div>
+
+        <h3>Base Color (RGB 0..1)</h3>
+        <div class="inline swatch">
+          <input id="glassColR" type="number" min="0" max="1" step="0.01">
+          <input id="glassColG" type="number" min="0" max="1" step="0.01">
+          <input id="glassColB" type="number" min="0" max="1" step="0.01">
+        </div>
+
+        <h3>Transmission Tint (RGB 0..1)</h3>
+        <div class="inline swatch">
+          <input id="glassAttR" type="number" min="0" max="1" step="0.01">
+          <input id="glassAttG" type="number" min="0" max="1" step="0.01">
+          <input id="glassAttB" type="number" min="0" max="1" step="0.01">
+        </div>
       </div>
     </div>
   </div>
@@ -324,7 +341,13 @@
       spin:{ damping:0.973, minSpin:0.10, swipeImpulse:0.0085 },
       post:{ pixelSize:6, ditherStrength:0.13 },
       water:{ amp:1.2, freq:18.0, speed:2.2, falloff:1.2, alpha:0.65, radius:4.0, pixel:4, yOffset:0.0, tint:[0.45, 0.75, 1.0] },
-      glass:{ transmission:1.0, thickness:1.4, ior:1.52, roughness:0.05, clearcoat:1.0, ccRough:0.05, envIntensity:1.9 }
+      glass:{
+        transmission:1.0, thickness:1.4, ior:1.52, roughness:0.05,
+        clearcoat:1.0, ccRough:0.05, envIntensity:1.9,
+        metalness:0.0,
+        color:[1.00, 1.00, 1.00],
+        attnColor:[0.66, 0.79, 1.00]
+      }
     };
     const phoneDefaults = {
       room:{ width:9.7, height:11.8, depth:20.5, positionZ:-5.1, portraitOverscan:1.49, imageZoom:1.03, borderOpacity:0.02, wallEmissive:0.35, wallDispAmp:0.02, wallDispSpeed:2.2 },
@@ -333,7 +356,13 @@
       spin:{ damping:0.975, minSpin:0.10, swipeImpulse:0.0100 },
       post:{ pixelSize:5, ditherStrength:0.17 },
       water:{ amp:1.4, freq:20.0, speed:2.6, falloff:1.1, alpha:0.70, radius:4.5, pixel:5, yOffset:0.0, tint:[0.55, 0.85, 1.0] },
-      glass:{ transmission:1.0, thickness:1.6, ior:1.50, roughness:0.06, clearcoat:1.0, ccRough:0.06, envIntensity:2.2 }
+      glass:{
+        transmission:1.0, thickness:1.6, ior:1.50, roughness:0.06,
+        clearcoat:1.0, ccRough:0.06, envIntensity:2.2,
+        metalness:0.04,
+        color:[1.00, 1.00, 1.00],
+        attnColor:[0.70, 0.88, 1.00]
+      }
     };
     const CONFIG = isPhone() ? structuredClone(phoneDefaults) : structuredClone(desktopDefaults);
 
@@ -467,32 +496,25 @@
     let vase=null, vaseReady=false, vaseBaseScale=1, userScaleMult=CONFIG.vase.userScaleMult, userTallY=CONFIG.vase.userTallY;
     const glassMaterials = [];
 
-    const VASE_URL = "./spintop.glb";
+    const VASE_URL = "./vase2.glb";
     const gltf = new GLTFLoader();
     gltf.load(VASE_URL, g=>{
       vase = g.scene;
+
       const baseGlass = {
-        color: 0xffffff,
-        metalness: 0.0,
-        roughness: 0.05,
-        transmission: 1.0,
-        thickness: 1.4,
-        ior: 1.52,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.05,
-        attenuationColor: new THREE.Color(0xa8c9ff),
+        color: new THREE.Color().setRGB(...CONFIG.glass.color),
+        metalness: CONFIG.glass.metalness,
+        roughness: CONFIG.glass.roughness,
+        transmission: CONFIG.glass.transmission,
+        thickness: CONFIG.glass.thickness,
+        ior: CONFIG.glass.ior,
+        clearcoat: CONFIG.glass.clearcoat,
+        clearcoatRoughness: CONFIG.glass.ccRough,
+        attenuationColor: new THREE.Color().setRGB(...CONFIG.glass.attnColor),
         attenuationDistance: 2.0,
         envMap: cubeRT.texture,
-        envMapIntensity: 2.0
+        envMapIntensity: CONFIG.glass.envIntensity
       };
-      // override with CONFIG.glass
-      baseGlass.roughness = CONFIG.glass.roughness;
-      baseGlass.transmission = CONFIG.glass.transmission;
-      baseGlass.thickness = CONFIG.glass.thickness;
-      baseGlass.ior = CONFIG.glass.ior;
-      baseGlass.clearcoat = CONFIG.glass.clearcoat;
-      baseGlass.clearcoatRoughness = CONFIG.glass.ccRough;
-      baseGlass.envMapIntensity = CONFIG.glass.envIntensity;
 
       vase.traverse(n=>{
         if(n.isMesh){
@@ -501,6 +523,7 @@
           glassMaterials.push(m);
         }
       });
+
       vaseBaseScale = autoScaleToRoom(vase);
       applyVaseScale();
       vaseGroup.add(vase);
@@ -509,6 +532,23 @@
       vaseReady = true;
       syncVasePositionInputs();
     });
+
+    function applyGlassConfigToMaterials(){
+      for (const m of glassMaterials){
+        m.transmission       = CONFIG.glass.transmission;
+        m.thickness          = CONFIG.glass.thickness;
+        m.ior                = CONFIG.glass.ior;
+        m.roughness          = CONFIG.glass.roughness;
+        m.clearcoat          = CONFIG.glass.clearcoat;
+        m.clearcoatRoughness = CONFIG.glass.ccRough;
+        m.envMapIntensity    = CONFIG.glass.envIntensity;
+        m.metalness          = CONFIG.glass.metalness;
+        m.color.setRGB(...CONFIG.glass.color);
+        m.attenuationColor.setRGB(...CONFIG.glass.attnColor);
+        m.envMap             = cubeRT.texture;
+        m.needsUpdate        = true;
+      }
+    }
 
     function roomFloorY(){ return -ROOM_H * 0.5 + 0.02; }
     function placeOnFloor(obj){
@@ -663,7 +703,7 @@
       fsMat.uniforms.resolution.value.set(vw(), vh());
     }
 
-    /* -------------------- Water (spin-coupled) -------------------- */
+    /* -------------------- Water (child of room so it tilts with room) -------------------- */
     const waterUniforms = {
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector3(0, 0, 0) },
@@ -723,21 +763,21 @@
     const waterGeo = new THREE.CircleGeometry(waterRadius, 128);
     const waterMesh = new THREE.Mesh(waterGeo, waterMat);
     waterMesh.rotation.x = -Math.PI/2;
-    waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, room.position.z);
-    waterMesh.renderOrder = 2;
-    scene.add(waterMesh);
+    // parent to room so it tilts with room
+    room.add(waterMesh);
+    function resizeWater(){
+      waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, 0);
+    }
+    resizeWater();
 
     function updateWaterCenterFromVase(){
       if(!vaseReady) return;
       const world = new THREE.Vector3();
       vaseGroup.getWorldPosition(world);
-      waterUniforms.uCenter.value.set(world.x, waterMesh.position.y, world.z);
+      waterUniforms.uCenter.value.set(world.x, waterMesh.getWorldPosition(new THREE.Vector3()).y, world.z);
     }
 
     /* -------------------- resize & layout -------------------- */
-    function resizeWater(){
-      waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, room.position.z);
-    }
     function updateLayout(){
       renderer.setSize(vw(), vh(), false);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 1.8));
@@ -771,13 +811,12 @@
     let popupVisible = false;
     let lastPopupTime = 0;
     const POPUP_COOLDOWN_MS = 3500;
-    const SPIN_POP_THRESHOLD = isPhone() ? 2.2 : 1.8; // tune as desired
+    const SPIN_POP_THRESHOLD = isPhone() ? 2.2 : 1.8;
 
     function showPopup(){
       if (popupVisible) return;
       popupVisible = true;
       popWrap.style.display = 'flex';
-      // next tick for animation
       requestAnimationFrame(()=> popCard.classList.add('show'));
     }
     function hidePopup(){
@@ -848,7 +887,7 @@
     }
     animate();
 
-    /* -------------------- Tabs & UI binding (same pattern as before) -------------------- */
+    /* -------------------- Tabs & UI binding -------------------- */
     const panel = document.getElementById('panel');
     const gear  = document.getElementById('gear');
     gear.onclick = ()=> { panel.style.display = (panel.style.display !== 'none') ? 'none' : 'block'; };
@@ -867,6 +906,7 @@
       num.addEventListener('change', e=>sync(e.target.value));
       range.addEventListener('input', e=>sync(e.target.value));
     }
+    function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
 
     function rebuildRoom(){
       const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
@@ -939,9 +979,8 @@
     bindRange('wPixNum','wPix',()=>CONFIG.water.pixel, v=>{ CONFIG.water.pixel=v|0; waterUniforms.uPixel.value=v|0; });
     bindRange('wYNum','wY',()=>CONFIG.water.yOffset, v=>{
       CONFIG.water.yOffset=v;
-      waterMesh.position.y = -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset;
+      resizeWater();
     });
-    // Tint numbers to uniform
     $('wR').value = CONFIG.water.tint[0];
     $('wG').value = CONFIG.water.tint[1];
     $('wB').value = CONFIG.water.tint[2];
@@ -955,8 +994,49 @@
     bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{ CONFIG.post.pixelSize = v|0; fsMat.uniforms.pixelSize.value = Math.max(1, v|0); });
     bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{ CONFIG.post.ditherStrength = Math.max(0, v); fsMat.uniforms.ditherStrength.value = CONFIG.post.ditherStrength; });
 
-    /* Init control values visible */
-    function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
+    // Vase effects (glass) — existing
+    bindRange('glassTransNum','glassTrans', ()=>CONFIG.glass.transmission, v=>{ CONFIG.glass.transmission=v; applyGlassConfigToMaterials(); });
+    bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness,    v=>{ CONFIG.glass.thickness=v;    applyGlassConfigToMaterials(); });
+    bindRange('glassIorNum','glassIor',     ()=>CONFIG.glass.ior,          v=>{ CONFIG.glass.ior=v;          applyGlassConfigToMaterials(); });
+    bindRange('glassRoughNum','glassRough', ()=>CONFIG.glass.roughness,    v=>{ CONFIG.glass.roughness=v;    applyGlassConfigToMaterials(); });
+    bindRange('glassCCNum','glassCC',       ()=>CONFIG.glass.clearcoat,    v=>{ CONFIG.glass.clearcoat=v;    applyGlassConfigToMaterials(); });
+    bindRange('glassCCRNum','glassCCR',     ()=>CONFIG.glass.ccRough,      v=>{ CONFIG.glass.ccRough=v;      applyGlassConfigToMaterials(); });
+    bindRange('glassEnvNum','glassEnv',     ()=>CONFIG.glass.envIntensity, v=>{ CONFIG.glass.envIntensity=v; applyGlassConfigToMaterials(); });
+
+    // NEW: metalness
+    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness, v=>{
+      CONFIG.glass.metalness = Math.max(0, Math.min(1, v));
+      applyGlassConfigToMaterials();
+    });
+
+    // NEW: colors (RGB 0..1)
+    $('glassColR').value = CONFIG.glass.color[0];
+    $('glassColG').value = CONFIG.glass.color[1];
+    $('glassColB').value = CONFIG.glass.color[2];
+    function setGlassBaseColor(){
+      CONFIG.glass.color[0] = THREE.MathUtils.clamp(+$('glassColR').value, 0, 1);
+      CONFIG.glass.color[1] = THREE.MathUtils.clamp(+$('glassColG').value, 0, 1);
+      CONFIG.glass.color[2] = THREE.MathUtils.clamp(+$('glassColB').value, 0, 1);
+      applyGlassConfigToMaterials();
+    }
+    $('glassColR').addEventListener('change', setGlassBaseColor);
+    $('glassColG').addEventListener('change', setGlassBaseColor);
+    $('glassColB').addEventListener('change', setGlassBaseColor);
+
+    $('glassAttR').value = CONFIG.glass.attnColor[0];
+    $('glassAttG').value = CONFIG.glass.attnColor[1];
+    $('glassAttB').value = CONFIG.glass.attnColor[2];
+    function setGlassAttnColor(){
+      CONFIG.glass.attnColor[0] = THREE.MathUtils.clamp(+$('glassAttR').value, 0, 1);
+      CONFIG.glass.attnColor[1] = THREE.MathUtils.clamp(+$('glassAttG').value, 0, 1);
+      CONFIG.glass.attnColor[2] = THREE.MathUtils.clamp(+$('glassAttB').value, 0, 1);
+      applyGlassConfigToMaterials();
+    }
+    $('glassAttR').addEventListener('change', setGlassAttnColor);
+    $('glassAttG').addEventListener('change', setGlassAttnColor);
+    $('glassAttB').addEventListener('change', setGlassAttnColor);
+
+    /* Init values visible in UI */
     // Vase
     setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
     setVal('vaseY', CONFIG.vase.userTallY); setVal('vaseYNum', CONFIG.vase.userTallY);
@@ -1001,6 +1081,21 @@
     // Global FX
     setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
     setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
+    // Vase FX new fields
+    setVal('glassTrans', CONFIG.glass.transmission); setVal('glassTransNum', CONFIG.glass.transmission);
+    setVal('glassThick', CONFIG.glass.thickness); setVal('glassThickNum', CONFIG.glass.thickness);
+    setVal('glassIor', CONFIG.glass.ior); setVal('glassIorNum', CONFIG.glass.ior);
+    setVal('glassRough', CONFIG.glass.roughness); setVal('glassRoughNum', CONFIG.glass.roughness);
+    setVal('glassCC', CONFIG.glass.clearcoat); setVal('glassCCNum', CONFIG.glass.clearcoat);
+    setVal('glassCCR', CONFIG.glass.ccRough); setVal('glassCCRNum', CONFIG.glass.ccRough);
+    setVal('glassEnv', CONFIG.glass.envIntensity); setVal('glassEnvNum', CONFIG.glass.envIntensity);
+    setVal('glassMetal', CONFIG.glass.metalness); setVal('glassMetalNum', CONFIG.glass.metalness);
+    $('glassColR').value = CONFIG.glass.color[0];
+    $('glassColG').value = CONFIG.glass.color[1];
+    $('glassColB').value = CONFIG.glass.color[2];
+    $('glassAttR').value = CONFIG.glass.attnColor[0];
+    $('glassAttG').value = CONFIG.glass.attnColor[1];
+    $('glassAttB').value = CONFIG.glass.attnColor[2];
 
     // Motion permission hint
     (function initMotionButton(){
