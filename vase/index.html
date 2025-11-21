@@ -6,7 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
   />
-  <title>Mysterious Room — Album Promo (popup + vase color/metal)</title>
+  <title>Mysterious Room — Auto-Fit Room (popup + vase color/metal)</title>
   <style>
     /* Full viewport & lock scroll */
     html, body { height: 100dvh; width: 100vw; }
@@ -52,6 +52,7 @@
       width: 60px; background:#0d1a3a; color:#eaf0ff; border:1px solid #446;
       border-radius:6px; padding:4px 6px; font-size:12px;
     }
+    .hint { opacity:.8; font-size:11px; margin:6px 0 2px; }
     .two { display:flex; gap:8px; margin-top:8px; }
     .two > button {
       flex:1 1 0; padding:8px 10px; border-radius:10px; border:1px solid #6aa2ff33;
@@ -121,7 +122,6 @@
     }
     .btn-tile:active { transform: translateY(1px) scale(0.995); }
     .btn-label { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
-
     .logo { width: 32px; height: 32px; filter: drop-shadow(0 0 8px #88a7ff55); }
 
     .popup-close {
@@ -170,20 +170,22 @@
         <div class="row"><label>Damping</label><input id="dampNum" type="number" step="0.001"><input id="damp" type="range" min="0.90" max="0.999" step="0.001"></div>
         <div class="row"><label>Min Spin</label><input id="minNum" type="number" step="0.01"><input id="min" type="range" min="0.0" max="0.6" step="0.01"></div>
         <div class="row"><label>Swipe Impulse</label><input id="impNum" type="number" step="0.0001"><input id="imp" type="range" min="0.0005" max="0.02" step="0.0001"></div>
+        <div class="two">
+          <button id="printControlsBtn">Print controls</button>
+          <button id="copyControlsBtn">Copy controls</button>
+        </div>
       </div>
 
       <!-- Room size & framing -->
       <div class="tabpage" id="roomTab">
-        <h3>Room Size</h3>
-        <div class="row"><label>Width</label><input id="wNum" type="number" step="0.1"><input id="w" type="range" min="3" max="30" step="0.1"></div>
-        <div class="row"><label>Height</label><input id="hNum" type="number" step="0.1"><input id="h" type="range" min="3" max="24" step="0.1"></div>
+        <h3>Room Size (Auto-fit)</h3>
+        <div class="hint">Width & Height auto-fit to viewport. No outside is ever visible.</div>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
         <h3>Framing</h3>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
-        <div class="row"><label>Portrait Overscan</label><input id="ovNum" type="number" step="0.01"><input id="ov" type="range" min="1.10" max="1.70" step="0.01"></div>
         <div class="two">
-          <button id="fitPortrait">Fit (Portrait)</button>
-          <button id="fitDesktop">Fit (Desktop)</button>
+          <button id="fitPortrait">Refit (Portrait)</button>
+          <button id="fitDesktop">Refit (Desktop)</button>
         </div>
       </div>
 
@@ -255,12 +257,7 @@
         <div class="row"><label>Clearcoat</label><input id="glassCCNum" type="number" step="0.01"><input id="glassCC" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>CC Roughness</label><input id="glassCCRNum" type="number" step="0.01"><input id="glassCCR" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Env Intensity</label><input id="glassEnvNum" type="number" step="0.01"><input id="glassEnv" type="range" min="0" max="4" step="0.01"></div>
-
-        <!-- NEW: metalness + colors -->
-        <div class="row"><label>Metalness</label>
-          <input id="glassMetalNum" type="number" step="0.01">
-          <input id="glassMetal" type="range" min="0" max="1" step="0.01">
-        </div>
+        <div class="row"><label>Metalness</label><input id="glassMetalNum" type="number" step="0.01"><input id="glassMetal" type="range" min="0" max="1" step="0.01"></div>
 
         <h3>Base Color (RGB 0..1)</h3>
         <div class="inline swatch">
@@ -335,7 +332,7 @@
 
     /* -------------------- presets (desktop vs phone) -------------------- */
     const desktopDefaults = {
-      room:{ width:18.3, height:13.3, depth:24.0, positionZ:-4.7, portraitOverscan:1.31, imageZoom:0.90, borderOpacity:0.00, wallEmissive:0.35, wallDispAmp:0.018, wallDispSpeed:3.26 },
+      room:{ width:18.3, height:13.3, depth:24.0, positionZ:-4.7, imageZoom:0.90, borderOpacity:0.00, wallEmissive:0.35, wallDispAmp:0.018, wallDispSpeed:3.26 },
       lights:{ exposure:0.86, ambient:1.91, hemisphere:2.0, rim:1.87, key:1.68, vaseLight:{ intensity:6.0, distance:8.6, decay:1.6, y:0.08 } },
       vase:{ userScaleMult:2.62, userTallY:1.35, z:-8.0, y:-2.2 },
       spin:{ damping:0.973, minSpin:0.10, swipeImpulse:0.0085 },
@@ -350,7 +347,7 @@
       }
     };
     const phoneDefaults = {
-      room:{ width:9.7, height:11.8, depth:20.5, positionZ:-5.1, portraitOverscan:1.49, imageZoom:1.03, borderOpacity:0.02, wallEmissive:0.35, wallDispAmp:0.02, wallDispSpeed:2.2 },
+      room:{ width:9.7, height:11.8, depth:20.5, positionZ:-5.1, imageZoom:1.03, borderOpacity:0.02, wallEmissive:0.35, wallDispAmp:0.02, wallDispSpeed:2.2 },
       lights:{ exposure:2.04, ambient:1.98, hemisphere:1.98, rim:2.55, key:2.21, vaseLight:{ intensity:4.3, distance:17.3, decay:1.6, y:0.08 } },
       vase:{ userScaleMult:1.46, userTallY:2.09, z:-2.1, y:1.3 },
       spin:{ damping:0.975, minSpin:0.10, swipeImpulse:0.0100 },
@@ -442,8 +439,9 @@
       texture.needsUpdate = true;
     }
 
-    /* -------------------- room geometry -------------------- */
+    /* -------------------- room geometry (auto-fit) -------------------- */
     let ROOM_W=CONFIG.room.width, ROOM_H=CONFIG.room.height, ROOM_D=CONFIG.room.depth;
+
     function buildRoomGeometry(w, h, d){
       const geo = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
       const tileW = 1/4, tileH = 1/3;
@@ -474,6 +472,48 @@
     );
     edges.position.copy(room.position);
     scene.add(edges);
+
+    /* -------------------- AUTO-FIT: compute W/H from viewport -------------------- */
+    const BASE_VFOV_DEG = 55;
+    const MAX_TILT = 0.085;              // same as input system
+    const TILT_MARGIN = 1.02 / Math.cos(MAX_TILT); // oversize to hide edges on tilt
+
+    function computeTargetDistance(depth){
+      return THREE.MathUtils.clamp(depth * 0.6, 6.0, 20.0);
+    }
+
+    function rebuildRoom(){
+      const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
+      room.geometry.dispose(); room.geometry=newGeo;
+      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
+      resizeWater();
+    }
+
+    function adjustRoomToViewport(){
+      const aspect = vw()/vh();
+      const vfovRad = THREE.MathUtils.degToRad(BASE_VFOV_DEG);
+
+      const openingZ = room.position.z + ROOM_D * 0.5;
+      const dTarget  = computeTargetDistance(ROOM_D);
+
+      camera.fov = BASE_VFOV_DEG;
+      camera.aspect = aspect;
+      camera.position.set(0, 0, openingZ + dTarget);
+
+      const halfH = Math.tan(vfovRad * 0.5) * dTarget;
+      const targetH = 2 * halfH * TILT_MARGIN;
+      const targetW = targetH * aspect;
+
+      ROOM_H = targetH;
+      ROOM_W = targetW;
+      rebuildRoom();
+
+      const backZ = room.position.z - ROOM_D * 0.5;
+      const margin = Math.max(0.5, Math.min(5, ROOM_D * 0.25));
+      camera.near = Math.max(0.01, (camera.position.z - openingZ) * 0.25);
+      camera.far  = Math.max(50, (camera.position.z - backZ) + margin);
+      camera.updateProjectionMatrix();
+    }
 
     /* -------------------- lights -------------------- */
     const amb = new THREE.AmbientLight(0xffffff, CONFIG.lights.ambient); scene.add(amb);
@@ -605,10 +645,14 @@
 
     /* -------------------- pointer/gyro tilt -------------------- */
     const enableMotionBtn = document.getElementById('enableMotion');
-    let targetRX=0, targetRY=0; const MAX_TILT=0.085;
+    let targetRX=0, targetRY=0;
     let baseBeta=null, baseGamma=null, pointerMoveAttached=false;
 
-    function onPointerMoveDesktop(e){ const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1; targetRY=x*MAX_TILT; targetRX=-y*MAX_TILT*0.6; }
+    function onPointerMoveDesktop(e){
+      const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1;
+      targetRY = x*MAX_TILT;
+      targetRX = -y*MAX_TILT*0.6;
+    }
     function onDeviceOrientation(e){
       if (baseBeta===null) baseBeta=e.beta||0;
       if (baseGamma===null) baseGamma=e.gamma||0;
@@ -625,30 +669,15 @@
         if (needsPerm){
           enableMotionBtn.style.display = 'block';
           enableMotionBtn.onclick = async ()=>{
-            try { const resp=await DeviceOrientationEvent.requestPermission(); if(resp==='granted'){ window.addEventListener('deviceorientation', onDeviceOrientation, true); enableMotionBtn.remove(); } }
-            catch(e){ console.warn(e); }
+            try { const resp=await DeviceOrientationEvent.requestPermission();
+              if(resp==='granted'){ window.addEventListener('deviceorientation', onDeviceOrientation, true); enableMotionBtn.remove(); }
+            } catch(e){ console.warn(e); }
           };
         } else { window.addEventListener('deviceorientation', onDeviceOrientation, true); }
       } else {
         window.addEventListener('pointermove', onPointerMoveDesktop, {passive:true});
         pointerMoveAttached=true;
       }
-    }
-
-    /* -------------------- camera cover -------------------- */
-    let PORTRAIT_OVERSCAN = CONFIG.room.portraitOverscan;
-    function updateCameraCover(){
-      const openingZ = isPortrait()
-        ? (room.position.z + ROOM_D*0.5)
-        : (room.position.z + ROOM_D*0.0);
-      const distance = Math.max(0.0001, camera.position.z - openingZ);
-      const aspect = vw()/vh();
-      const halfH = ROOM_H*0.5, halfW = ROOM_W*0.5;
-      const requiredHalfHeight = Math.max(halfH, halfW / aspect);
-      const exactVFOV = 2 * Math.atan(requiredHalfHeight / distance) * 180 / Math.PI;
-      camera.fov = exactVFOV * (isPortrait() ? PORTRAIT_OVERSCAN : 1.10);
-      camera.aspect = aspect;
-      camera.updateProjectionMatrix();
     }
 
     /* -------------------- post process -------------------- */
@@ -763,7 +792,6 @@
     const waterGeo = new THREE.CircleGeometry(waterRadius, 128);
     const waterMesh = new THREE.Mesh(waterGeo, waterMat);
     waterMesh.rotation.x = -Math.PI/2;
-    // parent to room so it tilts with room
     room.add(waterMesh);
     function resizeWater(){
       waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, 0);
@@ -774,7 +802,9 @@
       if(!vaseReady) return;
       const world = new THREE.Vector3();
       vaseGroup.getWorldPosition(world);
-      waterUniforms.uCenter.value.set(world.x, waterMesh.getWorldPosition(new THREE.Vector3()).y, world.z);
+      // y use actual world y of the water plane for correct distance
+      const waterY = waterMesh.getWorldPosition(new THREE.Vector3()).y;
+      waterUniforms.uCenter.value.set(world.x, waterY, world.z);
     }
 
     /* -------------------- resize & layout -------------------- */
@@ -784,9 +814,9 @@
       renderer.toneMappingExposure = CONFIG.lights.exposure;
       key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
       resizePost();
-      updateCameraCover();
       applyVaseScale();
       resizeWater();
+      adjustRoomToViewport();  // authoritative auto-fit
     }
     window.addEventListener('resize', updateLayout, {passive:true});
     window.addEventListener('orientationchange', updateLayout, {passive:true});
@@ -908,13 +938,6 @@
     }
     function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
 
-    function rebuildRoom(){
-      const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
-      room.geometry.dispose(); room.geometry=newGeo;
-      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
-      updateLayout();
-    }
-
     // Vase bindings
     bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{ CONFIG.vase.userScaleMult = Math.max(0.05, v); userScaleMult = CONFIG.vase.userScaleMult; applyVaseScale(); });
     bindRange('vaseYNum','vaseY', ()=>CONFIG.vase.userTallY, v=>{ CONFIG.vase.userTallY = Math.max(0.05, v); userTallY = CONFIG.vase.userTallY; applyVaseScale(); });
@@ -927,26 +950,17 @@
     bindRange('minNum','min', ()=>CONFIG.spin.minSpin, v=>{ CONFIG.spin.minSpin=v; MIN_SPIN=v; });
     bindRange('impNum','imp', ()=>CONFIG.spin.swipeImpulse, v=>{ CONFIG.spin.swipeImpulse=v; IMPULSE_SCALE=v; });
 
-    // Room size & framing
-    bindRange('wNum','w', ()=>ROOM_W, v=>{ ROOM_W=v; rebuildRoom(); });
-    bindRange('hNum','h', ()=>ROOM_H, v=>{ ROOM_H=v; rebuildRoom(); });
-    bindRange('dNum','d', ()=>ROOM_D, v=>{ ROOM_D=v; rebuildRoom(); });
-    bindRange('zNum','z', ()=>room.position.z, v=>{ room.position.z=v; edges.position.copy(room.position); updateLayout(); });
-    bindRange('ovNum','ov', ()=>PORTRAIT_OVERSCAN, v=>{ PORTRAIT_OVERSCAN=v; updateCameraCover(); });
+    // Room size & framing (AUTO: only depth & z)
+    bindRange('dNum','d', ()=>ROOM_D, v=>{ ROOM_D=v; adjustRoomToViewport(); });
+    bindRange('zNum','z', ()=>room.position.z, v=>{ room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport(); });
 
     $('fitPortrait').onclick = ()=>{
       room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      PORTRAIT_OVERSCAN = Math.max(1.28, PORTRAIT_OVERSCAN);
-      $('z').value=$('zNum').value=room.position.z;
-      $('ov').value=$('ovNum').value=PORTRAIT_OVERSCAN;
-      updateLayout();
+      adjustRoomToViewport();
     };
     $('fitDesktop').onclick = ()=>{
       room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      PORTRAIT_OVERSCAN = 1.10;
-      $('z').value=$('zNum').value=room.position.z;
-      $('ov').value=$('ovNum').value=PORTRAIT_OVERSCAN;
-      updateLayout();
+      adjustRoomToViewport();
     };
 
     // Wall image
@@ -994,7 +1008,7 @@
     bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{ CONFIG.post.pixelSize = v|0; fsMat.uniforms.pixelSize.value = Math.max(1, v|0); });
     bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{ CONFIG.post.ditherStrength = Math.max(0, v); fsMat.uniforms.ditherStrength.value = CONFIG.post.ditherStrength; });
 
-    // Vase effects (glass) — existing
+    // Vase effects (glass)
     bindRange('glassTransNum','glassTrans', ()=>CONFIG.glass.transmission, v=>{ CONFIG.glass.transmission=v; applyGlassConfigToMaterials(); });
     bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness,    v=>{ CONFIG.glass.thickness=v;    applyGlassConfigToMaterials(); });
     bindRange('glassIorNum','glassIor',     ()=>CONFIG.glass.ior,          v=>{ CONFIG.glass.ior=v;          applyGlassConfigToMaterials(); });
@@ -1002,14 +1016,8 @@
     bindRange('glassCCNum','glassCC',       ()=>CONFIG.glass.clearcoat,    v=>{ CONFIG.glass.clearcoat=v;    applyGlassConfigToMaterials(); });
     bindRange('glassCCRNum','glassCCR',     ()=>CONFIG.glass.ccRough,      v=>{ CONFIG.glass.ccRough=v;      applyGlassConfigToMaterials(); });
     bindRange('glassEnvNum','glassEnv',     ()=>CONFIG.glass.envIntensity, v=>{ CONFIG.glass.envIntensity=v; applyGlassConfigToMaterials(); });
+    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness,    v=>{ CONFIG.glass.metalness=Math.max(0, Math.min(1, v)); applyGlassConfigToMaterials(); });
 
-    // NEW: metalness
-    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness, v=>{
-      CONFIG.glass.metalness = Math.max(0, Math.min(1, v));
-      applyGlassConfigToMaterials();
-    });
-
-    // NEW: colors (RGB 0..1)
     $('glassColR').value = CONFIG.glass.color[0];
     $('glassColG').value = CONFIG.glass.color[1];
     $('glassColB').value = CONFIG.glass.color[2];
@@ -1037,65 +1045,65 @@
     $('glassAttB').addEventListener('change', setGlassAttnColor);
 
     /* Init values visible in UI */
-    // Vase
-    setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
-    setVal('vaseY', CONFIG.vase.userTallY); setVal('vaseYNum', CONFIG.vase.userTallY);
-    setVal('vaseZ', CONFIG.vase.z); setVal('vaseZNum', CONFIG.vase.z);
-    setVal('vaseYPos', CONFIG.vase.y); setVal('vaseYPosNum', CONFIG.vase.y);
-    // Spin
-    setVal('damp', DAMPING); setVal('dampNum', DAMPING);
-    setVal('min', MIN_SPIN); setVal('minNum', MIN_SPIN);
-    setVal('imp', IMPULSE_SCALE); setVal('impNum', IMPULSE_SCALE);
-    // Room
-    setVal('w', ROOM_W); setVal('wNum', ROOM_W);
-    setVal('h', ROOM_H); setVal('hNum', ROOM_H);
-    setVal('d', ROOM_D); setVal('dNum', ROOM_D);
-    setVal('z', room.position.z); setVal('zNum', room.position.z);
-    setVal('ov', PORTRAIT_OVERSCAN); setVal('ovNum', PORTRAIT_OVERSCAN);
-    // Wall image
-    setVal('zoom', CONFIG.room.imageZoom); setVal('zoomNum', CONFIG.room.imageZoom);
-    setVal('edge', edges.material.opacity); setVal('edgeNum', edges.material.opacity);
-    // Lights
-    setVal('exp', CONFIG.lights.exposure); setVal('expNum', CONFIG.lights.exposure);
-    setVal('amb', CONFIG.lights.ambient); setVal('ambNum', CONFIG.lights.ambient);
-    setVal('hem', CONFIG.lights.hemisphere); setVal('hemNum', CONFIG.lights.hemisphere);
-    setVal('rim', CONFIG.lights.rim); setVal('rimNum', CONFIG.lights.rim);
-    setVal('key', CONFIG.lights.key); setVal('keyNum', CONFIG.lights.key);
-    setVal('vlI', CONFIG.lights.vaseLight.intensity); setVal('vlINum', CONFIG.lights.vaseLight.intensity);
-    setVal('vlD', CONFIG.lights.vaseLight.distance);  setVal('vlDNum', CONFIG.lights.vaseLight.distance);
-    setVal('vlDec', CONFIG.lights.vaseLight.decay);   setVal('vlDecNum', CONFIG.lights.vaseLight.decay);
-    setVal('vlY', CONFIG.lights.vaseLight.y);         setVal('vlYNum', CONFIG.lights.vaseLight.y);
-    // Room FX
-    setVal('emis', CONFIG.room.wallEmissive); setVal('emisNum', CONFIG.room.wallEmissive);
-    setVal('disp', CONFIG.room.wallDispAmp);  setVal('dispNum', CONFIG.room.wallDispAmp);
-    setVal('ds',   CONFIG.room.wallDispSpeed);setVal('dsNum', CONFIG.room.wallDispSpeed);
-    // Water
-    setVal('wAmp', CONFIG.water.amp);   setVal('wAmpNum', CONFIG.water.amp);
-    setVal('wFreq', CONFIG.water.freq); setVal('wFreqNum', CONFIG.water.freq);
-    setVal('wSpeed', CONFIG.water.speed); setVal('wSpeedNum', CONFIG.water.speed);
-    setVal('wFall', CONFIG.water.falloff); setVal('wFallNum', CONFIG.water.falloff);
-    setVal('wAlpha', CONFIG.water.alpha); setVal('wAlphaNum', CONFIG.water.alpha);
-    setVal('wRad', CONFIG.water.radius); setVal('wRadNum', CONFIG.water.radius);
-    setVal('wPix', CONFIG.water.pixel); setVal('wPixNum', CONFIG.water.pixel);
-    setVal('wY', CONFIG.water.yOffset); setVal('wYNum', CONFIG.water.yOffset);
-    // Global FX
-    setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
-    setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
-    // Vase FX new fields
-    setVal('glassTrans', CONFIG.glass.transmission); setVal('glassTransNum', CONFIG.glass.transmission);
-    setVal('glassThick', CONFIG.glass.thickness); setVal('glassThickNum', CONFIG.glass.thickness);
-    setVal('glassIor', CONFIG.glass.ior); setVal('glassIorNum', CONFIG.glass.ior);
-    setVal('glassRough', CONFIG.glass.roughness); setVal('glassRoughNum', CONFIG.glass.roughness);
-    setVal('glassCC', CONFIG.glass.clearcoat); setVal('glassCCNum', CONFIG.glass.clearcoat);
-    setVal('glassCCR', CONFIG.glass.ccRough); setVal('glassCCRNum', CONFIG.glass.ccRough);
-    setVal('glassEnv', CONFIG.glass.envIntensity); setVal('glassEnvNum', CONFIG.glass.envIntensity);
-    setVal('glassMetal', CONFIG.glass.metalness); setVal('glassMetalNum', CONFIG.glass.metalness);
-    $('glassColR').value = CONFIG.glass.color[0];
-    $('glassColG').value = CONFIG.glass.color[1];
-    $('glassColB').value = CONFIG.glass.color[2];
-    $('glassAttR').value = CONFIG.glass.attnColor[0];
-    $('glassAttG').value = CONFIG.glass.attnColor[1];
-    $('glassAttB').value = CONFIG.glass.attnColor[2];
+    function initUIValues(){
+      // Vase
+      setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
+      setVal('vaseY', CONFIG.vase.userTallY); setVal('vaseYNum', CONFIG.vase.userTallY);
+      setVal('vaseZ', CONFIG.vase.z); setVal('vaseZNum', CONFIG.vase.z);
+      setVal('vaseYPos', CONFIG.vase.y); setVal('vaseYPosNum', CONFIG.vase.y);
+      // Spin
+      setVal('damp', CONFIG.spin.damping); setVal('dampNum', CONFIG.spin.damping);
+      setVal('min', CONFIG.spin.minSpin); setVal('minNum', CONFIG.spin.minSpin);
+      setVal('imp', CONFIG.spin.swipeImpulse); setVal('impNum', CONFIG.spin.swipeImpulse);
+      // Room (depth + z only)
+      setVal('d', ROOM_D); setVal('dNum', ROOM_D);
+      setVal('z', room.position.z); setVal('zNum', room.position.z);
+      // Wall image
+      setVal('zoom', CONFIG.room.imageZoom); setVal('zoomNum', CONFIG.room.imageZoom);
+      setVal('edge', edges.material.opacity); setVal('edgeNum', edges.material.opacity);
+      // Lights
+      setVal('exp', CONFIG.lights.exposure); setVal('expNum', CONFIG.lights.exposure);
+      setVal('amb', CONFIG.lights.ambient); setVal('ambNum', CONFIG.lights.ambient);
+      setVal('hem', CONFIG.lights.hemisphere); setVal('hemNum', CONFIG.lights.hemisphere);
+      setVal('rim', CONFIG.lights.rim); setVal('rimNum', CONFIG.lights.rim);
+      setVal('key', CONFIG.lights.key); setVal('keyNum', CONFIG.lights.key);
+      setVal('vlI', CONFIG.lights.vaseLight.intensity); setVal('vlINum', CONFIG.lights.vaseLight.intensity);
+      setVal('vlD', CONFIG.lights.vaseLight.distance);  setVal('vlDNum', CONFIG.lights.vaseLight.distance);
+      setVal('vlDec', CONFIG.lights.vaseLight.decay);   setVal('vlDecNum', CONFIG.lights.vaseLight.decay);
+      setVal('vlY', CONFIG.lights.vaseLight.y);         setVal('vlYNum', CONFIG.lights.vaseLight.y);
+      // Room FX
+      setVal('emis', CONFIG.room.wallEmissive); setVal('emisNum', CONFIG.room.wallEmissive);
+      setVal('disp', CONFIG.room.wallDispAmp);  setVal('dispNum', CONFIG.room.wallDispAmp);
+      setVal('ds',   CONFIG.room.wallDispSpeed);setVal('dsNum', CONFIG.room.wallDispSpeed);
+      // Water
+      setVal('wAmp', CONFIG.water.amp);   setVal('wAmpNum', CONFIG.water.amp);
+      setVal('wFreq', CONFIG.water.freq); setVal('wFreqNum', CONFIG.water.freq);
+      setVal('wSpeed', CONFIG.water.speed); setVal('wSpeedNum', CONFIG.water.speed);
+      setVal('wFall', CONFIG.water.falloff); setVal('wFallNum', CONFIG.water.falloff);
+      setVal('wAlpha', CONFIG.water.alpha); setVal('wAlphaNum', CONFIG.water.alpha);
+      setVal('wRad', CONFIG.water.radius); setVal('wRadNum', CONFIG.water.radius);
+      setVal('wPix', CONFIG.water.pixel); setVal('wPixNum', CONFIG.water.pixel);
+      setVal('wY', CONFIG.water.yOffset); setVal('wYNum', CONFIG.water.yOffset);
+      // Global FX
+      setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
+      setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
+      // Vase FX new fields
+      setVal('glassTrans', CONFIG.glass.transmission); setVal('glassTransNum', CONFIG.glass.transmission);
+      setVal('glassThick', CONFIG.glass.thickness); setVal('glassThickNum', CONFIG.glass.thickness);
+      setVal('glassIor', CONFIG.glass.ior); setVal('glassIorNum', CONFIG.glass.ior);
+      setVal('glassRough', CONFIG.glass.roughness); setVal('glassRoughNum', CONFIG.glass.roughness);
+      setVal('glassCC', CONFIG.glass.clearcoat); setVal('glassCCNum', CONFIG.glass.clearcoat);
+      setVal('glassCCR', CONFIG.glass.ccRough); setVal('glassCCRNum', CONFIG.glass.ccRough);
+      setVal('glassEnv', CONFIG.glass.envIntensity); setVal('glassEnvNum', CONFIG.glass.envIntensity);
+      setVal('glassMetal', CONFIG.glass.metalness); setVal('glassMetalNum', CONFIG.glass.metalness);
+      $('glassColR').value = CONFIG.glass.color[0];
+      $('glassColG').value = CONFIG.glass.color[1];
+      $('glassColB').value = CONFIG.glass.color[2];
+      $('glassAttR').value = CONFIG.glass.attnColor[0];
+      $('glassAttG').value = CONFIG.glass.attnColor[1];
+      $('glassAttB').value = CONFIG.glass.attnColor[2];
+    }
+    initUIValues();
 
     // Motion permission hint
     (function initMotionButton(){
@@ -1103,6 +1111,33 @@
         document.getElementById('enableMotion').style.display = 'block';
       }
     })();
+
+    /* ------------- Helpers to print/copy current controls to console/clipboard ------------- */
+    function snapshotConfig(){
+      // reflect live positions that may have drifted from CONFIG
+      const snap = structuredClone(CONFIG);
+      snap.room.width = ROOM_W;
+      snap.room.height = ROOM_H;
+      snap.room.depth = ROOM_D;
+      snap.room.positionZ = room.position.z;
+      snap.vase.z = vaseGroup.position.z;
+      snap.vase.y = vaseGroup.position.y;
+      // live uniforms that can diverge
+      snap.post.pixelSize = fsMat.uniforms.pixelSize.value;
+      snap.post.ditherStrength = fsMat.uniforms.ditherStrength.value;
+      return snap;
+    }
+    function printControls(){ console.log(JSON.stringify(snapshotConfig(), null, 2)); }
+    async function copyControls(){
+      const text = JSON.stringify(snapshotConfig(), null, 2);
+      try { await navigator.clipboard.writeText(text); console.log('Controls copied to clipboard.'); }
+      catch(e){ console.warn('Clipboard copy failed:', e); }
+    }
+    window.printControls = printControls;
+    window.copyControls  = copyControls;
+    document.getElementById('printControlsBtn').onclick = printControls;
+    document.getElementById('copyControlsBtn').onclick  = copyControls;
+
   </script>
 </body>
 </html>
