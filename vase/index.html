@@ -6,9 +6,8 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
   />
-  <title>Mysterious Room — Auto-Fit Room (popup + vase color/metal)</title>
+  <title>Mysterious Room — Presets + Auto-Fit</title>
   <style>
-    /* Full viewport & lock scroll */
     html, body { height: 100dvh; width: 100vw; }
     body {
       margin: 0; background: #000; overflow: hidden;
@@ -17,7 +16,7 @@
     }
     canvas { display: block; width: 100vw !important; height: 100dvh !important; }
 
-    /* Control panel */
+    /* Panel */
     .panel {
       position: fixed; top: 12px; left: 12px; z-index: 20;
       width: min(94vw, 420px);
@@ -28,14 +27,8 @@
       box-shadow: 0 8px 28px #000a; font-size: 12px; letter-spacing: .02em;
       display: none;
     }
-    .tabs {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      padding: 8px;
-      background: #0f1a38a6;
-      border-bottom: 1px solid #5c75b42a;
-    }
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px;
+      background: #0f1a38a6; border-bottom: 1px solid #5c75b42a; }
     .tab-btn {
       padding: 8px 10px; border-radius: 10px; border:1px solid #6aa2ff33;
       background:#0e1736; color:#d9e6ff; cursor:pointer; text-align:center;
@@ -43,8 +36,7 @@
     }
     .tab-btn.active { background:#1a2a62; border-color:#89a6ff66; color:#eaf0ff; }
     .tabpages { padding: 10px; overflow: auto; max-height: calc(100dvh - 120px); }
-    .tabpage { display: none; }
-    .tabpage.active { display: block; }
+    .tabpage { display: none; } .tabpage.active { display: block; }
     h3 { margin: 4px 0 10px; font-size: 13px; color:#cfe0ff; }
     .row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; align-items: center; margin: 6px 0; }
     .row input[type="range"] { width: 100%; }
@@ -76,18 +68,11 @@
       letter-spacing: .05em; box-shadow: 0 6px 20px #0007; display: none;
     }
 
-    /* ---------- Spin Popup ---------- */
-    .popup-wrap {
-      position: fixed; inset: 0; z-index: 30; display: none;
-      align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(2px);
-    }
+    /* Popup */
+    .popup-wrap { position: fixed; inset: 0; z-index: 30; display: none;
+      align-items: center; justify-content: center; background: rgba(0,0,0,0.35); backdrop-filter: blur(2px); }
     .popup {
-      position: relative;
-      width: min(92vw, 420px);
-      max-width: 92vw;
-      padding: 16px 14px 14px;
+      position: relative; width: min(92vw, 420px); max-width: 92vw; padding: 16px 14px 14px;
       border-radius: 16px;
       background:
         repeating-linear-gradient(0deg, #1a2350 0 2px, #0e1638 2px 4px),
@@ -97,22 +82,13 @@
         0 0 0 4px #1b2c6a88 inset,
         0 10px 28px #000a,
         0 0 40px #7da5ff33 inset;
-      color: #eaf0ff;
-      transform: translateY(8px) scale(0.98);
-      opacity: 0;
-      transition: transform .22s ease, opacity .22s ease;
-      image-rendering: pixelated;
+      color: #eaf0ff; transform: translateY(8px) scale(0.98); opacity: 0;
+      transition: transform .22s ease, opacity .22s ease; image-rendering: pixelated;
     }
     .popup.show { transform: translateY(0) scale(1); opacity: 1; }
-    .popup h4 {
-      margin: 0 0 10px; font-size: 16px; letter-spacing: .04em; color:#cfe0ff;
-      text-shadow: 0 1px 0 #000, 0 0 14px #89a6ff66;
-    }
+    .popup h4 { margin: 0 0 10px; font-size: 16px; letter-spacing: .04em; color:#cfe0ff; }
     .popup p { margin: 0 0 12px; font-size: 12px; opacity: .9; }
-
-    .popup-buttons {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;
-    }
+    .popup-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .btn-tile {
       display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 10px;
       padding: 10px 12px; border-radius: 12px; cursor: pointer; text-decoration: none;
@@ -123,10 +99,8 @@
     .btn-tile:active { transform: translateY(1px) scale(0.995); }
     .btn-label { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
     .logo { width: 32px; height: 32px; filter: drop-shadow(0 0 8px #88a7ff55); }
-
     .popup-close {
-      position: absolute; right: 8px; top: 8px;
-      width: 28px; height: 28px; border-radius: 8px;
+      position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border-radius: 8px;
       display: grid; place-items: center; cursor: pointer;
       border: 1px solid #8fb0ff55; background: #0c1538cc; color:#eaf0ff;
       font-size: 16px; line-height: 1; user-select: none;
@@ -134,13 +108,6 @@
       transition: transform .08s ease;
     }
     .popup-close:active { transform: translateY(1px) scale(0.98); }
-
-    @media (max-width: 600px) {
-      .popup { width: min(94vw, 440px); border-width: 2px; }
-      .popup-buttons { gap: 8px; }
-      .btn-tile { grid-template-columns: 28px 1fr; padding: 10px; }
-      .logo { width: 28px; height: 28px; }
-    }
   </style>
 </head>
 <body>
@@ -169,7 +136,7 @@
         <h3>Spin</h3>
         <div class="row"><label>Damping</label><input id="dampNum" type="number" step="0.001"><input id="damp" type="range" min="0.90" max="0.999" step="0.001"></div>
         <div class="row"><label>Min Spin</label><input id="minNum" type="number" step="0.01"><input id="min" type="range" min="0.0" max="0.6" step="0.01"></div>
-        <div class="row"><label>Swipe Impulse</label><input id="impNum" type="number" step="0.0001"><input id="imp" type="range" min="0.0005" max="0.02" step="0.0001"></div>
+        <div class="row"><label>Swipe Impulse</label><input id="impNum" type="number" step="0.0001"><input id="imp" type="range" min="0.0005" max="0.05" step="0.0001"></div>
         <div class="two">
           <button id="printControlsBtn">Print controls</button>
           <button id="copyControlsBtn">Copy controls</button>
@@ -179,7 +146,7 @@
       <!-- Room size & framing -->
       <div class="tabpage" id="roomTab">
         <h3>Room Size (Auto-fit)</h3>
-        <div class="hint">Width & Height auto-fit to viewport. No outside is ever visible.</div>
+        <div class="hint">Width & Height are auto-fit to viewport so no outside is visible.</div>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
         <h3>Framing</h3>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
@@ -199,14 +166,14 @@
       <!-- Lights controls -->
       <div class="tabpage" id="lightsTab">
         <h3>Lights</h3>
-        <div class="row"><label>Exposure</label><input id="expNum" type="number" step="0.01"><input id="exp" type="range" min="0.2" max="3.0" step="0.01"></div>
+        <div class="row"><label>Exposure</label><input id="expNum" type="number" step="0.01"><input id="exp" type="range" min="0.2" max="3.5" step="0.01"></div>
         <div class="row"><label>Ambient</label><input id="ambNum" type="number" step="0.01"><input id="amb" type="range" min="0" max="3" step="0.01"></div>
-        <div class="row"><label>Hemisphere</label><input id="hemNum" type="number" step="0.01"><input id="hem" type="range" min="0" max="3" step="0.01"></div>
-        <div class="row"><label>Rim</label><input id="rimNum" type="number" step="0.01"><input id="rim" type="range" min="0" max="4" step="0.01"></div>
-        <div class="row"><label>Key</label><input id="keyNum" type="number" step="0.01"><input id="key" type="range" min="0" max="4" step="0.01"></div>
+        <div class="row"><label>Hemisphere</label><input id="hemNum" type="number" step="0.01"><input id="hem" type="range" min="0" max="3.5" step="0.01"></div>
+        <div class="row"><label>Rim</label><input id="rimNum" type="number" step="0.01"><input id="rim" type="range" min="0" max="5" step="0.01"></div>
+        <div class="row"><label>Key</label><input id="keyNum" type="number" step="0.01"><input id="key" type="range" min="0" max="5" step="0.01"></div>
         <h3>Vase Light</h3>
-        <div class="row"><label>Intensity</label><input id="vlINum" type="number" step="0.01"><input id="vlI" type="range" min="0" max="10" step="0.01"></div>
-        <div class="row"><label>Distance</label><input id="vlDNum" type="number" step="0.1"><input id="vlD" type="range" min="0.1" max="30" step="0.1"></div>
+        <div class="row"><label>Intensity</label><input id="vlINum" type="number" step="0.01"><input id="vlI" type="range" min="0" max="30" step="0.01"></div>
+        <div class="row"><label>Distance</label><input id="vlDNum" type="number" step="0.1"><input id="vlD" type="range" min="0.1" max="40" step="0.1"></div>
         <div class="row"><label>Decay</label><input id="vlDecNum" type="number" step="0.1"><input id="vlDec" type="range" min="0" max="3" step="0.1"></div>
         <div class="row"><label>Y Position</label><input id="vlYNum" type="number" step="0.01"><input id="vlY" type="range" min="-4" max="4" step="0.01"></div>
       </div>
@@ -223,12 +190,12 @@
       <div class="tabpage" id="waterTab">
         <h3>Water (visible & fast)</h3>
         <div class="row"><label>Amplitude</label><input id="wAmpNum" type="number" step="0.01"><input id="wAmp" type="range" min="0" max="3.0" step="0.01"></div>
-        <div class="row"><label>Frequency</label><input id="wFreqNum" type="number" step="0.1"><input id="wFreq" type="range" min="1" max="40" step="0.1"></div>
+        <div class="row"><label>Frequency</label><input id="wFreqNum" type="number" step="0.1"><input id="wFreq" type="range" min="1" max="60" step="0.1"></div>
         <div class="row"><label>Wave Speed</label><input id="wSpeedNum" type="number" step="0.01"><input id="wSpeed" type="range" min="0" max="8" step="0.01"></div>
         <div class="row"><label>Falloff</label><input id="wFallNum" type="number" step="0.01"><input id="wFall" type="range" min="0.1" max="4.0" step="0.01"></div>
         <div class="row"><label>Alpha</label><input id="wAlphaNum" type="number" step="0.01"><input id="wAlpha" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Radius</label><input id="wRadNum" type="number" step="0.1"><input id="wRad" type="range" min="0.5" max="8.0" step="0.1"></div>
-        <div class="row"><label>Pixelation</label><input id="wPixNum" type="number" step="1"><input id="wPix" type="range" min="1" max="24" step="1"></div>
+        <div class="row"><label>Pixelation</label><input id="wPixNum" type="number" step="1"><input id="wPix" type="range" min="1" max="48" step="1"></div>
         <div class="row"><label>Y Offset</label><input id="wYNum" type="number" step="0.01"><input id="wY" type="range" min="-3" max="3" step="0.01"></div>
         <div class="inline">
           <span>Tint (RGB 0..1)</span>
@@ -286,7 +253,6 @@
       <h4 id="popTitle">you unlocked the portal</h4>
       <p>that spin was 🔥 — want to jump in?</p>
       <div class="popup-buttons">
-        <!-- Spotify -->
         <a class="btn-tile" id="btnSpotify" href="#" target="_blank" rel="noopener">
           <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
             <rect x="2" y="2" width="60" height="60" rx="12" fill="#1DB954"/>
@@ -296,7 +262,6 @@
           </svg>
           <span class="btn-label">Spotify</span>
         </a>
-        <!-- Apple Music -->
         <a class="btn-tile" id="btnApple" href="#" target="_blank" rel="noopener">
           <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
             <rect x="2" y="2" width="60" height="60" rx="12" fill="#fb2d61"/>
@@ -330,38 +295,37 @@
     const isTouch = ()=> ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     const isPhone = ()=> isTouch() && (Math.min(vw(), vh()) < 820);
 
-    /* -------------------- presets (desktop vs phone) -------------------- */
+    const params = new URLSearchParams(location.search);
+    function getStoredPreset(){ try{ return localStorage.getItem('room_preset_override') || ''; }catch(_){ return ''; } }
+    function setStoredPreset(v){ try{ localStorage.setItem('room_preset_override', v); }catch(_){ } }
+    const urlPreset = (params.get('preset')||'').toLowerCase();
+    if (urlPreset === 'phone' || urlPreset === 'desktop') setStoredPreset(urlPreset);
+    const presetChoice = getStoredPreset() || (isPhone() ? 'phone' : 'desktop');
+
+    /* -------------------- EXACT PRESETS FROM USER -------------------- */
     const desktopDefaults = {
-      room:{ width:18.3, height:13.3, depth:24.0, positionZ:-4.7, imageZoom:0.90, borderOpacity:0.00, wallEmissive:0.35, wallDispAmp:0.018, wallDispSpeed:3.26 },
+      room:{ width:18.766829958988648, height:10.18770767198562, depth:14.5, positionZ:-10.8, imageZoom:0.96, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
       lights:{ exposure:0.86, ambient:1.91, hemisphere:2.0, rim:1.87, key:1.68, vaseLight:{ intensity:6.0, distance:8.6, decay:1.6, y:0.08 } },
-      vase:{ userScaleMult:2.62, userTallY:1.35, z:-8.0, y:-2.2 },
-      spin:{ damping:0.973, minSpin:0.10, swipeImpulse:0.0085 },
-      post:{ pixelSize:6, ditherStrength:0.13 },
-      water:{ amp:1.2, freq:18.0, speed:2.2, falloff:1.2, alpha:0.65, radius:4.0, pixel:4, yOffset:0.0, tint:[0.45, 0.75, 1.0] },
-      glass:{
-        transmission:1.0, thickness:1.4, ior:1.52, roughness:0.05,
-        clearcoat:1.0, ccRough:0.05, envIntensity:1.9,
-        metalness:0.0,
-        color:[1.00, 1.00, 1.00],
-        attnColor:[0.66, 0.79, 1.00]
-      }
+      vase:{ userScaleMult:1.41, userTallY:1.06, z:-10.7, y:-4.8 },
+      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
+      post:{ pixelSize:5, ditherStrength:1.0 },
+      water:{ amp:1.61, freq:40.0, speed:0.82, falloff:0.9, alpha:0.44, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
+      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:0.63, color:[1,1,1], attnColor:[0.66,0.79,1] },
+      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
     };
     const phoneDefaults = {
-      room:{ width:9.7, height:11.8, depth:20.5, positionZ:-5.1, imageZoom:1.03, borderOpacity:0.02, wallEmissive:0.35, wallDispAmp:0.02, wallDispSpeed:2.2 },
-      lights:{ exposure:2.04, ambient:1.98, hemisphere:1.98, rim:2.55, key:2.21, vaseLight:{ intensity:4.3, distance:17.3, decay:1.6, y:0.08 } },
-      vase:{ userScaleMult:1.46, userTallY:2.09, z:-2.1, y:1.3 },
-      spin:{ damping:0.975, minSpin:0.10, swipeImpulse:0.0100 },
-      post:{ pixelSize:5, ditherStrength:0.17 },
-      water:{ amp:1.4, freq:20.0, speed:2.6, falloff:1.1, alpha:0.70, radius:4.5, pixel:5, yOffset:0.0, tint:[0.55, 0.85, 1.0] },
-      glass:{
-        transmission:1.0, thickness:1.6, ior:1.50, roughness:0.06,
-        clearcoat:1.0, ccRough:0.06, envIntensity:2.2,
-        metalness:0.04,
-        color:[1.00, 1.00, 1.00],
-        attnColor:[0.70, 0.88, 1.00]
-      }
+      room:{ width:3.2466138193122998, height:7.026005291024567, depth:8.1, positionZ:-2.4, imageZoom:1.0, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
+      lights:{ exposure:2.74, ambient:1.72, hemisphere:2.36, rim:3.22, key:1.47, vaseLight:{ intensity:7.16, distance:28.2, decay:2.7, y:0.18 } },
+      vase:{ userScaleMult:0.2, userTallY:1.81, z:-0.9, y:-3.0 },
+      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
+      post:{ pixelSize:3, ditherStrength:1.0 },
+      water:{ amp:1.27, freq:40.0, speed:0.82, falloff:0.9, alpha:0.05, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
+      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:0.9, color:[1,1,1], attnColor:[0.66,0.79,1] },
+      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
     };
-    const CONFIG = isPhone() ? structuredClone(phoneDefaults) : structuredClone(desktopDefaults);
+
+    // Choose preset (URL/localStorage override wins)
+    const CONFIG = structuredClone(presetChoice === 'phone' ? phoneDefaults : desktopDefaults);
 
     /* -------------------- renderer -------------------- */
     const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
@@ -381,9 +345,8 @@
     camera.position.set(0, 0, 7.5);
 
     /* -------------------- texture / walls -------------------- */
-    const textureURL = "/reilly-album-cvr.jpeg";
-    const tLoader = new THREE.TextureLoader();
-    tLoader.setCrossOrigin("anonymous");
+    const textureURL = "/reilly-album-cvr.jpeg"; // keep your path
+    const tLoader = new THREE.TextureLoader(); tLoader.setCrossOrigin("anonymous");
     const tex = tLoader.load(textureURL, ()=>{
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -392,10 +355,7 @@
     });
 
     const wallMat = new THREE.MeshStandardMaterial({
-      map: tex,
-      side: THREE.BackSide,
-      roughness: 0.8,
-      metalness: 0.0,
+      map: tex, side: THREE.BackSide, roughness: 0.8, metalness: 0.0,
       emissive: new THREE.Color(0x2a365c),
       emissiveIntensity: CONFIG.room.wallEmissive,
       envMapIntensity: 0.18
@@ -441,7 +401,6 @@
 
     /* -------------------- room geometry (auto-fit) -------------------- */
     let ROOM_W=CONFIG.room.width, ROOM_H=CONFIG.room.height, ROOM_D=CONFIG.room.depth;
-
     function buildRoomGeometry(w, h, d){
       const geo = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
       const tileW = 1/4, tileH = 1/3;
@@ -473,10 +432,13 @@
     edges.position.copy(room.position);
     scene.add(edges);
 
-    /* -------------------- AUTO-FIT: compute W/H from viewport -------------------- */
+    /* -------------------- AUTO-FIT sizing -------------------- */
     const BASE_VFOV_DEG = 55;
-    const MAX_TILT = 0.085;              // same as input system
-    const TILT_MARGIN = 1.02 / Math.cos(MAX_TILT); // oversize to hide edges on tilt
+    const INPUT_MAX_TILT = 0.085;
+
+    // Use your preset _internal values if present
+    let WATER_RADIUS_FACTOR = CONFIG._internal?.WATER_RADIUS_FACTOR ?? 0.74;
+    let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? (1.12 / Math.cos(INPUT_MAX_TILT * 1.08));
 
     function computeTargetDistance(depth){
       return THREE.MathUtils.clamp(depth * 0.6, 6.0, 20.0);
@@ -486,13 +448,12 @@
       const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
       room.geometry.dispose(); room.geometry=newGeo;
       edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
-      resizeWater();
+      resizeWater(); rebuildWaterCircle();
     }
 
     function adjustRoomToViewport(){
       const aspect = vw()/vh();
       const vfovRad = THREE.MathUtils.degToRad(BASE_VFOV_DEG);
-
       const openingZ = room.position.z + ROOM_D * 0.5;
       const dTarget  = computeTargetDistance(ROOM_D);
 
@@ -536,7 +497,8 @@
     let vase=null, vaseReady=false, vaseBaseScale=1, userScaleMult=CONFIG.vase.userScaleMult, userTallY=CONFIG.vase.userTallY;
     const glassMaterials = [];
 
-    const VASE_URL = "./vase2.glb";
+    // New model file
+    const VASE_URL = "./vaseNew.glb";
     const gltf = new GLTFLoader();
     gltf.load(VASE_URL, g=>{
       vase = g.scene;
@@ -605,15 +567,18 @@
     }
     function applyVaseScale(){
       if(!vase) return;
-      const portraitBoost = (isPortrait() && isPhone()) ? 1.7 : 1.0;
+      const portraitBoost = (isPortrait() && (presetChoice==='phone')) ? 1.7 : 1.0;
       const s = vaseBaseScale * portraitBoost * userScaleMult;
       vase.scale.set(s, s*userTallY, s);
     }
 
-    /* -------------------- spin physics -------------------- */
+    /* -------------------- spin physics with speed-based sway -------------------- */
     let angVel=0, tilt=0, wobblePhase=0;
     let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE_SCALE=CONFIG.spin.swipeImpulse;
-    const TILT_FINAL=THREE.MathUtils.degToRad(7);
+
+    const SPEED_REF = 4;      // faster => straighter
+    const TILT_IDLE_DEG = 60;   // max tilt at low speed
+    const TILT_MIN_DEG  = 10;    // tilt when fast
 
     let dragging=false, lastX=0, lastT=0;
     function getPointerX(e){ if(e.touches?.length) return e.touches[0].clientX; if(e.changedTouches?.length) return e.changedTouches[0].clientX; return e.clientX??0; }
@@ -629,18 +594,25 @@
 
     function updateVase(dt){
       if(!vaseReady) return;
+
       angVel *= Math.pow(DAMPING, dt*60);
       const floor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
       if (Math.abs(angVel) < Math.abs(floor)) angVel = floor;
 
-      vaseGroup.rotation.y += angVel * dt;
+      const speedNorm = Math.min(1, Math.abs(angVel)/SPEED_REF);
 
-      tilt += (TILT_FINAL - tilt) * Math.min(1, dt*2.5);
-      const wobbleFreq = Math.max(0.8, Math.abs(angVel)*2.2);
+      const targetTilt = THREE.MathUtils.degToRad(
+        THREE.MathUtils.lerp(TILT_IDLE_DEG, TILT_MIN_DEG, speedNorm)
+      );
+      tilt += (targetTilt - tilt) * Math.min(1, dt*3.0);
+
+      const wobbleAmp = THREE.MathUtils.lerp(0.11, 0.03, speedNorm);
+      const wobbleFreq = THREE.MathUtils.lerp(0.8, 3.2, speedNorm);
       wobblePhase += wobbleFreq * dt;
-      const wobbleAmp = THREE.MathUtils.clamp(0.12 - Math.min(0.1, Math.abs(angVel)*0.08), 0.02, 0.08);
+
+      vaseGroup.rotation.y += angVel * dt;
       vaseGroup.rotation.x = tilt + Math.sin(wobblePhase) * wobbleAmp;
-      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * wobbleAmp * 0.6;
+      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * (wobbleAmp * 0.6);
     }
 
     /* -------------------- pointer/gyro tilt -------------------- */
@@ -650,21 +622,21 @@
 
     function onPointerMoveDesktop(e){
       const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1;
-      targetRY = x*MAX_TILT;
-      targetRX = -y*MAX_TILT*0.6;
+      targetRY = x*INPUT_MAX_TILT;
+      targetRX = -y*INPUT_MAX_TILT*0.6;
     }
     function onDeviceOrientation(e){
       if (baseBeta===null) baseBeta=e.beta||0;
       if (baseGamma===null) baseGamma=e.gamma||0;
       const dB=(e.beta||0)-baseBeta, dG=(e.gamma||0)-baseGamma;
-      targetRY = THREE.MathUtils.clamp(dG/45,-1,1)*MAX_TILT;
-      targetRX = -THREE.MathUtils.clamp(dB/60,-1,1)*(MAX_TILT*0.6);
+      targetRY = THREE.MathUtils.clamp(dG/45,-1,1)*INPUT_MAX_TILT;
+      targetRX = -THREE.MathUtils.clamp(dB/60,-1,1)*(INPUT_MAX_TILT*0.6);
     }
     function setupInputMode(){
       if (pointerMoveAttached){ window.removeEventListener('pointermove', onPointerMoveDesktop); pointerMoveAttached=false; }
       window.removeEventListener('deviceorientation', onDeviceOrientation, true);
       enableMotionBtn.style.display = 'none';
-      if (isPortrait() && isPhone() && window.DeviceOrientationEvent){
+      if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent){
         const needsPerm = typeof DeviceOrientationEvent.requestPermission === 'function';
         if (needsPerm){
           enableMotionBtn.style.display = 'block';
@@ -726,13 +698,12 @@
     });
     const fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), fsMat);
     screenScene.add(fsQuad);
-
     function resizePost(){
       rt.setSize(vw(), vh());
       fsMat.uniforms.resolution.value.set(vw(), vh());
     }
 
-    /* -------------------- Water (child of room so it tilts with room) -------------------- */
+    /* -------------------- Water (tilts with room) -------------------- */
     const waterUniforms = {
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector3(0, 0, 0) },
@@ -748,10 +719,7 @@
     };
 
     const waterMat = new THREE.ShaderMaterial({
-      transparent:true,
-      depthWrite:false,
-      depthTest:true,
-      blending: THREE.AdditiveBlending,
+      transparent:true, depthWrite:false, depthTest:true, blending: THREE.AdditiveBlending,
       uniforms: waterUniforms,
       vertexShader: `
         varying vec3 vWorld;
@@ -788,21 +756,26 @@
       `
     });
 
-    const waterRadius = Math.max(ROOM_W, ROOM_D) * 0.66;
-    const waterGeo = new THREE.CircleGeometry(waterRadius, 128);
+    const waterGeo = new THREE.CircleGeometry(1.0, 128);
     const waterMesh = new THREE.Mesh(waterGeo, waterMat);
     waterMesh.rotation.x = -Math.PI/2;
     room.add(waterMesh);
+
+    function rebuildWaterCircle(){
+      const radius = Math.max(ROOM_W, ROOM_D) * WATER_RADIUS_FACTOR;
+      waterMesh.geometry.dispose();
+      waterMesh.geometry = new THREE.CircleGeometry(radius, 128);
+    }
     function resizeWater(){
       waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, 0);
     }
+    rebuildWaterCircle();
     resizeWater();
 
     function updateWaterCenterFromVase(){
       if(!vaseReady) return;
       const world = new THREE.Vector3();
       vaseGroup.getWorldPosition(world);
-      // y use actual world y of the water plane for correct distance
       const waterY = waterMesh.getWorldPosition(new THREE.Vector3()).y;
       waterUniforms.uCenter.value.set(world.x, waterY, world.z);
     }
@@ -816,7 +789,7 @@
       resizePost();
       applyVaseScale();
       resizeWater();
-      adjustRoomToViewport();  // authoritative auto-fit
+      adjustRoomToViewport();
     }
     window.addEventListener('resize', updateLayout, {passive:true});
     window.addEventListener('orientationchange', updateLayout, {passive:true});
@@ -834,14 +807,13 @@
     const btnSpotify = document.getElementById('btnSpotify');
     const btnApple = document.getElementById('btnApple');
 
-    // TODO: replace with your real links
     btnSpotify.href = "https://open.spotify.com/";
     btnApple.href = "https://music.apple.com/";
 
     let popupVisible = false;
     let lastPopupTime = 0;
     const POPUP_COOLDOWN_MS = 3500;
-    const SPIN_POP_THRESHOLD = isPhone() ? 2.2 : 1.8;
+    const SPIN_POP_THRESHOLD = (presetChoice==='phone') ? 2.2 : 1.8;
 
     function showPopup(){
       if (popupVisible) return;
@@ -868,23 +840,19 @@
       const dt = Math.min(clock.getDelta(), 0.033);
       const timeSec = clock.elapsedTime;
 
-      // Animate walls with spin-coupled speed/direction
       if (wallShaderRef){
         const dir = (angVel >= 0 ? 1.0 : -1.0);
         const speedFactor = 1.0 + Math.min(3.0, Math.abs(angVel) * 2.4);
         wallShaderRef.uniforms.uTime.value += dt * dir * speedFactor;
       }
 
-      // Popup trigger logic
       if (Math.abs(angVel) > SPIN_POP_THRESHOLD){
         const now = performance.now();
         if (!popupVisible && (now - lastPopupTime) > POPUP_COOLDOWN_MS){
-          lastPopupTime = now;
-          showPopup();
+          lastPopupTime = now; showPopup();
         }
       }
 
-      // envmap at vase position
       if (vaseReady && vase){
         vase.visible = false;
         cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
@@ -892,19 +860,16 @@
         vase.visible = true;
       }
 
-      // smooth room tilt
       room.rotation.x += (targetRX - room.rotation.x) * 0.06;
       room.rotation.y += (targetRY - room.rotation.y) * 0.06;
       edges.rotation.copy(room.rotation);
 
       updateVase(dt);
 
-      // water uniforms
       updateWaterCenterFromVase();
       waterUniforms.uTime.value = timeSec;
       waterUniforms.uSpinAbs.value = Math.abs(angVel);
 
-      // render -> post
       const usePost = (CONFIG.post.pixelSize > 1) || (CONFIG.post.ditherStrength > 0.0001);
       if (usePost){
         renderer.setRenderTarget(rt);
@@ -950,7 +915,7 @@
     bindRange('minNum','min', ()=>CONFIG.spin.minSpin, v=>{ CONFIG.spin.minSpin=v; MIN_SPIN=v; });
     bindRange('impNum','imp', ()=>CONFIG.spin.swipeImpulse, v=>{ CONFIG.spin.swipeImpulse=v; IMPULSE_SCALE=v; });
 
-    // Room size & framing (AUTO: only depth & z)
+    // Room size (AUTO: only depth & z)
     bindRange('dNum','d', ()=>ROOM_D, v=>{ ROOM_D=v; adjustRoomToViewport(); });
     bindRange('zNum','z', ()=>room.position.z, v=>{ room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport(); });
 
@@ -983,7 +948,7 @@
     bindRange('dispNum','disp', ()=>CONFIG.room.wallDispAmp,  v=>{ CONFIG.room.wallDispAmp=v;  if(wallShaderRef) wallShaderRef.uniforms.uDispAmp.value=v; });
     bindRange('dsNum','ds',     ()=>CONFIG.room.wallDispSpeed,v=>{ CONFIG.room.wallDispSpeed=v;if(wallShaderRef) wallShaderRef.uniforms.uDispSpeed.value=v; });
 
-    // Water
+    // Water uniforms
     bindRange('wAmpNum','wAmp', ()=>CONFIG.water.amp,   v=>{ CONFIG.water.amp=v;   waterUniforms.uAmp.value=v; });
     bindRange('wFreqNum','wFreq',()=>CONFIG.water.freq, v=>{ CONFIG.water.freq=v;  waterUniforms.uFreq.value=v; });
     bindRange('wSpeedNum','wSpeed',()=>CONFIG.water.speed, v=>{ CONFIG.water.speed=v; waterUniforms.uSpeed.value=v; });
@@ -991,10 +956,8 @@
     bindRange('wAlphaNum','wAlpha',()=>CONFIG.water.alpha, v=>{ CONFIG.water.alpha=v; waterUniforms.uAlpha.value=v; });
     bindRange('wRadNum','wRad',()=>CONFIG.water.radius, v=>{ CONFIG.water.radius=v; waterUniforms.uRadius.value=v; });
     bindRange('wPixNum','wPix',()=>CONFIG.water.pixel, v=>{ CONFIG.water.pixel=v|0; waterUniforms.uPixel.value=v|0; });
-    bindRange('wYNum','wY',()=>CONFIG.water.yOffset, v=>{
-      CONFIG.water.yOffset=v;
-      resizeWater();
-    });
+    bindRange('wYNum','wY',()=>CONFIG.water.yOffset, v=>{ CONFIG.water.yOffset=v; resizeWater(); });
+    // Tint
     $('wR').value = CONFIG.water.tint[0];
     $('wG').value = CONFIG.water.tint[1];
     $('wB').value = CONFIG.water.tint[2];
@@ -1044,7 +1007,7 @@
     $('glassAttG').addEventListener('change', setGlassAttnColor);
     $('glassAttB').addEventListener('change', setGlassAttnColor);
 
-    /* Init values visible in UI */
+    /* ---- init visible values ---- */
     function initUIValues(){
       // Vase
       setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
@@ -1055,7 +1018,7 @@
       setVal('damp', CONFIG.spin.damping); setVal('dampNum', CONFIG.spin.damping);
       setVal('min', CONFIG.spin.minSpin); setVal('minNum', CONFIG.spin.minSpin);
       setVal('imp', CONFIG.spin.swipeImpulse); setVal('impNum', CONFIG.spin.swipeImpulse);
-      // Room (depth + z only)
+      // Room (depth + z)
       setVal('d', ROOM_D); setVal('dNum', ROOM_D);
       setVal('z', room.position.z); setVal('zNum', room.position.z);
       // Wall image
@@ -1087,7 +1050,7 @@
       // Global FX
       setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
       setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
-      // Vase FX new fields
+      // Vase FX
       setVal('glassTrans', CONFIG.glass.transmission); setVal('glassTransNum', CONFIG.glass.transmission);
       setVal('glassThick', CONFIG.glass.thickness); setVal('glassThickNum', CONFIG.glass.thickness);
       setVal('glassIor', CONFIG.glass.ior); setVal('glassIorNum', CONFIG.glass.ior);
@@ -1105,16 +1068,15 @@
     }
     initUIValues();
 
-    // Motion permission hint
+    // Motion hint
     (function initMotionButton(){
-      if (isPortrait() && isPhone() && window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
         document.getElementById('enableMotion').style.display = 'block';
       }
     })();
 
-    /* ------------- Helpers to print/copy current controls to console/clipboard ------------- */
+    /* ----- controls printer ----- */
     function snapshotConfig(){
-      // reflect live positions that may have drifted from CONFIG
       const snap = structuredClone(CONFIG);
       snap.room.width = ROOM_W;
       snap.room.height = ROOM_H;
@@ -1122,9 +1084,10 @@
       snap.room.positionZ = room.position.z;
       snap.vase.z = vaseGroup.position.z;
       snap.vase.y = vaseGroup.position.y;
-      // live uniforms that can diverge
       snap.post.pixelSize = fsMat.uniforms.pixelSize.value;
       snap.post.ditherStrength = fsMat.uniforms.ditherStrength.value;
+      snap._internal = { WATER_RADIUS_FACTOR, TILT_MARGIN };
+      snap._preset = presetChoice;
       return snap;
     }
     function printControls(){ console.log(JSON.stringify(snapshotConfig(), null, 2)); }
