@@ -6,7 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
   />
-  <title>Mysterious Room — Presets + Auto-Fit</title>
+  <title>Biome — Spin + Audio</title>
   <style>
     html, body { height: 100dvh; width: 100vw; }
     body {
@@ -54,13 +54,6 @@
     .swatch { display:flex; gap:6px; }
     .swatch input[type="number"] { width:52px; }
 
-    #gear {
-      position: fixed; right: 12px; bottom: 12px; z-index: 21;
-      width: 44px; height: 44px; border-radius: 50%;
-      border: 1px solid #6aa2ff55; background:#0e1736; color:#dce8ff;
-      display: grid; place-items: center; font-size: 20px; cursor: pointer;
-      box-shadow: 0 8px 24px #000a;
-    }
     #enableMotion {
       position: fixed; inset: auto 16px 66px auto; z-index: 22;
       padding: 10px 14px; border-radius: 12px; border: 1px solid #6aa2ff33;
@@ -96,7 +89,6 @@
       box-shadow: 0 2px 0 #000a inset, 0 0 16px #6aa2ff22 inset;
       transition: transform .08s ease, box-shadow .12s ease;
     }
-    .btn-tile:active { transform: translateY(1px) scale(0.995); }
     .btn-label { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
     .logo { width: 32px; height: 32px; filter: drop-shadow(0 0 8px #88a7ff55); }
     .popup-close {
@@ -146,7 +138,7 @@
       <!-- Room size & framing -->
       <div class="tabpage" id="roomTab">
         <h3>Room Size (Auto-fit)</h3>
-        <div class="hint">Width & Height are auto-fit to viewport so no outside is visible.</div>
+        <div class="hint">Width & Height auto-fit to viewport so no outside is visible.</div>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
         <h3>Framing</h3>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
@@ -167,7 +159,7 @@
       <div class="tabpage" id="lightsTab">
         <h3>Lights</h3>
         <div class="row"><label>Exposure</label><input id="expNum" type="number" step="0.01"><input id="exp" type="range" min="0.2" max="3.5" step="0.01"></div>
-        <div class="row"><label>Ambient</label><input id="ambNum" type="number" step="0.01"><input id="amb" type="range" min="0" max="3" step="0.01"></div>
+        <div class="row"><label>Ambient</label><input id="ambNum" type="number" step="0.01"><input id="amb" type="range" min="0" max="3.5" step="0.01"></div>
         <div class="row"><label>Hemisphere</label><input id="hemNum" type="number" step="0.01"><input id="hem" type="range" min="0" max="3.5" step="0.01"></div>
         <div class="row"><label>Rim</label><input id="rimNum" type="number" step="0.01"><input id="rim" type="range" min="0" max="5" step="0.01"></div>
         <div class="row"><label>Key</label><input id="keyNum" type="number" step="0.01"><input id="key" type="range" min="0" max="5" step="0.01"></div>
@@ -243,17 +235,16 @@
     </div>
   </div>
 
-  <button id="gear" aria-label="Toggle controls">⚙️</button>
-  <button id="enableMotion">Enable Motion</button>
+  <button id="enableMotion">Enable Fun</button>
 
   <!-- Spin Popup -->
   <div class="popup-wrap" id="spinPopupWrap" aria-hidden="true">
     <div class="popup" id="spinPopup" role="dialog" aria-modal="true" aria-labelledby="popTitle">
       <button class="popup-close" id="popClose" aria-label="Close">✕</button>
-      <h4 id="popTitle">you unlocked the portal</h4>
-      <p>that spin was 🔥 — want to jump in?</p>
+      <h4 id="popTitle">ritual complete</h4>
+      <p>select reward</p>
       <div class="popup-buttons">
-        <a class="btn-tile" id="btnSpotify" href="#" target="_blank" rel="noopener">
+        <a class="btn-tile" id="btnSpotify" href="https://open.spotify.com/" target="_blank" rel="noopener">
           <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
             <rect x="2" y="2" width="60" height="60" rx="12" fill="#1DB954"/>
             <path d="M15 26c13-5 21-4 33 1" stroke="#0b2a12" stroke-width="6" stroke-linecap="round" fill="none"/>
@@ -262,7 +253,7 @@
           </svg>
           <span class="btn-label">Spotify</span>
         </a>
-        <a class="btn-tile" id="btnApple" href="#" target="_blank" rel="noopener">
+        <a class="btn-tile" id="btnApple" href="https://music.apple.com/" target="_blank" rel="noopener">
           <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
             <rect x="2" y="2" width="60" height="60" rx="12" fill="#fb2d61"/>
             <path d="M42 14l-18 4v22c0 2-2 4-5 4s-5-2-5-4 2-4 5-4c2 0 4 1 5 2V22l18-4v16c0 2-2 4-5 4s-5-2-5-4 2-4 5-4c2 0 4 1 5 2V14z"
@@ -302,11 +293,11 @@
     if (urlPreset === 'phone' || urlPreset === 'desktop') setStoredPreset(urlPreset);
     const presetChoice = getStoredPreset() || (isPhone() ? 'phone' : 'desktop');
 
-    /* -------------------- EXACT PRESETS FROM USER -------------------- */
+    /* -------------------- PRESETS (your values) -------------------- */
     const desktopDefaults = {
       room:{ width:18.766829958988648, height:10.18770767198562, depth:14.5, positionZ:-10.8, imageZoom:0.96, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
       lights:{ exposure:0.86, ambient:1.91, hemisphere:2.0, rim:1.87, key:1.68, vaseLight:{ intensity:6.0, distance:8.6, decay:1.6, y:0.08 } },
-      vase:{ userScaleMult:2.49, userTallY:1.06, z:-10.7, y:-4.8 },
+      vase:{ userScaleMult:3.2, userTallY:1.06, z:-10.7, y:-4.8 },
       spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
       post:{ pixelSize:5, ditherStrength:1.0 },
       water:{ amp:1.61, freq:40.0, speed:0.82, falloff:0.9, alpha:0.44, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
@@ -318,13 +309,12 @@
       lights:{ exposure:2.74, ambient:1.72, hemisphere:2.36, rim:3.22, key:1.47, vaseLight:{ intensity:7.16, distance:28.2, decay:2.7, y:0.18 } },
       vase:{ userScaleMult:1.37, userTallY:1.81, z:-0.9, y:-3.0 },
       spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
-      post:{ pixelSize:4, ditherStrength:1.0 },
+      post:{ pixelSize:3, ditherStrength:1.0 },
       water:{ amp:1.27, freq:40.0, speed:0.82, falloff:0.9, alpha:0.05, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
       glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:0.9, color:[1,1,1], attnColor:[0.66,0.79,1] },
       _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
     };
 
-    // Choose preset (URL/localStorage override wins)
     const CONFIG = structuredClone(presetChoice === 'phone' ? phoneDefaults : desktopDefaults);
 
     /* -------------------- renderer -------------------- */
@@ -345,7 +335,7 @@
     camera.position.set(0, 0, 7.5);
 
     /* -------------------- texture / walls -------------------- */
-    const textureURL = "/reilly-album-cvr.jpeg"; // keep your path
+    const textureURL = "/reilly-album-cvr.jpeg";
     const tLoader = new THREE.TextureLoader(); tLoader.setCrossOrigin("anonymous");
     const tex = tLoader.load(textureURL, ()=>{
       tex.colorSpace = THREE.SRGBColorSpace;
@@ -436,7 +426,6 @@
     const BASE_VFOV_DEG = 55;
     const INPUT_MAX_TILT = 0.085;
 
-    // Use your preset _internal values if present
     let WATER_RADIUS_FACTOR = CONFIG._internal?.WATER_RADIUS_FACTOR ?? 0.74;
     let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? (1.12 / Math.cos(INPUT_MAX_TILT * 1.08));
 
@@ -497,7 +486,6 @@
     let vase=null, vaseReady=false, vaseBaseScale=1, userScaleMult=CONFIG.vase.userScaleMult, userTallY=CONFIG.vase.userTallY;
     const glassMaterials = [];
 
-    // New model file
     const VASE_URL = "./vaseNew.glb";
     const gltf = new GLTFLoader();
     gltf.load(VASE_URL, g=>{
@@ -576,13 +564,13 @@
     let angVel=0, tilt=0, wobblePhase=0;
     let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE_SCALE=CONFIG.spin.swipeImpulse;
 
-    const SPEED_REF = 4;      // faster => straighter
-    const TILT_IDLE_DEG = 60;   // max tilt at low speed
-    const TILT_MIN_DEG  = 10;    // tilt when fast
+    const SPEED_REF = 4;
+    const TILT_IDLE_DEG = 60;
+    const TILT_MIN_DEG  = 10;
 
     let dragging=false, lastX=0, lastT=0;
     function getPointerX(e){ if(e.touches?.length) return e.touches[0].clientX; if(e.changedTouches?.length) return e.changedTouches[0].clientX; return e.clientX??0; }
-    function onSwipeDown(e){ dragging=true; lastX=getPointerX(e); lastT=performance.now(); }
+    function onSwipeDown(e){ dragging=true; lastX=getPointerX(e); lastT=performance.now(); maybeStartAudio(); }
     function onSwipeMove(e){ if(!dragging) return; const now=performance.now(); const x=getPointerX(e); const dx=x-lastX; const dt=Math.max(1, now-lastT); angVel += (dx/dt)*IMPULSE_SCALE; lastX=x; lastT=now; }
     function onSwipeUp(){ dragging=false; }
     window.addEventListener('mousedown', onSwipeDown, {passive:true});
@@ -622,15 +610,15 @@
 
     function onPointerMoveDesktop(e){
       const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1;
-      targetRY = x*INPUT_MAX_TILT;
-      targetRX = -y*INPUT_MAX_TILT*0.6;
+      targetRY = x*0.085;
+      targetRX = -y*0.085*0.6;
     }
     function onDeviceOrientation(e){
       if (baseBeta===null) baseBeta=e.beta||0;
       if (baseGamma===null) baseGamma=e.gamma||0;
       const dB=(e.beta||0)-baseBeta, dG=(e.gamma||0)-baseGamma;
-      targetRY = THREE.MathUtils.clamp(dG/45,-1,1)*INPUT_MAX_TILT;
-      targetRX = -THREE.MathUtils.clamp(dB/60,-1,1)*(INPUT_MAX_TILT*0.6);
+      targetRY = THREE.MathUtils.clamp(dG/45,-1,1)*0.085;
+      targetRX = -THREE.MathUtils.clamp(dB/60,-1,1)*0.085*0.6;
     }
     function setupInputMode(){
       if (pointerMoveAttached){ window.removeEventListener('pointermove', onPointerMoveDesktop); pointerMoveAttached=false; }
@@ -641,11 +629,18 @@
         if (needsPerm){
           enableMotionBtn.style.display = 'block';
           enableMotionBtn.onclick = async ()=>{
-            try { const resp=await DeviceOrientationEvent.requestPermission();
-              if(resp==='granted'){ window.addEventListener('deviceorientation', onDeviceOrientation, true); enableMotionBtn.remove(); }
+            try {
+              const resp=await DeviceOrientationEvent.requestPermission();
+              if(resp==='granted'){
+                window.addEventListener('deviceorientation', onDeviceOrientation, true);
+                enableMotionBtn.remove();
+              }
             } catch(e){ console.warn(e); }
+            maybeStartAudio(true);
           };
-        } else { window.addEventListener('deviceorientation', onDeviceOrientation, true); }
+        } else {
+          window.addEventListener('deviceorientation', onDeviceOrientation, true);
+        }
       } else {
         window.addEventListener('pointermove', onPointerMoveDesktop, {passive:true});
         pointerMoveAttached=true;
@@ -800,26 +795,23 @@
     setupInputMode();
     updateLayout();
 
-    /* -------------------- Spin Popup logic -------------------- */
+    /* -------------------- Spin Popup + thresholds -------------------- */
     const popWrap = document.getElementById('spinPopupWrap');
     const popCard = document.getElementById('spinPopup');
     const popClose = document.getElementById('popClose');
-    const btnSpotify = document.getElementById('btnSpotify');
-    const btnApple = document.getElementById('btnApple');
-
-    btnSpotify.href = "https://open.spotify.com/";
-    btnApple.href = "https://music.apple.com/";
 
     let popupVisible = false;
     let lastPopupTime = 0;
     const POPUP_COOLDOWN_MS = 3500;
-    const SPIN_POP_THRESHOLD = (presetChoice==='phone') ? 7.0  : 6.0;
+    const SPIN_POP_THRESHOLD = (presetChoice==='phone') ? 6.0  : 5.0; // popup open threshold
 
     function showPopup(){
       if (popupVisible) return;
       popupVisible = true;
       popWrap.style.display = 'flex';
       requestAnimationFrame(()=> popCard.classList.add('show'));
+      // Force audio to full-normal while visible
+      forceFastAudio();
     }
     function hidePopup(){
       if (!popupVisible) return;
@@ -831,6 +823,136 @@
     popClose.addEventListener('click', hidePopup);
     popWrap.addEventListener('click', (e)=>{ if (e.target === popWrap) hidePopup(); });
 
+    /* -------------------- Web Audio: continuous mapping -------------------- */
+    // NOTE: if you uploaded the file here, point to that path:
+    const AUDIO_URL = "./soundtrack.wav";
+
+    const AUDIO_IDLE_RATE = 0.25;
+    const AUDIO_IDLE_LPF  = 380;
+    const AUDIO_NORMAL_RATE = 1.0;
+    const AUDIO_NORMAL_LPF  = 18000;
+    const AUDIO_SMOOTH = 0.18;
+    const AUDIO_SPEED_FOR_FULL = (presetChoice==='phone') ? 6.0 : 5.0;
+
+    let audioCtx = null;
+    let audioBuffer = null;
+    let sourceNode = null;
+    let filterNode = null;
+    let gainNode = null;
+    let audioReady = false;
+    let audioStarted = false;
+
+    async function loadAudioBuffer(ctx){
+      if (audioBuffer) return audioBuffer;
+      const res = await fetch(AUDIO_URL);
+      const arr = await res.arrayBuffer();
+      audioBuffer = await ctx.decodeAudioData(arr);
+      return audioBuffer;
+    }
+
+    function buildGraph(ctx){
+      filterNode = ctx.createBiquadFilter();
+      filterNode.type = 'lowpass';
+      filterNode.frequency.value = AUDIO_IDLE_LPF;
+      filterNode.Q.value = 0.0001;
+
+      gainNode = ctx.createGain();
+      gainNode.gain.value = 0.9;
+
+      filterNode.connect(gainNode).connect(ctx.destination);
+    }
+
+    function startLoopingSource(ctx){
+      if (!audioBuffer) return;
+      stopSource();
+      sourceNode = ctx.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.loop = true;
+      sourceNode.playbackRate.value = AUDIO_IDLE_RATE;
+      sourceNode.connect(filterNode);
+      const t = ctx.currentTime;
+      sourceNode.start(t + 0.01);
+      audioStarted = true;
+    }
+
+    function stopSource(){
+      if (sourceNode){
+        try { sourceNode.stop(); } catch(_) {}
+        try { sourceNode.disconnect(); } catch(_) {}
+        sourceNode = null;
+      }
+    }
+
+    async function initAudio(forceResume=false){
+      if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        buildGraph(audioCtx);
+      }
+      if (audioCtx.state === 'suspended' && forceResume){
+        try { await audioCtx.resume(); } catch(e){ /* ignore */ }
+      }
+      if (!audioBuffer){
+        try { await loadAudioBuffer(audioCtx); } catch(e){ console.warn('Audio load failed:', e); return; }
+      }
+      if (!audioStarted){
+        startLoopingSource(audioCtx);
+        setIdleAudioTargets(); // begin in idle state
+      }
+      audioReady = true;
+    }
+
+    async function maybeStartAudio(force=false){
+      if (!audioReady || (audioCtx && audioCtx.state==='suspended') || !audioStarted){
+        await initAudio(force);
+      }
+    }
+
+    function easeCubic(t){ return t*t*(3 - 2*t); } // smoothstep-like cubic
+
+    function setIdleAudioTargets(){
+      if (!audioCtx || !filterNode || !sourceNode) return;
+      const t = audioCtx.currentTime + 0.01;
+      filterNode.frequency.cancelScheduledValues(t);
+      filterNode.frequency.setTargetAtTime(AUDIO_IDLE_LPF, t, AUDIO_SMOOTH);
+      sourceNode.playbackRate.cancelScheduledValues(t);
+      sourceNode.playbackRate.setTargetAtTime(AUDIO_IDLE_RATE, t, AUDIO_SMOOTH);
+    }
+
+    function setFastAudioTargets(){
+      if (!audioCtx || !filterNode || !sourceNode) return;
+      const t = audioCtx.currentTime + 0.01;
+      filterNode.frequency.cancelScheduledValues(t);
+      filterNode.frequency.setTargetAtTime(AUDIO_NORMAL_LPF, t, AUDIO_SMOOTH);
+      sourceNode.playbackRate.cancelScheduledValues(t);
+      sourceNode.playbackRate.setTargetAtTime(AUDIO_NORMAL_RATE, t, AUDIO_SMOOTH);
+    }
+
+    function forceFastAudio(){ // used while popup is visible
+      if (!audioReady) return;
+      setFastAudioTargets();
+    }
+
+    // Continuous mapping per frame (unless popup forces full)
+    function updateAudioBySpeed(speedAbs){
+      if (!audioReady || !sourceNode || !filterNode) return;
+      if (popupVisible){ // override while popup open
+        setFastAudioTargets();
+        return;
+      }
+      const k = easeCubic(THREE.MathUtils.clamp(speedAbs / Math.max(0.001, AUDIO_SPEED_FOR_FULL), 0, 1));
+      const rate = THREE.MathUtils.lerp(AUDIO_IDLE_RATE, AUDIO_NORMAL_RATE, k);
+      const lpf  = THREE.MathUtils.lerp(AUDIO_IDLE_LPF,  AUDIO_NORMAL_LPF,  k);
+      const t = audioCtx.currentTime + 0.01;
+      sourceNode.playbackRate.cancelScheduledValues(t);
+      sourceNode.playbackRate.setTargetAtTime(rate, t, AUDIO_SMOOTH);
+      filterNode.frequency.cancelScheduledValues(t);
+      filterNode.frequency.setTargetAtTime(lpf, t, AUDIO_SMOOTH);
+    }
+
+    // Try to start on load (desktop may need gesture)
+    window.addEventListener('load', ()=> { initAudio(false); }, {once:true});
+    window.addEventListener('pointerdown', ()=> { maybeStartAudio(true); }, {once:true});
+
     /* -------------------- render loop -------------------- */
     const clock = new THREE.Clock();
     const tmpV3 = new THREE.Vector3();
@@ -840,19 +962,26 @@
       const dt = Math.min(clock.getDelta(), 0.033);
       const timeSec = clock.elapsedTime;
 
+      // Walls react to spin speed
       if (wallShaderRef){
         const dir = (angVel >= 0 ? 1.0 : -1.0);
         const speedFactor = 1.0 + Math.min(3.0, Math.abs(angVel) * 2.4);
         wallShaderRef.uniforms.uTime.value += dt * dir * speedFactor;
       }
 
-      if (Math.abs(angVel) > SPIN_POP_THRESHOLD){
+      // Popup opening condition (unchanged)
+      const speedAbs = Math.abs(angVel);
+      if (speedAbs > SPIN_POP_THRESHOLD){
         const now = performance.now();
         if (!popupVisible && (now - lastPopupTime) > POPUP_COOLDOWN_MS){
           lastPopupTime = now; showPopup();
         }
       }
 
+      // Audio follows speed continuously (and is forced normal while popup is open)
+      updateAudioBySpeed(speedAbs);
+
+      // Envmap probe at vase
       if (vaseReady && vase){
         vase.visible = false;
         cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
@@ -860,16 +989,19 @@
         vase.visible = true;
       }
 
+      // Smooth room tilt
       room.rotation.x += (targetRX - room.rotation.x) * 0.06;
       room.rotation.y += (targetRY - room.rotation.y) * 0.06;
       edges.rotation.copy(room.rotation);
 
       updateVase(dt);
 
+      // Water uniforms
       updateWaterCenterFromVase();
       waterUniforms.uTime.value = timeSec;
       waterUniforms.uSpinAbs.value = Math.abs(angVel);
 
+      // Render -> post
       const usePost = (CONFIG.post.pixelSize > 1) || (CONFIG.post.ditherStrength > 0.0001);
       if (usePost){
         renderer.setRenderTarget(rt);
@@ -884,8 +1016,6 @@
 
     /* -------------------- Tabs & UI binding -------------------- */
     const panel = document.getElementById('panel');
-    const gear  = document.getElementById('gear');
-    gear.onclick = ()=> { panel.style.display = (panel.style.display !== 'none') ? 'none' : 'block'; };
 
     document.getElementById('tabs').addEventListener('click', (e)=>{
       const btn = e.target.closest('.tab-btn'); if(!btn) return;
@@ -903,10 +1033,11 @@
     }
     function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
 
+    function syncVasePositionInputs(){ $('vaseZ').value = $('vaseZNum').value = vaseGroup.position.z; $('vaseYPos').value = $('vaseYPosNum').value = vaseGroup.position.y; }
+
     // Vase bindings
     bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{ CONFIG.vase.userScaleMult = Math.max(0.05, v); userScaleMult = CONFIG.vase.userScaleMult; applyVaseScale(); });
     bindRange('vaseYNum','vaseY', ()=>CONFIG.vase.userTallY, v=>{ CONFIG.vase.userTallY = Math.max(0.05, v); userTallY = CONFIG.vase.userTallY; applyVaseScale(); });
-    function syncVasePositionInputs(){ $('vaseZ').value = $('vaseZNum').value = vaseGroup.position.z; $('vaseYPos').value = $('vaseYPosNum').value = vaseGroup.position.y; }
     bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{ CONFIG.vase.z=v; vaseGroup.position.z=v; });
     bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{ CONFIG.vase.y=v; vaseGroup.position.y=v; });
 
@@ -1068,7 +1199,7 @@
     }
     initUIValues();
 
-    // Motion hint
+    // Motion hint (show only for iOS permission path)
     (function initMotionButton(){
       if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
         document.getElementById('enableMotion').style.display = 'block';
