@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
-   <title>Wasapok</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+  />
+  <title>Wasapok</title>
   <link rel="icon" type="image/x-icon" href="DiamondIcon.png">
   <style>
     html,body{height:100dvh;width:100vw;}
-    body{margin:0;background:#000;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;cursor: url('./diamondCur'), auto}
+    body{
+      margin:0;
+      background:#000;
+      overflow:hidden;
+      touch-action:none;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;
+      cursor: url('./diamondCur'), auto;
+    }
     canvas{display:block;width:100vw!important;height:100dvh!important}
     .panel{position:fixed;top:12px;left:12px;z-index:9999;width:min(94vw,460px);max-height:calc(100dvh - 24px);overflow:auto;border-radius:14px;background:#0b1020e0;border:1px solid #88a7ff2a;color:#eaf0ff;box-shadow:0 8px 28px #000a;font-size:12px;display:none}
     .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#0f1a38a6;border-bottom:1px solid #5c75b42a;position:sticky;top:0}
@@ -128,7 +138,7 @@
     </div>
   </div>
 
-  <button id="toggleControls">Controls (H)</button>
+  <!-- <button id="toggleControls">Controls (H)</button> -->
   <button id="enableMotion">Enable Fun</button>
 
   <script type="importmap">
@@ -196,7 +206,7 @@
       spin:{
         damping:0.997,
         minSpin:0.11,
-        swipeImpulse:0.02
+        swipeImpulse:0.1
       },
       post:{
         pixelSize:5,
@@ -289,7 +299,7 @@
       spin:{
         damping:0.997,
         minSpin:0.11,
-        swipeImpulse:0.0437
+        swipeImpulse:0.1
       },
       post:{
         pixelSize:4,
@@ -339,7 +349,7 @@
         emissiveIntensity:1
       },
       badges:{
-        sizeMul:1.5,
+        sizeMul:1.6,
         offsetXMul:0.6,
         yPos:4.7,
         zOffset:-1,
@@ -873,19 +883,41 @@
 
     buildBadges();
 
-    const raycaster=new THREE.Raycaster(); const pointer=new THREE.Vector2();
-    window.addEventListener('click', (e)=>{
+    /* ---------- badge raycast + unified mouse/touch handling ---------- */
+    const raycaster=new THREE.Raycaster();
+    const pointer=new THREE.Vector2();
+
+    function handleBadgeHit(clientX, clientY){
       if(!badgesReady || !badgeGroup.visible) return;
-      const rect=renderer.domElement.getBoundingClientRect();
-      pointer.set( ((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1 );
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      pointer.set(x, y);
       raycaster.setFromCamera(pointer, camera);
       const objects = [spotifyBadge, appleBadge].filter(Boolean);
-      const hits=raycaster.intersectObjects(objects, false);
+      const hits = raycaster.intersectObjects(objects, false);
       if(!hits.length) return;
-      const obj=hits[0].object;
-      if(obj===spotifyBadge) window.open('https://open.spotify.com/', '_blank', 'noopener');
-      else if(obj===appleBadge) window.open('https://music.apple.com/', '_blank', 'noopener');
+      const obj = hits[0].object;
+      let url = null;
+      if(obj === spotifyBadge) url = 'https://open.spotify.com/';
+      else if(obj === appleBadge) url = 'https://music.apple.com/';
+      if(!url) return;
+      window.open(url, '_blank', 'noopener');
+    }
+
+    // Mouse / desktop click
+    window.addEventListener('click', (e)=>{
+      handleBadgeHit(e.clientX, e.clientY);
     }, {passive:true});
+
+    // Direct touch tap (fixes iPhone canvas tap not triggering synthetic click reliably)
+    window.addEventListener('touchend', (e)=>{
+      const t = e.changedTouches && e.changedTouches[0];
+      if(!t) return;
+      handleBadgeHit(t.clientX, t.clientY);
+      // Prevent extra synthetic click
+      e.preventDefault();
+    }, {passive:false});
 
     /* ---------- audio ---------- */
     const AUDIO_URL="./soundtrackComp.mp3"; const A_IDLE=0.25, A_IDLE_LPF=380, A_NORM=1.0, A_NORM_LPF=18000, A_SMOOTH=0.18;
