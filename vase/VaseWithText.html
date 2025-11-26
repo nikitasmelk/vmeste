@@ -16,7 +16,6 @@
     }
     canvas { display: block; width: 100vw !important; height: 100dvh !important; }
 
-    /* Panel */
     .panel {
       position: fixed; top: 12px; left: 12px; z-index: 9999;
       width: min(94vw, 460px);
@@ -28,9 +27,15 @@
       display: none;
     }
     .tabs {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 8px;
-      background: #0f1a38a6; border-bottom: 1px solid #5c75b42a;
-      position: sticky; top: 0; z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 8px;
+      background: #0f1a38a6;
+      border-bottom: 1px solid #5c75b42a;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
     .tab-btn {
       padding: 8px 10px; border-radius: 10px; border:1px solid #6aa2ff33;
@@ -39,11 +44,15 @@
     }
     .tab-btn.active { background:#1a2a62; border-color:#89a6ff66; color:#eaf0ff; }
     .tabpages { padding: 10px; }
-    .tabpage { display: none; } .tabpage.active { display: block; }
+    .tabpage { display: none; }
+    .tabpage.active { display: block; }
     h3 { margin: 4px 0 10px; font-size: 13px; color:#cfe0ff; }
     .row {
-      display: grid; grid-template-columns: 1fr 60px; gap: 8px;
-      align-items: center; margin: 6px 0;
+      display: grid;
+      grid-template-columns: 1fr 60px;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
     }
     .row input[type="range"] { width: 100%; }
     .row input[type="number"] {
@@ -59,8 +68,8 @@
     .inline { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .swatch { display:flex; gap:6px; }
     .swatch input[type="number"] { width:52px; }
+    label { cursor: default; }
 
-    /* Controls toggle button */
     #toggleControls {
       position: fixed; right: 16px; bottom: 16px; z-index: 10000;
       padding: 10px 14px; border-radius: 12px; border: 1px solid #6aa2ff33;
@@ -68,30 +77,31 @@
       letter-spacing: .05em; box-shadow: 0 6px 20px #0007;
     }
 
-    /* Motion enable button (mobile gyro) */
     #enableMotion {
       position: fixed; inset: auto 16px 66px auto; z-index: 10000;
       padding: 10px 14px; border-radius: 12px; border: 1px solid #6aa2ff33;
       background: #0b1020; color: #cfe0ff; font: 600 12px/1.2 system-ui;
       letter-spacing: .05em; box-shadow: 0 6px 20px #0007; display: none;
     }
+
+    input[type="checkbox"] {
+      width: auto;
+      accent-color: #7fa3ff;
+    }
   </style>
 </head>
 <body>
-
-  <!-- Controls -->
   <div class="panel" id="panel">
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="vaseTab">vase</button>
       <button class="tab-btn" data-tab="roomTab">room size & framing</button>
-      <button class="tab-btn" data-tab="wallImgTab">wall image</button>
-      <button class="tab-btn" data-tab="lightsTab">lights</button>
-      <button class="tab-btn" data-tab="roomFxTab">room fx</button>
-      <button class="tab-btn" data-tab="waterTab">water</button>
-      <button class="tab-btn" data-tab="globalFxTab">global fx</button>
-      <button class="tab-btn" data-tab="vaseFxTab">vase fx</button>
-      <button class="tab-btn" data-tab="badgesTab">badges</button>
-      <button class="tab-btn" data-tab="headerTab">header text</button>
+      <button class="tab-btn" data-tab="wallImgTab">wall image controls</button>
+      <button class="tab-btn" data-tab="lightsTab">lights controls</button>
+      <button class="tab-btn" data-tab="roomFxTab">room effects</button>
+      <button class="tab-btn" data-tab="waterTab">water effects</button>
+      <button class="tab-btn" data-tab="globalFxTab">global effects</button>
+      <button class="tab-btn" data-tab="vaseFxTab">vase effects</button>
+      <button class="tab-btn" data-tab="headerTab">header + badges</button>
     </div>
 
     <div class="tabpages">
@@ -114,15 +124,11 @@
 
       <!-- Room size & framing -->
       <div class="tabpage" id="roomTab">
-        <h3>Room Size (Auto-fit)</h3>
-        <div class="hint">Width & Height auto-fit to viewport so no outside is visible.</div>
+        <h3>Room Size (auto-fit)</h3>
+        <div class="hint">Depth drives room size; width/height auto-fit to keep the outside invisible.</div>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
         <h3>Framing</h3>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
-        <div class="two">
-          <button id="fitPortrait">Refit (Portrait)</button>
-          <button id="fitDesktop">Refit (Desktop)</button>
-        </div>
       </div>
 
       <!-- Wall image controls -->
@@ -210,31 +216,14 @@
         </div>
       </div>
 
-      <!-- Badges -->
-      <div class="tabpage" id="badgesTab">
-        <h3>Badges (Spotify / Apple Music)</h3>
-        <div class="hint">Badges appear when spin first reaches full audio speed, or you can force-show them here.</div>
-        <div class="row"><label>Size ×</label><input id="badgeSizeNum" type="number" step="0.01"><input id="badgeSize" type="range" min="0.3" max="3.0" step="0.01"></div>
-        <div class="row"><label>Thickness ×</label><input id="badgeThickNum" type="number" step="0.01"><input id="badgeThick" type="range" min="0.5" max="4.0" step="0.01"></div>
-        <div class="row"><label>Spread ×</label><input id="badgeSpreadNum" type="number" step="0.01"><input id="badgeSpread" type="range" min="0.3" max="2.0" step="0.01"></div>
-        <div class="row"><label>Height ×</label><input id="badgeHeightNum" type="number" step="0.01"><input id="badgeHeight" type="range" min="0.3" max="2.0" step="0.01"></div>
-        <div class="row"><label>Depth Z offset</label><input id="badgeZNum" type="number" step="0.1"><input id="badgeZ" type="range" min="-10" max="10" step="0.1"></div>
-        <div class="two">
-          <button id="badgeShowToggle">Force show badges</button>
-          <button id="badgeReset">Reset badges preset</button>
-        </div>
-        <div class="hint">Click badges to open Spotify / Apple Music in a new tab.</div>
-      </div>
-
-      <!-- Header text -->
+      <!-- Header + Badges -->
       <div class="tabpage" id="headerTab">
         <h3>Header Text</h3>
-        <div class="hint">Opacity auto-rises with spin and locks at 0.99 on first full-speed moment; you can set the baseline here.</div>
-        <div class="row"><label>Opacity (0..0.99)</label><input id="hdrOpNum" type="number" step="0.01" min="0" max="0.99"><input id="hdrOp" type="range" min="0" max="0.99" step="0.01"></div>
+        <div class="hint">Opacity is automatic: starts at 0 and eases to 0.99 when the vase reaches full spin speed (then stays).</div>
         <div class="row"><label>Size ×</label><input id="hdrSizeNum" type="number" step="0.01" min="0.2" max="3"><input id="hdrSize" type="range" min="0.2" max="3" step="0.01"></div>
         <div class="row"><label>Pos X</label><input id="hdrXNum" type="number" step="0.1"><input id="hdrX" type="range" min="-40" max="40" step="0.1"></div>
         <div class="row"><label>Pos Y</label><input id="hdrYNum" type="number" step="0.1"><input id="hdrY" type="range" min="-20" max="20" step="0.1"></div>
-        <div class="row"><label>Pos Z</label><input id="hdrZNum" type="number" step="0.1"><input id="hdrZ" type="range" min="-10" max="30" step="0.1"></div>
+        <div class="row"><label>Pos Z</label><input id="hdrZNum" type="number" step="0.1"><input id="hdrZ" type="range" min="-40" max="40" step="0.1"></div>
 
         <h3>Header Material</h3>
         <div class="row"><label>Metalness</label><input id="hdrMetalNum" type="number" step="0.01"><input id="hdrMetal" type="range" min="0" max="1" step="0.01"></div>
@@ -243,17 +232,22 @@
         <div class="row"><label>CC Roughness</label><input id="hdrCCRNum" type="number" step="0.01"><input id="hdrCCR" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Env Intensity</label><input id="hdrEnvNum" type="number" step="0.01"><input id="hdrEnv" type="range" min="0" max="4" step="0.01"></div>
         <div class="row"><label>Transmission</label><input id="hdrTransNum" type="number" step="0.01"><input id="hdrTrans" type="range" min="0" max="1" step="0.01"></div>
-        <div class="row"><label>Depth (Thickness)</label><input id="hdrThickNum" type="number" step="0.01"><input id="hdrThick" type="range" min="0.05" max="2.0" step="0.01"></div>
-        <div class="row"><label>Glow (Emissive)</label><input id="hdrGlowNum" type="number" step="0.01"><input id="hdrGlow" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Depth/Thickness ×</label><input id="hdrThickNum" type="number" step="0.01"><input id="hdrThick" type="range" min="0.2" max="3" step="0.01"></div>
+        <div class="row"><label>Emissive Intensity</label><input id="hdrEmissNum" type="number" step="0.01"><input id="hdrEmiss" type="range" min="0" max="3" step="0.01"></div>
+
+        <h3>Badges</h3>
+        <div class="row"><label>Badge Size ×</label><input id="bdgSizeNum" type="number" step="0.01"><input id="bdgSize" type="range" min="0.3" max="3" step="0.01"></div>
+        <div class="row"><label>Thickness ×</label><input id="bdgThickNum" type="number" step="0.01"><input id="bdgThick" type="range" min="0.5" max="4" step="0.01"></div>
+        <div class="row"><label>X Offset ×</label><input id="bdgXOffNum" type="number" step="0.01"><input id="bdgXOff" type="range" min="0" max="2" step="0.01"></div>
+        <div class="row"><label>Height ×</label><input id="bdgHeightNum" type="number" step="0.01"><input id="bdgHeight" type="range" min="0" max="4" step="0.01"></div>
+        <div class="row"><label>Z Offset</label><input id="bdgZOffNum" type="number" step="0.1"><input id="bdgZOff" type="range" min="-10" max="10" step="0.1"></div>
       </div>
     </div>
   </div>
 
-  <!-- Toggle Control Button -->
   <button id="toggleControls">Controls (H)</button>
   <button id="enableMotion">Enable Fun</button>
 
-  <!-- three.js -->
   <script type="importmap">
     {
       "imports": {
@@ -270,14 +264,11 @@
     import { Font } from 'three/addons/loaders/FontLoader.js';
     import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-    /* -------------------- helpers & environment -------------------- */
     const vw = ()=> (window.visualViewport?.width  || window.innerWidth);
     const vh = ()=> (window.visualViewport?.height || window.innerHeight);
     const isPortrait = ()=> vh() >= vw();
     const isTouch = ()=> ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     const isPhone = ()=> isTouch() && (Math.min(vw(), vh()) < 820);
-
-    const tmpV3 = new THREE.Vector3();
 
     const params = new URLSearchParams(location.search);
     function getStoredPreset(){ try{ return localStorage.getItem('room_preset_override') || ''; }catch(_){ return ''; } }
@@ -286,32 +277,205 @@
     if (urlPreset === 'phone' || urlPreset === 'desktop') setStoredPreset(urlPreset);
     const presetChoice = getStoredPreset() || (isPhone() ? 'phone' : 'desktop');
 
-    /* -------------------- PRESETS -------------------- */
+    /* -------------------- presets from you -------------------- */
     const desktopDefaults = {
-      room:{ width:18.766829958988648, height:10.18770767198562, depth:14.5, positionZ:-10.8, imageZoom:0.96, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
-      lights:{ exposure:0.86, ambient:1.91, hemisphere:2.0, rim:1.87, key:1.68, vaseLight:{ intensity:6.0, distance:8.6, decay:1.6, y:0.1 } },
-      vase:{ userScaleMult:3.2, userTallY:1.06, z:-10.7, y:-4.8 },
-      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
-      post:{ pixelSize:5, ditherStrength:1.0 },
-      water:{ amp:1.61, freq:40.0, speed:0.82, falloff:0.9, alpha:0.44, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
-      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:0.63, color:[1,1,1], attnColor:[0.66,0.79,1] },
-      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
+      room: {
+        width: 18.766829958988648,
+        height: 10.18770767198562,
+        depth: 14.5,
+        positionZ: -10.8,
+        imageZoom: 0.96,
+        borderOpacity: 0,
+        wallEmissive: 0.38,
+        wallDispAmp: 0.006,
+        wallDispSpeed: 2.39
+      },
+      lights: {
+        exposure: 0.86,
+        ambient: 1.91,
+        hemisphere: 2,
+        rim: 1.87,
+        key: 1.68,
+        vaseLight: {
+          intensity: 6,
+          distance: 8.6,
+          decay: 1.6,
+          y: 0.1
+        }
+      },
+      vase: {
+        userScaleMult: 3.2,
+        userTallY: 1.06,
+        z: -10.7,
+        y: -4.8
+      },
+      spin: {
+        damping: 0.997,
+        minSpin: 0.11,
+        swipeImpulse: 0.02
+      },
+      post: {
+        pixelSize: 5,
+        ditherStrength: 1
+      },
+      water: {
+        amp: 1.61,
+        freq: 40,
+        speed: 0.82,
+        falloff: 0.9,
+        alpha: 0.44,
+        radius: 2.9,
+        pixel: 24,
+        yOffset: -0.05,
+        tint: [0.45, 0.75, 1]
+      },
+      glass: {
+        transmission: 0.86,
+        thickness: 4,
+        ior: 2.5,
+        roughness: 0.05,
+        clearcoat: 1,
+        ccRough: 0.9,
+        envIntensity: 1.51,
+        metalness: 0.63,
+        color: [1, 1, 1],
+        attnColor: [0.66, 0.79, 1]
+      },
+      _internal: {
+        WATER_RADIUS_FACTOR: 0.74,
+        TILT_MARGIN: 1.1247358823385865
+      },
+      header: {
+        opacity: 0.99,
+        sizeMul: 0.56,
+        x: 0,
+        y: 2.5,
+        z: -2.5,
+        locked: true,
+        metalness: 0.97,
+        roughness: 0.0,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.84,
+        envIntensity: 2.47,
+        transmission: 1,
+        thickness: 2,
+        emissiveIntensity: 1
+      },
+      badges: {
+        sizeMul: 1.53,
+        thicknessMul: 2.8,
+        offsetXMul: 1.01,
+        heightMul: 1.6,
+        zOffset: 1.4,
+        forceVisible: false,
+        activated: true
+      },
+      _preset: 'desktop'
     };
+
     const phoneDefaults = {
-      room:{ width:3.2466138193122998, height:7.026005291024567, depth:8.1, positionZ:-2.4, imageZoom:1.0, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
-      lights:{ exposure:2.74, ambient:1.72, hemisphere:2.36, rim:3.22, key:1.47, vaseLight:{ intensity:7.16, distance:28.2, decay:2.7, y:0.4 } },
-      vase:{ userScaleMult:1.37, userTallY:1.81, z:-0.9, y:-3.3 },
-      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
-      post:{ pixelSize:3, ditherStrength:1.0 },
-      water:{ amp:1.27, freq:40.0, speed:0.82, falloff:0.9, alpha:0.05, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
-      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:1.0, color:[1,1,1], attnColor:[0.66,0.79,1] },
-      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
+      room: {
+        width: 3.2466138193122998,
+        height: 7.026005291024567,
+        depth: 6.6,
+        positionZ: -10.4,
+        imageZoom: 0.96,
+        borderOpacity: 0,
+        wallEmissive: 0.32,
+        wallDispAmp: 0.011,
+        wallDispSpeed: 2.19
+      },
+      lights: {
+        exposure: 0.77,
+        ambient: 0.79,
+        hemisphere: 2.87,
+        rim: 3.34,
+        key: 1.47,
+        vaseLight: {
+          intensity: 10.26,
+          distance: 2.9,
+          decay: 2.5,
+          y: 0.77
+        }
+      },
+      vase: {
+        userScaleMult: 0.98,
+        userTallY: 1.04,
+        z: -9.3,
+        y: -3.1
+      },
+      spin: {
+        damping: 0.997,
+        minSpin: 0.11,
+        swipeImpulse: 0.02
+      },
+      post: {
+        pixelSize: 5,
+        ditherStrength: 1
+      },
+      water: {
+        amp: 0,
+        freq: 23.9,
+        speed: 0.82,
+        falloff: 0.9,
+        alpha: 0.44,
+        radius: 2.9,
+        pixel: 24,
+        yOffset: -0.05,
+        tint: [0.45, 0.75, 1]
+      },
+      glass: {
+        transmission: 0.98,
+        thickness: 2.98,
+        ior: 2.5,
+        roughness: 0,
+        clearcoat: 0.03,
+        ccRough: 0.67,
+        envIntensity: 1.58,
+        metalness: 0.8,
+        color: [1, 1, 1],
+        attnColor: [0.66, 0.79, 1]
+      },
+      _internal: {
+        WATER_RADIUS_FACTOR: 0.74,
+        TILT_MARGIN: 1.1247358823385865
+      },
+      header: {
+        opacity: 0.99,
+        sizeMul: 0.74,
+        x: -2.3,
+        y: -4.3,
+        z: 7.6,
+        locked: true,
+        metalness: 0.15,
+        roughness: 0.07,
+        clearcoat: 0.46,
+        clearcoatRoughness: 0.74,
+        envIntensity: 2.18,
+        transmission: 1,
+        thickness: 2,
+        emissiveIntensity: 1
+      },
+      badges: {
+        sizeMul: 1.13,
+        thicknessMul: 2.91,
+        offsetXMul: 0.4,
+        heightMul: 2,
+        zOffset: 2.8,
+        forceVisible: false,
+        activated: true
+      },
+      _preset: 'phone'
     };
 
     const CONFIG = structuredClone(presetChoice === 'phone' ? phoneDefaults : desktopDefaults);
 
-    /* -------------------- renderer -------------------- */
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
+    /* -------------------- renderer & scene -------------------- */
+    const renderer = new THREE.WebGLRenderer({
+      antialias:true,
+      alpha:true,
+      powerPreference:'high-performance'
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 1.8));
     renderer.setSize(vw(), vh(), false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -320,14 +484,13 @@
     renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
-    /* -------------------- scene / camera -------------------- */
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0d1220, 18, 40);
 
     const camera = new THREE.PerspectiveCamera(55, vw()/vh(), 0.1, 100);
     camera.position.set(0, 0, 7.5);
 
-    /* -------------------- texture / walls -------------------- */
+    /* -------------------- wall texture & shader -------------------- */
     const textureURL = "/reilly-album-cvr.jpeg";
     const tLoader = new THREE.TextureLoader(); tLoader.setCrossOrigin("anonymous");
     const tex = tLoader.load(textureURL, ()=>{
@@ -338,7 +501,10 @@
     });
 
     const wallMat = new THREE.MeshStandardMaterial({
-      map: tex, side: THREE.BackSide, roughness: 0.8, metalness: 0.0,
+      map: tex,
+      side: THREE.BackSide,
+      roughness: 0.8,
+      metalness: 0.0,
       emissive: new THREE.Color(0x2a365c),
       emissiveIntensity: CONFIG.room.wallEmissive,
       envMapIntensity: 0.18
@@ -382,15 +548,19 @@
       texture.needsUpdate = true;
     }
 
-    /* -------------------- room geometry (auto-fit) -------------------- */
+    /* -------------------- room geometry & autofit -------------------- */
     let ROOM_W=CONFIG.room.width, ROOM_H=CONFIG.room.height, ROOM_D=CONFIG.room.depth;
+
     function buildRoomGeometry(w, h, d){
       const geo = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
       const tileW = 1/4, tileH = 1/3;
       const regions = {
-        px:{u0:0.5,v0:1/3}, nx:{u0:0.0,v0:1/3},
-        py:{u0:0.25,v0:2/3}, ny:{u0:0.25,v0:0.0},
-        pz:{u0:0.25,v0:1/3}, nz:{u0:0.75,v0:1/3}
+        px:{u0:0.5,v0:1/3},
+        nx:{u0:0.0,v0:1/3},
+        py:{u0:0.25,v0:2/3},
+        ny:{u0:0.25,v0:0.0},
+        pz:{u0:0.25,v0:1/3},
+        nz:{u0:0.75,v0:1/3}
       };
       const uv = geo.getAttribute('uv'); const arr = uv.array; const stride = 12;
       const faces=[regions.px,regions.nx,regions.py,regions.ny,regions.pz,regions.nz];
@@ -414,10 +584,58 @@
 
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(roomGeo),
-      new THREE.LineBasicMaterial({ color: 0xF0F6FF, transparent: true, opacity: CONFIG.room.borderOpacity })
+      new THREE.LineBasicMaterial({
+        color: 0xF0F6FF,
+        transparent: true,
+        opacity: CONFIG.room.borderOpacity
+      })
     );
     edges.position.copy(room.position);
     scene.add(edges);
+
+    const BASE_VFOV_DEG = 55;
+    const INPUT_MAX_TILT = 0.085;
+    let WATER_RADIUS_FACTOR = CONFIG._internal?.WATER_RADIUS_FACTOR ?? 0.74;
+    let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? (1.12 / Math.cos(INPUT_MAX_TILT * 1.08));
+
+    function computeTargetDistance(depth){
+      return THREE.MathUtils.clamp(depth * 0.6, 6.0, 20.0);
+    }
+
+    function rebuildRoom(){
+      const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
+      room.geometry.dispose(); room.geometry=newGeo;
+      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
+      resizeWater();
+      rebuildWaterCircle();
+    }
+
+    function adjustRoomToViewport(){
+      const aspect = vw()/vh();
+      const vfovRad = THREE.MathUtils.degToRad(BASE_VFOV_DEG);
+      const openingZ = room.position.z + ROOM_D * 0.5;
+      const dTarget  = computeTargetDistance(ROOM_D);
+
+      camera.fov = BASE_VFOV_DEG;
+      camera.aspect = aspect;
+      camera.position.set(0, 0, openingZ + dTarget);
+
+      const halfH = Math.tan(vfovRad * 0.5) * dTarget;
+      const targetH = 2 * halfH * TILT_MARGIN;
+      const targetW = targetH * aspect;
+
+      ROOM_H = targetH;
+      ROOM_W = targetW;
+      rebuildRoom();
+
+      const backZ = room.position.z - ROOM_D * 0.5;
+      const margin = Math.max(0.5, Math.min(5, ROOM_D * 0.25));
+      camera.near = Math.max(0.01, (camera.position.z - openingZ) * 0.25);
+      camera.far  = Math.max(50, (camera.position.z - backZ) + margin);
+      camera.updateProjectionMatrix();
+
+      if (headerFontRef) rebuildHeaderGeometry();
+    }
 
     /* -------------------- lights -------------------- */
     const amb = new THREE.AmbientLight(0xffffff, CONFIG.lights.ambient); scene.add(amb);
@@ -427,7 +645,7 @@
     key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
     scene.add(key);
 
-    /* -------------------- envmap + probe -------------------- */
+    /* -------------------- env map & vase -------------------- */
     const cubeRT = new THREE.WebGLCubeRenderTarget(256, {
       generateMipmaps:true,
       minFilter:THREE.LinearMipmapLinearFilter,
@@ -437,15 +655,6 @@
     const cubeCam = new THREE.CubeCamera(0.1, 100, cubeRT);
     scene.add(cubeCam);
 
-    let envInitialized = false;
-    function initEnvProbeOnce(){
-      if (envInitialized) return;
-      envInitialized = true;
-      cubeCam.position.set(0, 0, 0);
-      cubeCam.update(renderer, scene);
-    }
-
-    /* -------------------- vase -------------------- */
     const vaseGroup = new THREE.Group(); scene.add(vaseGroup);
     const vaseLight = new THREE.PointLight(
       0xaad4ff,
@@ -471,22 +680,23 @@
         transmission: CONFIG.glass.transmission,
         thickness: CONFIG.glass.thickness,
         ior: CONFIG.glass.ior,
-        clearcoat: 1.0,
+        clearcoat: CONFIG.glass.clearcoat,
         clearcoatRoughness: CONFIG.glass.ccRough,
         attenuationColor: new THREE.Color().setRGB(...CONFIG.glass.attnColor),
         attenuationDistance: 2.0,
         envMap: cubeRT.texture,
-        envMapIntensity: CONFIG.glass.envIntensity,
-        emissive: new THREE.Color(0x111623),
-        emissiveIntensity: 0.16      // prevent fully black vase at start
+        envMapIntensity: CONFIG.glass.envIntensity
       };
 
       vase.traverse(n=>{
         if(n.isMesh){
           const m = new THREE.MeshPhysicalMaterial(baseGlass);
           n.castShadow = n.receiveShadow = false;
-          n.material = m;
+          // tiny emissive so it's never pure black on load
+          m.emissive.setRGB(0.02, 0.03, 0.06);
+          m.emissiveIntensity = 0.08;
           glassMaterials.push(m);
+          n.material = m;
         }
       });
 
@@ -497,8 +707,6 @@
       vaseGroup.position.set(0, CONFIG.vase.y, CONFIG.vase.z);
       vaseReady = true;
       syncVasePositionInputs();
-
-      initEnvProbeOnce();
     });
 
     function applyGlassConfigToMaterials(){
@@ -538,7 +746,7 @@
       vase.scale.set(s, s*userTallY, s);
     }
 
-    /* -------------------- HEADER 3D TEXT -------------------- */
+    /* -------------------- header 3D text -------------------- */
     const HEADER_TEXT = 'Biome .•.•.•:::Plain.';
     const FONT_URL = './Sprintura.otf';
 
@@ -549,30 +757,25 @@
     let headerFontRef = null;
 
     const headerConfig = {
-      opacity: 0.22,
-      sizeMul: 1.0,
-      x: 0,
-      y: 2.0,
-      z: 6.0,
-      metalness: 1.0,
-      roughness: 0.18,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.35,
-      envIntensity: 1.6,
-      transmission: 0.32,
-      thickness: 0.65,
-      emissiveIntensity: 0.32
+      sizeMul: (CONFIG.header?.sizeMul ?? 1.0),
+      x: CONFIG.header?.x ?? 0,
+      y: CONFIG.header?.y ?? 2.0,
+      z: CONFIG.header?.z ?? 6.0,
+      metalness: CONFIG.header?.metalness ?? 1.0,
+      roughness: CONFIG.header?.roughness ?? 0.18,
+      clearcoat: CONFIG.header?.clearcoat ?? 1.0,
+      clearcoatRoughness: CONFIG.header?.clearcoatRoughness ?? 0.35,
+      envIntensity: CONFIG.header?.envIntensity ?? 1.6,
+      transmission: CONFIG.header?.transmission ?? 0.32,
+      thickness: CONFIG.header?.thickness ?? 1.0,
+      emissiveIntensity: CONFIG.header?.emissiveIntensity ?? 0.32
     };
 
     let headerOpacityLocked = false;
     const HEADER_OPACITY_MAX = 0.99;
 
-    function headerBaseSize(){
-      return Math.min(ROOM_W, ROOM_H) * 0.145;
-    }
-    function headerBaseHeight(){
-      return Math.min(ROOM_W, ROOM_H) * 0.035;
-    }
+    function headerBaseSize(){ return Math.min(ROOM_W, ROOM_H) * 0.145; }
+    function headerBaseHeight(){ return Math.min(ROOM_W, ROOM_H) * 0.035; }
 
     function buildHeaderMaterial(){
       headerMat = new THREE.MeshPhysicalMaterial({
@@ -589,26 +792,17 @@
         ior: 1.45,
         side: THREE.FrontSide,
         transparent: true,
-        opacity: headerConfig.opacity,
-        depthTest: true,
+        opacity: 0.0,          // start fully invisible
+        depthTest: false,
         depthWrite: false,
-        emissive: new THREE.Color(0x121932),
+        emissive: new THREE.Color(0x6f8bbf),
         emissiveIntensity: headerConfig.emissiveIntensity
       });
       return headerMat;
     }
 
-    function applyHeaderMaterialConfig(){
-      if (!headerMat) return;
-      headerMat.metalness            = headerConfig.metalness;
-      headerMat.roughness            = headerConfig.roughness;
-      headerMat.clearcoat            = headerConfig.clearcoat;
-      headerMat.clearcoatRoughness   = headerConfig.clearcoatRoughness;
-      headerMat.envMapIntensity      = headerConfig.envIntensity;
-      headerMat.transmission         = headerConfig.transmission;
-      headerMat.thickness            = headerConfig.thickness;
-      headerMat.emissiveIntensity    = headerConfig.emissiveIntensity;
-      headerMat.needsUpdate          = true;
+    function applyHeaderTransform(){
+      headerGroup.position.set(headerConfig.x, headerConfig.y, headerConfig.z);
     }
 
     function rebuildHeaderGeometry(){
@@ -617,14 +811,17 @@
         headerGroup.remove(headerMesh);
         headerMesh.geometry.dispose();
       }
+      const sizeBase = headerBaseSize();
+      const heightBase = headerBaseHeight();
+
       const geo = new TextGeometry(HEADER_TEXT, {
         font: headerFontRef,
-        size: headerBaseSize() * headerConfig.sizeMul,
-        height: headerBaseHeight() * headerConfig.sizeMul,
+        size: sizeBase * headerConfig.sizeMul,
+        height: heightBase * headerConfig.sizeMul * headerConfig.thickness,
         curveSegments: 10,
         bevelEnabled: true,
-        bevelThickness: Math.min(ROOM_W, ROOM_H) * 0.003 * headerConfig.sizeMul,
-        bevelSize:      Math.min(ROOM_W, ROOM_H) * 0.002 * headerConfig.sizeMul,
+        bevelThickness: Math.min(ROOM_W, ROOM_H) * 0.003 * headerConfig.sizeMul * headerConfig.thickness,
+        bevelSize:      Math.min(ROOM_W, ROOM_H) * 0.002 * headerConfig.sizeMul * headerConfig.thickness,
         bevelSegments: 4
       });
       geo.computeBoundingBox();
@@ -637,188 +834,56 @@
 
       headerGroup.add(headerMesh);
       applyHeaderTransform();
-      applyHeaderMaterialConfig();
-    }
-
-    function applyHeaderTransform(){
-      headerGroup.position.set(headerConfig.x, headerConfig.y, headerConfig.z);
     }
 
     const ttfLoader = new TTFLoader();
     ttfLoader.load(FONT_URL, (json)=>{
       const font = new Font(json);
       headerFontRef = font;
-
-      const openingZ = room.position.z + ROOM_D * 0.5;
-      const dTarget  = computeTargetDistance(ROOM_D);
-      headerConfig.x = 0;
-      headerConfig.y = ROOM_H * 0.2;
-      headerConfig.z = openingZ + dTarget * 0.35;
-
+      if (!CONFIG.header){
+        const openingZ = room.position.z + ROOM_D * 0.5;
+        const dTarget  = computeTargetDistance(ROOM_D);
+        headerConfig.x = 0;
+        headerConfig.y = ROOM_H * 0.2;
+        headerConfig.z = openingZ + dTarget * 0.35;
+      }
+      buildHeaderMaterial();
       rebuildHeaderGeometry();
-      initEnvProbeOnce();
     });
 
-    /* -------------------- 3D BADGES -------------------- */
-    const badgeGroup = new THREE.Group();
-    scene.add(badgeGroup);
-    badgeGroup.visible = false;
-
-    let spotifyTex = null;
-    let appleTex = null;
-    let spotifyBadge = null;
-    let appleBadge = null;
-    let badgesReady = false;
-    let badgesActivated = false;
-
-    const badgesConfig = {
-      sizeMul: 1.0,
-      thicknessMul: 2.8,   // more 3D by default
-      offsetXMul: 1.0,
-      heightMul: 1.0,
-      zOffset: 0.0,
-      forceVisible: false
-    };
-
-    function buildOrUpdateBadges(){
-      const sizeRef = Math.min(ROOM_W, ROOM_H);
-      const badgeSize = sizeRef * 0.24 * badgesConfig.sizeMul;
-      const badgeThickness = badgeSize * 0.06 * badgesConfig.thicknessMul;
-      const offsetX = sizeRef * 0.65 * badgesConfig.offsetXMul;
-      const baseY = roomFloorY() + sizeRef * 0.32 * badgesConfig.heightMul;
-      const baseZ = vaseGroup.position.z + badgesConfig.zOffset;
-
-      const makeBadge = (tex)=>{
-        const geo = new THREE.BoxGeometry(1, 1, 0.12);
-        const sideMat = new THREE.MeshStandardMaterial({
-          color: 0x050814,
-          roughness: 0.55,
-          metalness: 0.4
-        });
-        const rimMat = new THREE.MeshStandardMaterial({
-          color: 0x202a40,
-          roughness: 0.4,
-          metalness: 0.75
-        });
-        const frontMat = new THREE.MeshBasicMaterial({
-          map: tex,
-          transparent: true,
-          toneMapped: true
-        });
-        // px, nx, py, ny, pz, nz
-        return new THREE.Mesh(geo, [
-          rimMat, rimMat, sideMat, sideMat, frontMat, sideMat
-        ]);
-      };
-
-      if (!spotifyBadge && spotifyTex){
-        spotifyBadge = makeBadge(spotifyTex);
-        badgeGroup.add(spotifyBadge);
-      }
-      if (!appleBadge && appleTex){
-        appleBadge = makeBadge(appleTex);
-        badgeGroup.add(appleBadge);
-      }
-
-      if (spotifyBadge){
-        spotifyBadge.scale.set(badgeSize, badgeSize, badgeThickness);
-        spotifyBadge.position.set(-offsetX, baseY, baseZ);
-      }
-      if (appleBadge){
-        appleBadge.scale.set(badgeSize, badgeSize, badgeThickness);
-        appleBadge.position.set( offsetX, baseY, baseZ);
-      }
-
-      badgesReady = !!(spotifyBadge && appleBadge);
-      badgeGroup.visible = badgesReady && (badgesActivated || badgesConfig.forceVisible);
-    }
-
-    function tryBuildBadges(){
-      if (!spotifyTex || !appleTex) return;
-      buildOrUpdateBadges();
-    }
-
-    function updateBadgesLayout(){
-      if (!badgesReady) return;
-      buildOrUpdateBadges();
-    }
-
-    tLoader.load("./spotify.png", tex=>{
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      spotifyTex = tex;
-      tryBuildBadges();
-    });
-    tLoader.load("./apple.png", tex=>{
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      appleTex = tex;
-      tryBuildBadges();
-    });
-
-    /* -------------------- spin physics -------------------- */
+    /* -------------------- spin physics & full-speed hold -------------------- */
     let angVel=0, tilt=0, wobblePhase=0;
     let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE_SCALE=CONFIG.spin.swipeImpulse;
 
-    const SPEED_REF = 4;
+    const FULL_SPIN_SPEED = (presetChoice==='phone') ? 6.0 : 5.0;
+    const FULL_SPEED_HOLD_SECS = 10.0;    // 10s full-speed hold
+    let fullSpeedHoldUntil = 0.0;
+
+    const SPEED_REF = FULL_SPIN_SPEED * 1.2;
     const TILT_IDLE_DEG = 45;
     const TILT_MIN_DEG  = 10;
 
     let dragging=false, lastX=0, lastT=0;
-    function getPointerCoords(e){
-      if(e.touches?.length) return {x:e.touches[0].clientX, y:e.touches[0].clientY};
-      if(e.changedTouches?.length) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY};
-      return {x:e.clientX??0, y:e.clientY??0};
+    function getPointerX(e){
+      if(e.touches?.length) return e.touches[0].clientX;
+      if(e.changedTouches?.length) return e.changedTouches[0].clientX;
+      return e.clientX ?? 0;
     }
-
-    /* ----- raycaster for badge clicks ----- */
-    const raycaster = new THREE.Raycaster();
-    const pointerNDC = new THREE.Vector2();
-
-    function handleBadgeClick(e){
-      if (!badgesReady || !badgeGroup.visible) return false;
-      const { x, y } = getPointerCoords(e);
-      const rect = renderer.domElement.getBoundingClientRect();
-      const nx = ((x - rect.left) / rect.width) * 2 - 1;
-      const ny = -(((y - rect.top) / rect.height) * 2 - 1);
-      pointerNDC.set(nx, ny);
-      raycaster.setFromCamera(pointerNDC, camera);
-
-      const targets = [];
-      if (spotifyBadge) targets.push(spotifyBadge);
-      if (appleBadge) targets.push(appleBadge);
-      if (!targets.length) return false;
-
-      const hits = raycaster.intersectObjects(targets, true);
-      if (!hits.length) return false;
-
-      const hitObj = hits[0].object;
-      let url = null;
-      if (spotifyBadge && (hitObj === spotifyBadge || hitObj.parent === spotifyBadge)){
-        url = 'https://open.spotify.com/';
-      } else if (appleBadge && (hitObj === appleBadge || hitObj.parent === appleBadge)){
-        url = 'https://music.apple.com/';
-      }
-      if (url){
-        window.open(url, '_blank', 'noopener');
-        return true;
-      }
-      return false;
-    }
-
     function onSwipeDown(e){
-      // Prefer click on badges over spin
-      if (handleBadgeClick(e)) return;
-      dragging=true; const c=getPointerCoords(e); lastX=c.x; lastT=performance.now(); maybeStartAudio();
+      dragging=true;
+      lastX=getPointerX(e);
+      lastT=performance.now();
+      maybeStartAudio();
     }
     function onSwipeMove(e){
       if(!dragging) return;
       const now=performance.now();
-      const c=getPointerCoords(e);
-      const dx=c.x-lastX;
+      const x=getPointerX(e);
+      const dx=x-lastX;
       const dt=Math.max(1, now-lastT);
       angVel += (dx/dt)*IMPULSE_SCALE;
-      lastX=c.x; lastT=now;
+      lastX=x;
+      lastT=now;
     }
     function onSwipeUp(){ dragging=false; }
 
@@ -829,15 +894,32 @@
     window.addEventListener('touchmove', onSwipeMove, {passive:true});
     window.addEventListener('touchend',  onSwipeUp,   {passive:true});
 
-    function updateVase(dt){
+    function updateVase(dt, timeSec){
       if(!vaseReady) return;
 
-      angVel *= Math.pow(DAMPING, dt*60);
-      const floor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
-      if (Math.abs(angVel) < Math.abs(floor)) angVel = floor;
+      const speedAbsBefore = Math.abs(angVel);
+      if (speedAbsBefore >= FULL_SPIN_SPEED * 0.98){
+        fullSpeedHoldUntil = timeSec + FULL_SPEED_HOLD_SECS;
+      }
+      const inHold = timeSec < fullSpeedHoldUntil;
+      const sign = (angVel>=0 ? 1 : -1) || 1;
+
+      if (inHold){
+        // converge to exact full speed
+        const target = FULL_SPIN_SPEED;
+        angVel += (sign*target - angVel) * Math.min(1, dt*5.0);
+      } else {
+        // normal damping + floor
+        angVel *= Math.pow(DAMPING, dt*60);
+        const floor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
+        if (Math.abs(angVel) < Math.abs(floor)) angVel = floor;
+      }
+
+      // safety clamp
+      const maxSpin = FULL_SPIN_SPEED * 1.6;
+      if (Math.abs(angVel) > maxSpin) angVel = Math.sign(angVel) * maxSpin;
 
       const speedNorm = Math.min(1, Math.abs(angVel)/SPEED_REF);
-
       const targetTilt = THREE.MathUtils.degToRad(
         THREE.MathUtils.lerp(TILT_IDLE_DEG, TILT_MIN_DEG, speedNorm)
       );
@@ -852,7 +934,7 @@
       vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * (wobbleAmp * 0.6);
     }
 
-    /* -------------------- pointer/gyro tilt -------------------- */
+    /* -------------------- pointer / gyro tilt -------------------- */
     const enableMotionBtn = document.getElementById('enableMotion');
     let targetRX=0, targetRY=0;
     let baseBeta=null, baseGamma=null, pointerMoveAttached=false;
@@ -876,7 +958,6 @@
       }
       window.removeEventListener('deviceorientation', onDeviceOrientation, true);
       enableMotionBtn.style.display = 'none';
-
       if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent){
         const needsPerm = typeof DeviceOrientationEvent.requestPermission === 'function';
         if (needsPerm){
@@ -900,61 +981,11 @@
       }
     }
 
-    /* -------------------- AUTO-FIT sizing -------------------- */
-    const BASE_VFOV_DEG = 55;
-    const INPUT_MAX_TILT = 0.085;
-
-    let WATER_RADIUS_FACTOR = CONFIG._internal?.WATER_RADIUS_FACTOR ?? 0.74;
-    let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? (1.12 / Math.cos(INPUT_MAX_TILT * 1.08));
-
-    function computeTargetDistance(depth){
-      return THREE.MathUtils.clamp(depth * 0.6, 6.0, 20.0);
-    }
-
-    function rebuildRoom(){
-      const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
-      room.geometry.dispose(); room.geometry=newGeo;
-      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
-      resizeWater(); rebuildWaterCircle();
-      updateBadgesLayout();
-    }
-
-    function adjustRoomToViewport(){
-      const aspect = vw()/vh();
-      const vfovRad = THREE.MathUtils.degToRad(BASE_VFOV_DEG);
-      const openingZ = room.position.z + ROOM_D * 0.5;
-      const dTarget  = computeTargetDistance(ROOM_D);
-
-      camera.fov = BASE_VFOV_DEG;
-      camera.aspect = aspect;
-      camera.position.set(0, 0, openingZ + dTarget);
-
-      const halfH = Math.tan(vfovRad * 0.5) * dTarget;
-      const targetH = 2 * halfH * TILT_MARGIN;
-      const targetW = targetH * aspect;
-
-      ROOM_H = targetH;
-      ROOM_W = targetW;
-      rebuildRoom();
-
-      const backZ = room.position.z - ROOM_D * 0.5;
-      const margin = Math.max(0.5, Math.min(5, ROOM_D * 0.25));
-      camera.near = Math.max(0.01, (camera.position.z - openingZ) * 0.25);
-      camera.far  = Math.max(50, (camera.position.z - backZ) + margin);
-      camera.updateProjectionMatrix();
-
-      if (headerFontRef) rebuildHeaderGeometry();
-      updateBadgesLayout();
-      initEnvProbeOnce();
-    }
-
-    /* -------------------- post process -------------------- */
-    let rt = new THREE.WebGLRenderTarget(vw(), vh(), {
-      minFilter:THREE.LinearFilter,
-      magFilter:THREE.LinearFilter,
-      depthBuffer:true,
-      stencilBuffer:false
-    });
+    /* -------------------- postprocess -------------------- */
+    let rt = new THREE.WebGLRenderTarget(
+      vw(), vh(),
+      { minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, depthBuffer:true, stencilBuffer:false }
+    );
     const screenScene = new THREE.Scene();
     const screenCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 
@@ -1005,7 +1036,7 @@
       fsMat.uniforms.resolution.value.set(vw(), vh());
     }
 
-    /* -------------------- Water -------------------- */
+    /* -------------------- water -------------------- */
     const waterUniforms = {
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector3(0, 0, 0) },
@@ -1082,6 +1113,127 @@
       waterUniforms.uCenter.value.set(world.x, waterY, world.z);
     }
 
+    /* -------------------- badges (3D cards, PNG alpha) -------------------- */
+    const badgeGroup = new THREE.Group();
+    scene.add(badgeGroup);
+    badgeGroup.visible = false;
+
+    let spotifyTex = null;
+    let appleTex = null;
+    let spotifyBadge = null;
+    let appleBadge = null;
+    let badgesReady = false;
+    let badgesActivated = false; // only becomes true at full speed
+
+    const badgesConfig = CONFIG.badges ? {
+      sizeMul: CONFIG.badges.sizeMul ?? 1.0,
+      thicknessMul: CONFIG.badges.thicknessMul ?? 2.8,
+      offsetXMul: CONFIG.badges.offsetXMul ?? 1.0,
+      heightMul: CONFIG.badges.heightMul ?? 1.0,
+      zOffset: CONFIG.badges.zOffset ?? 0.0
+    } : {
+      sizeMul: 1.0,
+      thicknessMul: 2.8,
+      offsetXMul: 1.0,
+      heightMul: 1.0,
+      zOffset: 0.0
+    };
+
+    function buildBadges(){
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+
+      spotifyTex = loader.load('./spotify.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.magFilter = THREE.LinearFilter;
+        t.minFilter = THREE.LinearMipmapLinearFilter;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      });
+      appleTex = loader.load('./apple.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.magFilter = THREE.LinearFilter;
+        t.minFilter = THREE.LinearMipmapLinearFilter;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      });
+
+      const geo = new THREE.BoxGeometry(1,1,1);
+
+      const makeBadgeMaterials = (mapTex)=>{
+        const mat = new THREE.MeshStandardMaterial({
+          map: mapTex,
+          metalness: 0.3,
+          roughness: 0.35,
+          envMap: cubeRT.texture,
+          envMapIntensity: 1.2,
+          transparent: true,
+          alphaTest: 0.01
+        });
+        // same material on all faces (no black box)
+        return [mat, mat, mat, mat, mat, mat];
+      };
+
+      spotifyBadge = new THREE.Mesh(geo, makeBadgeMaterials(spotifyTex));
+      appleBadge   = new THREE.Mesh(geo, makeBadgeMaterials(appleTex));
+
+      spotifyBadge.castShadow = appleBadge.castShadow = false;
+      spotifyBadge.receiveShadow = appleBadge.receiveShadow = false;
+
+      badgeGroup.add(spotifyBadge);
+      badgeGroup.add(appleBadge);
+
+      badgesReady = true;
+      updateBadgesTransform();
+      badgeGroup.visible = badgesActivated;
+    }
+
+    function updateBadgesTransform(){
+      if (!badgesReady || !vaseReady) return;
+      const center = new THREE.Vector3();
+      vaseGroup.getWorldPosition(center);
+
+      const base = Math.min(ROOM_W, ROOM_H) * 0.12 * badgesConfig.sizeMul;
+      const depth = base * 0.3 * badgesConfig.thicknessMul;
+      const height = base * 0.6 * badgesConfig.heightMul;
+
+      const xOffsetBase = Math.min(ROOM_W, ROOM_D) * 0.4 * badgesConfig.offsetXMul;
+      const yOffsetBase = Math.min(ROOM_H, ROOM_D) * 0.15 * badgesConfig.heightMul;
+      const zBase = center.z + badgesConfig.zOffset;
+
+      if (spotifyBadge){
+        spotifyBadge.scale.set(base, height, depth);
+        spotifyBadge.position.set(center.x - xOffsetBase, center.y + yOffsetBase, zBase);
+      }
+      if (appleBadge){
+        appleBadge.scale.set(base, height, depth);
+        appleBadge.position.set(center.x + xOffsetBase, center.y + yOffsetBase, zBase);
+      }
+    }
+
+    buildBadges();
+
+    // Badge click -> links
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    function onPointerClick(e){
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = ( (e.clientX - rect.left) / rect.width ) * 2 - 1;
+      const y = - ( (e.clientY - rect.top) / rect.height ) * 2 + 1;
+      pointer.set(x, y);
+      raycaster.setFromCamera(pointer, camera);
+      const targets = [];
+      if (spotifyBadge) targets.push(spotifyBadge);
+      if (appleBadge) targets.push(appleBadge);
+      const hits = raycaster.intersectObjects(targets, false);
+      if (!hits.length) return;
+      const obj = hits[0].object;
+      if (obj === spotifyBadge){
+        window.open('https://open.spotify.com/', '_blank', 'noopener');
+      } else if (obj === appleBadge){
+        window.open('https://music.apple.com/', '_blank', 'noopener');
+      }
+    }
+    window.addEventListener('click', onPointerClick, {passive:true});
+
     /* -------------------- resize & layout -------------------- */
     function updateLayout(){
       renderer.setSize(vw(), vh(), false);
@@ -1092,7 +1244,7 @@
       applyVaseScale();
       resizeWater();
       adjustRoomToViewport();
-      updateBadgesLayout();
+      updateBadgesTransform();
     }
     window.addEventListener('resize', updateLayout, {passive:true});
     window.addEventListener('orientationchange', updateLayout, {passive:true});
@@ -1102,16 +1254,14 @@
 
     setupInputMode();
     updateLayout();
-    initEnvProbeOnce();
 
-    /* -------------------- Web Audio -------------------- */
+    /* -------------------- audio: idle -> full, tied to spin -------------------- */
     const AUDIO_URL = "./soundtrackComp.mp3";
     const AUDIO_IDLE_RATE = 0.25;
     const AUDIO_IDLE_LPF  = 380;
     const AUDIO_NORMAL_RATE = 1.0;
     const AUDIO_NORMAL_LPF  = 18000;
     const AUDIO_SMOOTH = 0.18;
-    const AUDIO_SPEED_FOR_FULL = (presetChoice==='phone') ? 5.0 : 4.0;
 
     let audioCtx = null;
     let audioBuffer = null;
@@ -1197,39 +1347,9 @@
       sourceNode.playbackRate.setTargetAtTime(AUDIO_IDLE_RATE, t, AUDIO_SMOOTH);
     }
 
-    function setFastAudioTargets(){
-      if (!audioCtx || !filterNode || !sourceNode) return;
-      const t = audioCtx.currentTime + 0.01;
-      filterNode.frequency.cancelScheduledValues(t);
-      filterNode.frequency.setTargetAtTime(AUDIO_NORMAL_LPF, t, AUDIO_SMOOTH);
-      sourceNode.playbackRate.cancelScheduledValues(t);
-      sourceNode.playbackRate.setTargetAtTime(AUDIO_NORMAL_RATE, t, AUDIO_SMOOTH);
-    }
-
-    function forceFastAudio(){ if (!audioReady) return; setFastAudioTargets(); }
-
-    function updateHeaderOpacityWithSpeed(k01){
-      if (!headerMat) return;
-      if (headerOpacityLocked) return;
-
-      const k = Math.max(0, Math.min(1, k01));
-      const beta = 5.0;
-      const expOpacity = HEADER_OPACITY_MAX * (1 - Math.exp(-beta * k));
-      const target = Math.max(headerConfig.opacity, expOpacity);
-      headerMat.opacity = target;
-
-      if (k >= 0.999 && !headerOpacityLocked){
-        headerMat.opacity = HEADER_OPACITY_MAX;
-        headerOpacityLocked = true;
-      }
-    }
-
     function updateAudioBySpeed(speedAbs){
       if (!audioReady || !sourceNode || !filterNode) return;
-
-      const k = easeCubic(
-        THREE.MathUtils.clamp(speedAbs / Math.max(0.001, AUDIO_SPEED_FOR_FULL), 0, 1)
-      );
+      const k = easeCubic(THREE.MathUtils.clamp(speedAbs / Math.max(0.001, FULL_SPIN_SPEED), 0, 1));
       const rate = THREE.MathUtils.lerp(AUDIO_IDLE_RATE, AUDIO_NORMAL_RATE, k);
       const lpf  = THREE.MathUtils.lerp(AUDIO_IDLE_LPF,  AUDIO_NORMAL_LPF,  k);
       const t = audioCtx.currentTime + 0.01;
@@ -1237,59 +1357,78 @@
       sourceNode.playbackRate.setTargetAtTime(rate, t, AUDIO_SMOOTH);
       filterNode.frequency.cancelScheduledValues(t);
       filterNode.frequency.setTargetAtTime(lpf, t, AUDIO_SMOOTH);
-
-      updateHeaderOpacityWithSpeed(k);
-
-      // Activate badges once, but can also be forced via UI
-      if (!badgesActivated && k >= 0.999){
-        badgesActivated = true;
-        badgeGroup.visible = badgesReady && (badgesActivated || badgesConfig.forceVisible);
-      }
     }
 
     window.addEventListener('load', ()=> { initAudio(false); }, {once:true});
     window.addEventListener('pointerdown', ()=> { maybeStartAudio(true); }, {once:true});
 
-    /* -------------------- render loop -------------------- */
+    /* -------------------- header opacity from spin -------------------- */
+    function updateHeaderOpacityWithSpeed(speedAbs){
+      if (!headerMat) return;
+      if (headerOpacityLocked) return;
+      const t = THREE.MathUtils.clamp(speedAbs / Math.max(0.001, FULL_SPIN_SPEED), 0, 1);
+      const k = t*t*(3 - 2*t); // smooth
+      const expOpacity = HEADER_OPACITY_MAX * (1.0 - Math.exp(-4.0 * k));
+      headerMat.opacity = expOpacity;
+      if (k >= 0.999){
+        headerMat.opacity = HEADER_OPACITY_MAX;
+        headerOpacityLocked = true;
+      }
+    }
+
+    /* -------------------- main loop -------------------- */
     const clock = new THREE.Clock();
+    const tmpV3 = new THREE.Vector3();
 
     function animate(){
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.033);
       const timeSec = clock.elapsedTime;
 
+      updateVase(dt, timeSec);
+
+      const speedAbs = Math.abs(angVel);
+
+      // wall shader reacts to spin
       if (wallShaderRef){
         const dir = (angVel >= 0 ? 1.0 : -1.0);
-        const speedFactor = 1.0 + Math.min(3.0, Math.abs(angVel) * 2.4);
+        const speedFactor = 1.0 + Math.min(3.0, speedAbs * 2.4);
         wallShaderRef.uniforms.uTime.value += dt * dir * speedFactor;
       }
 
-      const speedAbs = Math.abs(angVel);
-      updateAudioBySpeed(speedAbs);
-
-      // Envmap from vase position once it's there
-      if (vaseReady && vase){
-        vase.visible = false;
-        cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
-        cubeCam.update(renderer, scene);
-        vase.visible = true;
+      // badges: appear once at full speed
+      if (!badgesActivated && speedAbs >= FULL_SPIN_SPEED){
+        badgesActivated = true;
+        if (badgesReady) badgeGroup.visible = true;
       }
 
+      // audio + header from speed
+      updateAudioBySpeed(speedAbs);
+      updateHeaderOpacityWithSpeed(speedAbs);
+
+      // env map every frame so header/vase have light from start
+      cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
+      if (vaseReady && vase) vase.visible = false;
+      cubeCam.update(renderer, scene);
+      if (vaseReady && vase) vase.visible = true;
+
+      // room tilt
       room.rotation.x += (targetRX - room.rotation.x) * 0.06;
       room.rotation.y += (targetRY - room.rotation.y) * 0.06;
       edges.rotation.copy(room.rotation);
 
-      badgeGroup.rotation.copy(room.rotation);
+      // header simply faces camera
+      if (headerMesh){
+        headerGroup.lookAt(camera.position);
+      }
 
-      headerGroup.rotation.x = room.rotation.x;
-      headerGroup.rotation.y = room.rotation.y;
-      if (headerMesh) headerMesh.lookAt(camera.position);
-
-      updateVase(dt);
-
+      // water uniforms
       updateWaterCenterFromVase();
       waterUniforms.uTime.value = timeSec;
-      waterUniforms.uSpinAbs.value = Math.abs(angVel);
+      waterUniforms.uSpinAbs.value = speedAbs;
+
+      // badges follow vase
+      updateBadgesTransform();
 
       const usePost = (CONFIG.post.pixelSize > 1) || (CONFIG.post.ditherStrength > 0.0001);
       if (usePost){
@@ -1303,9 +1442,8 @@
     }
     animate();
 
-    /* -------------------- Tabs & UI binding -------------------- */
+    /* -------------------- tabs & UI -------------------- */
     const panel = document.getElementById('panel');
-
     document.getElementById('tabs').addEventListener('click', (e)=>{
       const btn = e.target.closest('.tab-btn'); if(!btn) return;
       for (const b of e.currentTarget.querySelectorAll('.tab-btn')) b.classList.toggle('active', b===btn);
@@ -1318,21 +1456,29 @@
     window.addEventListener('keydown', (e)=>{ if (e.key.toLowerCase() === 'h') togglePanel(); });
 
     const $ = id => document.getElementById(id);
-    function bindRange(numId, rangeId, getVal, setVal){
+    function setVal(id, val){ const el=$(id); if(el){ el.value=val; } }
+
+    function bindRange(numId, rangeId, getVal, setValFn){
       const num=$(numId), range=$(rangeId);
-      const init = getVal(); num.value = init; range.value = init;
-      const sync=(v)=>{ const val = +v; num.value=val; range.value=val; setVal(val); };
+      const init = getVal();
+      num.value = init;
+      range.value = init;
+      const sync=(v)=>{
+        const val = +v;
+        num.value=val;
+        range.value=val;
+        setValFn(val);
+      };
       num.addEventListener('change', e=>sync(e.target.value));
       range.addEventListener('input', e=>sync(e.target.value));
     }
-    function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
 
     function syncVasePositionInputs(){
       $('vaseZ').value = $('vaseZNum').value = vaseGroup.position.z;
       $('vaseYPos').value = $('vaseYPosNum').value = vaseGroup.position.y;
     }
 
-    // Vase bindings
+    // Vase
     bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{
       CONFIG.vase.userScaleMult = Math.max(0.05, v);
       userScaleMult = CONFIG.vase.userScaleMult;
@@ -1344,43 +1490,45 @@
       applyVaseScale();
     });
     bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{
-      CONFIG.vase.z=v; vaseGroup.position.z=v; updateBadgesLayout();
+      CONFIG.vase.z=v;
+      vaseGroup.position.z=v;
+      updateBadgesTransform();
     });
     bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{
-      CONFIG.vase.y=v; vaseGroup.position.y=v; updateBadgesLayout();
+      CONFIG.vase.y=v;
+      vaseGroup.position.y=v;
+      updateBadgesTransform();
     });
 
     // Spin
     bindRange('dampNum','damp', ()=>CONFIG.spin.damping, v=>{
-      CONFIG.spin.damping=v; DAMPING=v;
+      CONFIG.spin.damping=v;
+      DAMPING=v;
     });
     bindRange('minNum','min', ()=>CONFIG.spin.minSpin, v=>{
-      CONFIG.spin.minSpin=v; MIN_SPIN=v;
+      CONFIG.spin.minSpin=v;
+      MIN_SPIN=v;
     });
     bindRange('impNum','imp', ()=>CONFIG.spin.swipeImpulse, v=>{
-      CONFIG.spin.swipeImpulse=v; IMPULSE_SCALE=v;
+      CONFIG.spin.swipeImpulse=v;
+      IMPULSE_SCALE=v;
     });
 
-    // Room size
+    // Room depth & Z
     bindRange('dNum','d', ()=>ROOM_D, v=>{
-      ROOM_D=v; adjustRoomToViewport();
+      ROOM_D=v;
+      adjustRoomToViewport();
     });
     bindRange('zNum','z', ()=>room.position.z, v=>{
-      room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport();
+      room.position.z=v;
+      edges.position.copy(room.position);
+      adjustRoomToViewport();
     });
-
-    $('fitPortrait').onclick = ()=>{
-      room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      adjustRoomToViewport();
-    };
-    $('fitDesktop').onclick = ()=>{
-      room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      adjustRoomToViewport();
-    };
 
     // Wall image
     bindRange('zoomNum','zoom', ()=>CONFIG.room.imageZoom, v=>{
-      CONFIG.room.imageZoom=v; applyTextureZoom(tex, v);
+      CONFIG.room.imageZoom=v;
+      applyTextureZoom(tex, v);
     });
     bindRange('edgeNum','edge', ()=>edges.material.opacity, v=>{
       edges.material.opacity = Math.max(0, Math.min(1, v));
@@ -1389,69 +1537,91 @@
 
     // Lights
     bindRange('expNum','exp', ()=>CONFIG.lights.exposure, v=>{
-      CONFIG.lights.exposure=v; renderer.toneMappingExposure=v;
+      CONFIG.lights.exposure=v;
+      renderer.toneMappingExposure=v;
     });
     bindRange('ambNum','amb', ()=>CONFIG.lights.ambient, v=>{
-      CONFIG.lights.ambient=v; amb.intensity=v;
+      CONFIG.lights.ambient=v;
+      amb.intensity=v;
     });
     bindRange('hemNum','hem', ()=>CONFIG.lights.hemisphere, v=>{
-      CONFIG.lights.hemisphere=v; hemi.intensity=v;
+      CONFIG.lights.hemisphere=v;
+      hemi.intensity=v;
     });
     bindRange('rimNum','rim', ()=>CONFIG.lights.rim, v=>{
-      CONFIG.lights.rim=v; rim.intensity=v;
+      CONFIG.lights.rim=v;
+      rim.intensity=v;
     });
     bindRange('keyNum','key', ()=>CONFIG.lights.key, v=>{
-      CONFIG.lights.key=v; key.intensity=v;
+      CONFIG.lights.key=v;
+      key.intensity=v;
     });
     bindRange('vlINum','vlI', ()=>CONFIG.lights.vaseLight.intensity, v=>{
-      CONFIG.lights.vaseLight.intensity=v; vaseLight.intensity=v;
+      CONFIG.lights.vaseLight.intensity=v;
+      vaseLight.intensity=v;
     });
-    bindRange('vlDNum','vlD', ()=>CONFIG.lights.vaseLight.distance,  v=>{
-      CONFIG.lights.vaseLight.distance=v;  vaseLight.distance=v;
+    bindRange('vlDNum','vlD', ()=>CONFIG.lights.vaseLight.distance, v=>{
+      CONFIG.lights.vaseLight.distance=v;
+      vaseLight.distance=v;
     });
     bindRange('vlDecNum','vlDec', ()=>CONFIG.lights.vaseLight.decay, v=>{
-      CONFIG.lights.vaseLight.decay=v;  vaseLight.decay=v;
+      CONFIG.lights.vaseLight.decay=v;
+      vaseLight.decay=v;
     });
-    bindRange('vlYNum','vlY', ()=>CONFIG.lights.vaseLight.y,        v=>{
-      CONFIG.lights.vaseLight.y=v; vaseLight.position.y=v;
+    bindRange('vlYNum','vlY', ()=>CONFIG.lights.vaseLight.y, v=>{
+      CONFIG.lights.vaseLight.y=v;
+      vaseLight.position.y=v;
     });
 
     // Room FX
     bindRange('emisNum','emis', ()=>CONFIG.room.wallEmissive, v=>{
-      CONFIG.room.wallEmissive=v; wallMat.emissiveIntensity=v; wallMat.needsUpdate=true;
+      CONFIG.room.wallEmissive=v;
+      wallMat.emissiveIntensity=v;
+      wallMat.needsUpdate=true;
     });
-    bindRange('dispNum','disp', ()=>CONFIG.room.wallDispAmp,  v=>{
-      CONFIG.room.wallDispAmp=v;  if(wallShaderRef) wallShaderRef.uniforms.uDispAmp.value=v;
+    bindRange('dispNum','disp', ()=>CONFIG.room.wallDispAmp, v=>{
+      CONFIG.room.wallDispAmp=v;
+      if(wallShaderRef) wallShaderRef.uniforms.uDispAmp.value=v;
     });
-    bindRange('dsNum','ds',     ()=>CONFIG.room.wallDispSpeed,v=>{
-      CONFIG.room.wallDispSpeed=v;if(wallShaderRef) wallShaderRef.uniforms.uDispSpeed.value=v;
+    bindRange('dsNum','ds', ()=>CONFIG.room.wallDispSpeed, v=>{
+      CONFIG.room.wallDispSpeed=v;
+      if(wallShaderRef) wallShaderRef.uniforms.uDispSpeed.value=v;
     });
 
     // Water
-    bindRange('wAmpNum','wAmp', ()=>CONFIG.water.amp,   v=>{
-      CONFIG.water.amp=v;   waterUniforms.uAmp.value=v;
+    bindRange('wAmpNum','wAmp', ()=>CONFIG.water.amp, v=>{
+      CONFIG.water.amp=v;
+      waterUniforms.uAmp.value=v;
     });
-    bindRange('wFreqNum','wFreq',()=>CONFIG.water.freq, v=>{
-      CONFIG.water.freq=v;  waterUniforms.uFreq.value=v;
+    bindRange('wFreqNum','wFreq', ()=>CONFIG.water.freq, v=>{
+      CONFIG.water.freq=v;
+      waterUniforms.uFreq.value=v;
     });
-    bindRange('wSpeedNum','wSpeed',()=>CONFIG.water.speed, v=>{
-      CONFIG.water.speed=v; waterUniforms.uSpeed.value=v;
+    bindRange('wSpeedNum','wSpeed', ()=>CONFIG.water.speed, v=>{
+      CONFIG.water.speed=v;
+      waterUniforms.uSpeed.value=v;
     });
-    bindRange('wFallNum','wFall',()=>CONFIG.water.falloff, v=>{
-      CONFIG.water.falloff=v; waterUniforms.uFalloff.value=v;
+    bindRange('wFallNum','wFall', ()=>CONFIG.water.falloff, v=>{
+      CONFIG.water.falloff=v;
+      waterUniforms.uFalloff.value=v;
     });
-    bindRange('wAlphaNum','wAlpha',()=>CONFIG.water.alpha, v=>{
-      CONFIG.water.alpha=v; waterUniforms.uAlpha.value=v;
+    bindRange('wAlphaNum','wAlpha', ()=>CONFIG.water.alpha, v=>{
+      CONFIG.water.alpha=v;
+      waterUniforms.uAlpha.value=v;
     });
-    bindRange('wRadNum','wRad',()=>CONFIG.water.radius, v=>{
-      CONFIG.water.radius=v; waterUniforms.uRadius.value=v;
+    bindRange('wRadNum','wRad', ()=>CONFIG.water.radius, v=>{
+      CONFIG.water.radius=v;
+      waterUniforms.uRadius.value=v;
     });
-    bindRange('wPixNum','wPix',()=>CONFIG.water.pixel, v=>{
-      CONFIG.water.pixel=v|0; waterUniforms.uPixel.value=v|0;
+    bindRange('wPixNum','wPix', ()=>CONFIG.water.pixel, v=>{
+      CONFIG.water.pixel=v|0;
+      waterUniforms.uPixel.value=v|0;
     });
-    bindRange('wYNum','wY',()=>CONFIG.water.yOffset, v=>{
-      CONFIG.water.yOffset=v; resizeWater();
+    bindRange('wYNum','wY', ()=>CONFIG.water.yOffset, v=>{
+      CONFIG.water.yOffset=v;
+      resizeWater();
     });
+
     $('wR').value = CONFIG.water.tint[0];
     $('wG').value = CONFIG.water.tint[1];
     $('wB').value = CONFIG.water.tint[2];
@@ -1475,27 +1645,34 @@
 
     // Vase FX
     bindRange('glassTransNum','glassTrans', ()=>CONFIG.glass.transmission, v=>{
-      CONFIG.glass.transmission=v; applyGlassConfigToMaterials();
+      CONFIG.glass.transmission=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness,    v=>{
-      CONFIG.glass.thickness=v;    applyGlassConfigToMaterials();
+    bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness, v=>{
+      CONFIG.glass.thickness=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassIorNum','glassIor',     ()=>CONFIG.glass.ior,          v=>{
-      CONFIG.glass.ior=v;          applyGlassConfigToMaterials();
+    bindRange('glassIorNum','glassIor', ()=>CONFIG.glass.ior, v=>{
+      CONFIG.glass.ior=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassRoughNum','glassRough', ()=>CONFIG.glass.roughness,    v=>{
-      CONFIG.glass.roughness=v;    applyGlassConfigToMaterials();
+    bindRange('glassRoughNum','glassRough', ()=>CONFIG.glass.roughness, v=>{
+      CONFIG.glass.roughness=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassCCNum','glassCC',       ()=>CONFIG.glass.clearcoat,    v=>{
-      CONFIG.glass.clearcoat=v;    applyGlassConfigToMaterials();
+    bindRange('glassCCNum','glassCC', ()=>CONFIG.glass.clearcoat, v=>{
+      CONFIG.glass.clearcoat=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassCCRNum','glassCCR',     ()=>CONFIG.glass.ccRough,      v=>{
-      CONFIG.glass.ccRough=v;      applyGlassConfigToMaterials();
+    bindRange('glassCCRNum','glassCCR', ()=>CONFIG.glass.ccRough, v=>{
+      CONFIG.glass.ccRough=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassEnvNum','glassEnv',     ()=>CONFIG.glass.envIntensity, v=>{
-      CONFIG.glass.envIntensity=v; applyGlassConfigToMaterials();
+    bindRange('glassEnvNum','glassEnv', ()=>CONFIG.glass.envIntensity, v=>{
+      CONFIG.glass.envIntensity=v;
+      applyGlassConfigToMaterials();
     });
-    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness,    v=>{
+    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness, v=>{
       CONFIG.glass.metalness=Math.max(0, Math.min(1, v));
       applyGlassConfigToMaterials();
     });
@@ -1526,64 +1703,83 @@
     $('glassAttG').addEventListener('change', setGlassAttnColor);
     $('glassAttB').addEventListener('change', setGlassAttnColor);
 
-    /* ----- HEADER UI BINDINGS ----- */
+    /* ----- header + badges UI ----- */
     function bindHeaderUI(){
-      bindRange('hdrOpNum','hdrOp', ()=>headerConfig.opacity, v=>{
-        headerConfig.opacity = Math.max(0, Math.min(0.99, v));
-        if (!headerOpacityLocked && headerMat){
-          headerMat.opacity = headerConfig.opacity;
-        }
-      });
       bindRange('hdrSizeNum','hdrSize', ()=>headerConfig.sizeMul, v=>{
         headerConfig.sizeMul = Math.max(0.2, Math.min(3, v));
         rebuildHeaderGeometry();
       });
       bindRange('hdrXNum','hdrX', ()=>headerConfig.x, v=>{
-        headerConfig.x = v; applyHeaderTransform();
+        headerConfig.x = v;
+        applyHeaderTransform();
       });
       bindRange('hdrYNum','hdrY', ()=>headerConfig.y, v=>{
-        headerConfig.y = v; applyHeaderTransform();
+        headerConfig.y = v;
+        applyHeaderTransform();
       });
       bindRange('hdrZNum','hdrZ', ()=>headerConfig.z, v=>{
-        headerConfig.z = v; applyHeaderTransform();
+        headerConfig.z = v;
+        applyHeaderTransform();
       });
 
       bindRange('hdrMetalNum','hdrMetal', ()=>headerConfig.metalness, v=>{
-        headerConfig.metalness = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+        headerConfig.metalness = THREE.MathUtils.clamp(v,0,1);
+        if (headerMat){ headerMat.metalness = headerConfig.metalness; headerMat.needsUpdate=true; }
       });
       bindRange('hdrRoughNum','hdrRough', ()=>headerConfig.roughness, v=>{
-        headerConfig.roughness = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+        headerConfig.roughness = THREE.MathUtils.clamp(v,0,1);
+        if (headerMat){ headerMat.roughness = headerConfig.roughness; headerMat.needsUpdate=true; }
       });
       bindRange('hdrCCNum','hdrCC', ()=>headerConfig.clearcoat, v=>{
-        headerConfig.clearcoat = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+        headerConfig.clearcoat = THREE.MathUtils.clamp(v,0,1);
+        if (headerMat){ headerMat.clearcoat = headerConfig.clearcoat; headerMat.needsUpdate=true; }
       });
       bindRange('hdrCCRNum','hdrCCR', ()=>headerConfig.clearcoatRoughness, v=>{
-        headerConfig.clearcoatRoughness = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+        headerConfig.clearcoatRoughness = THREE.MathUtils.clamp(v,0,1);
+        if (headerMat){ headerMat.clearcoatRoughness = headerConfig.clearcoatRoughness; headerMat.needsUpdate=true; }
       });
       bindRange('hdrEnvNum','hdrEnv', ()=>headerConfig.envIntensity, v=>{
-        headerConfig.envIntensity = Math.max(0, v);
-        applyHeaderMaterialConfig();
+        headerConfig.envIntensity = Math.max(0,v);
+        if (headerMat){ headerMat.envMapIntensity = headerConfig.envIntensity; headerMat.needsUpdate=true; }
       });
       bindRange('hdrTransNum','hdrTrans', ()=>headerConfig.transmission, v=>{
-        headerConfig.transmission = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+        headerConfig.transmission = THREE.MathUtils.clamp(v,0,1);
+        if (headerMat){ headerMat.transmission = headerConfig.transmission; headerMat.needsUpdate=true; }
       });
       bindRange('hdrThickNum','hdrThick', ()=>headerConfig.thickness, v=>{
-        headerConfig.thickness = Math.max(0.05, v);
-        applyHeaderMaterialConfig();
+        headerConfig.thickness = Math.max(0.2, Math.min(3, v));
+        if (headerMat){ headerMat.thickness = headerConfig.thickness; headerMat.needsUpdate=true; }
+        rebuildHeaderGeometry();
       });
-      bindRange('hdrGlowNum','hdrGlow', ()=>headerConfig.emissiveIntensity, v=>{
-        headerConfig.emissiveIntensity = Math.max(0, Math.min(1, v));
-        applyHeaderMaterialConfig();
+      bindRange('hdrEmissNum','hdrEmiss', ()=>headerConfig.emissiveIntensity, v=>{
+        headerConfig.emissiveIntensity = Math.max(0, v);
+        if (headerMat){ headerMat.emissiveIntensity = headerConfig.emissiveIntensity; headerMat.needsUpdate=true; }
+      });
+
+      // Badges
+      bindRange('bdgSizeNum','bdgSize', ()=>badgesConfig.sizeMul, v=>{
+        badgesConfig.sizeMul = Math.max(0.3, Math.min(3, v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgThickNum','bdgThick', ()=>badgesConfig.thicknessMul, v=>{
+        badgesConfig.thicknessMul = Math.max(0.5, Math.min(4, v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgXOffNum','bdgXOff', ()=>badgesConfig.offsetXMul, v=>{
+        badgesConfig.offsetXMul = Math.max(0, Math.min(2, v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgHeightNum','bdgHeight', ()=>badgesConfig.heightMul, v=>{
+        badgesConfig.heightMul = Math.max(0, Math.min(4, v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgZOffNum','bdgZOff', ()=>badgesConfig.zOffset, v=>{
+        badgesConfig.zOffset = v;
+        updateBadgesTransform();
       });
     }
 
     function initHeaderUIValues(){
-      setVal('hdrOp', headerConfig.opacity); setVal('hdrOpNum', headerConfig.opacity);
       setVal('hdrSize', headerConfig.sizeMul); setVal('hdrSizeNum', headerConfig.sizeMul);
       setVal('hdrX', headerConfig.x); setVal('hdrXNum', headerConfig.x);
       setVal('hdrY', headerConfig.y); setVal('hdrYNum', headerConfig.y);
@@ -1596,102 +1792,49 @@
       setVal('hdrEnv', headerConfig.envIntensity); setVal('hdrEnvNum', headerConfig.envIntensity);
       setVal('hdrTrans', headerConfig.transmission); setVal('hdrTransNum', headerConfig.transmission);
       setVal('hdrThick', headerConfig.thickness); setVal('hdrThickNum', headerConfig.thickness);
-      setVal('hdrGlow', headerConfig.emissiveIntensity); setVal('hdrGlowNum', headerConfig.emissiveIntensity);
+      setVal('hdrEmiss', headerConfig.emissiveIntensity); setVal('hdrEmissNum', headerConfig.emissiveIntensity);
+
+      setVal('bdgSize', badgesConfig.sizeMul); setVal('bdgSizeNum', badgesConfig.sizeMul);
+      setVal('bdgThick', badgesConfig.thicknessMul); setVal('bdgThickNum', badgesConfig.thicknessMul);
+      setVal('bdgXOff', badgesConfig.offsetXMul); setVal('bdgXOffNum', badgesConfig.offsetXMul);
+      setVal('bdgHeight', badgesConfig.heightMul); setVal('bdgHeightNum', badgesConfig.heightMul);
+      setVal('bdgZOff', badgesConfig.zOffset); setVal('bdgZOffNum', badgesConfig.zOffset);
     }
 
     bindHeaderUI();
 
-    /* ----- BADGES UI BINDINGS ----- */
-    function applyBadgesForceVisibility(){
-      badgeGroup.visible = badgesReady && (badgesActivated || badgesConfig.forceVisible);
-      const btn = $('badgeShowToggle');
-      if (!btn) return;
-      btn.textContent = badgesConfig.forceVisible ? 'Hide badges' : 'Force show badges';
-    }
-
-    function resetBadgesPreset(){
-      badgesConfig.sizeMul = 1.0;
-      badgesConfig.thicknessMul = 2.8;
-      badgesConfig.offsetXMul = 1.0;
-      badgesConfig.heightMul = 1.0;
-      badgesConfig.zOffset = 0.0;
-      badgesConfig.forceVisible = false;
-
-      setVal('badgeSize', badgesConfig.sizeMul); setVal('badgeSizeNum', badgesConfig.sizeMul);
-      setVal('badgeThick', badgesConfig.thicknessMul); setVal('badgeThickNum', badgesConfig.thicknessMul);
-      setVal('badgeSpread', badgesConfig.offsetXMul); setVal('badgeSpreadNum', badgesConfig.offsetXMul);
-      setVal('badgeHeight', badgesConfig.heightMul); setVal('badgeHeightNum', badgesConfig.heightMul);
-      setVal('badgeZ', badgesConfig.zOffset); setVal('badgeZNum', badgesConfig.zOffset);
-
-      buildOrUpdateBadges();
-      applyBadgesForceVisibility();
-    }
-
-    function bindBadgesUI(){
-      bindRange('badgeSizeNum','badgeSize', ()=>badgesConfig.sizeMul, v=>{
-        badgesConfig.sizeMul = Math.max(0.3, Math.min(3, v));
-        buildOrUpdateBadges();
-      });
-      bindRange('badgeThickNum','badgeThick', ()=>badgesConfig.thicknessMul, v=>{
-        badgesConfig.thicknessMul = Math.max(0.5, Math.min(4.0, v));
-        buildOrUpdateBadges();
-      });
-      bindRange('badgeSpreadNum','badgeSpread', ()=>badgesConfig.offsetXMul, v=>{
-        badgesConfig.offsetXMul = Math.max(0.3, Math.min(2.0, v));
-        buildOrUpdateBadges();
-      });
-      bindRange('badgeHeightNum','badgeHeight', ()=>badgesConfig.heightMul, v=>{
-        badgesConfig.heightMul = Math.max(0.3, Math.min(2.0, v));
-        buildOrUpdateBadges();
-      });
-      bindRange('badgeZNum','badgeZ', ()=>badgesConfig.zOffset, v=>{
-        badgesConfig.zOffset = v;
-        buildOrUpdateBadges();
-      });
-
-      $('badgeShowToggle').addEventListener('click', ()=>{
-        badgesConfig.forceVisible = !badgesConfig.forceVisible;
-        applyBadgesForceVisibility();
-      });
-      $('badgeReset').addEventListener('click', resetBadgesPreset);
-    }
-
-    bindBadgesUI();
-    resetBadgesPreset();
-
-    /* ---- init visible values ---- */
+    /* ----- init values in UI ----- */
     function initUIValues(){
-      // Vase
       setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
       setVal('vaseY', CONFIG.vase.userTallY); setVal('vaseYNum', CONFIG.vase.userTallY);
       setVal('vaseZ', CONFIG.vase.z); setVal('vaseZNum', CONFIG.vase.z);
       setVal('vaseYPos', CONFIG.vase.y); setVal('vaseYPosNum', CONFIG.vase.y);
-      // Spin
+
       setVal('damp', CONFIG.spin.damping); setVal('dampNum', CONFIG.spin.damping);
       setVal('min', CONFIG.spin.minSpin); setVal('minNum', CONFIG.spin.minSpin);
       setVal('imp', CONFIG.spin.swipeImpulse); setVal('impNum', CONFIG.spin.swipeImpulse);
-      // Room
+
       setVal('d', ROOM_D); setVal('dNum', ROOM_D);
       setVal('z', room.position.z); setVal('zNum', room.position.z);
-      // Wall image
+
       setVal('zoom', CONFIG.room.imageZoom); setVal('zoomNum', CONFIG.room.imageZoom);
       setVal('edge', edges.material.opacity); setVal('edgeNum', edges.material.opacity);
-      // Lights
+
       setVal('exp', CONFIG.lights.exposure); setVal('expNum', CONFIG.lights.exposure);
       setVal('amb', CONFIG.lights.ambient); setVal('ambNum', CONFIG.lights.ambient);
       setVal('hem', CONFIG.lights.hemisphere); setVal('hemNum', CONFIG.lights.hemisphere);
       setVal('rim', CONFIG.lights.rim); setVal('rimNum', CONFIG.lights.rim);
       setVal('key', CONFIG.lights.key); setVal('keyNum', CONFIG.lights.key);
       setVal('vlI', CONFIG.lights.vaseLight.intensity); setVal('vlINum', CONFIG.lights.vaseLight.intensity);
-      setVal('vlD', CONFIG.lights.vaseLight.distance);  setVal('vlDNum', CONFIG.lights.vaseLight.distance);
-      setVal('vlDec', CONFIG.lights.vaseLight.decay);   setVal('vlDecNum', CONFIG.lights.vaseLight.decay);
-      setVal('vlY', CONFIG.lights.vaseLight.y);         setVal('vlYNum', CONFIG.lights.vaseLight.y);
-      // Room FX
+      setVal('vlD', CONFIG.lights.vaseLight.distance); setVal('vlDNum', CONFIG.lights.vaseLight.distance);
+      setVal('vlDec', CONFIG.lights.vaseLight.decay); setVal('vlDecNum', CONFIG.lights.vaseLight.decay);
+      setVal('vlY', CONFIG.lights.vaseLight.y); setVal('vlYNum', CONFIG.lights.vaseLight.y);
+
       setVal('emis', CONFIG.room.wallEmissive); setVal('emisNum', CONFIG.room.wallEmissive);
-      setVal('disp', CONFIG.room.wallDispAmp);  setVal('dispNum', CONFIG.room.wallDispAmp);
-      setVal('ds',   CONFIG.room.wallDispSpeed);setVal('dsNum', CONFIG.room.wallDispSpeed);
-      // Water
-      setVal('wAmp', CONFIG.water.amp);   setVal('wAmpNum', CONFIG.water.amp);
+      setVal('disp', CONFIG.room.wallDispAmp); setVal('dispNum', CONFIG.room.wallDispAmp);
+      setVal('ds', CONFIG.room.wallDispSpeed); setVal('dsNum', CONFIG.room.wallDispSpeed);
+
+      setVal('wAmp', CONFIG.water.amp); setVal('wAmpNum', CONFIG.water.amp);
       setVal('wFreq', CONFIG.water.freq); setVal('wFreqNum', CONFIG.water.freq);
       setVal('wSpeed', CONFIG.water.speed); setVal('wSpeedNum', CONFIG.water.speed);
       setVal('wFall', CONFIG.water.falloff); setVal('wFallNum', CONFIG.water.falloff);
@@ -1699,22 +1842,22 @@
       setVal('wRad', CONFIG.water.radius); setVal('wRadNum', CONFIG.water.radius);
       setVal('wPix', CONFIG.water.pixel); setVal('wPixNum', CONFIG.water.pixel);
       setVal('wY', CONFIG.water.yOffset); setVal('wYNum', CONFIG.water.yOffset);
-      // Global FX
+
       setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
       setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
-      // Header
+
       initHeaderUIValues();
     }
     initUIValues();
 
-    // Motion hint button setup
+    // motion hint
     (function initMotionButton(){
       if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
-        document.getElementById('enableMotion').style.display = 'block';
+        $('enableMotion').style.display = 'block';
       }
     })();
 
-    /* ----- controls printer ----- */
+    /* ----- snapshot / copy controls ----- */
     function snapshotConfig(){
       const snap = structuredClone(CONFIG);
       snap.room.width = ROOM_W;
@@ -1729,7 +1872,7 @@
       snap._preset = presetChoice;
 
       snap.header = {
-        opacity: headerMat ? headerMat.opacity : headerConfig.opacity,
+        opacity: headerMat ? headerMat.opacity : 0,
         sizeMul: headerConfig.sizeMul,
         x: headerConfig.x, y: headerConfig.y, z: headerConfig.z,
         locked: headerOpacityLocked,
@@ -1749,7 +1892,6 @@
         offsetXMul: badgesConfig.offsetXMul,
         heightMul: badgesConfig.heightMul,
         zOffset: badgesConfig.zOffset,
-        forceVisible: badgesConfig.forceVisible,
         activated: badgesActivated
       };
 
@@ -1758,13 +1900,17 @@
     function printControls(){ console.log(JSON.stringify(snapshotConfig(), null, 2)); }
     async function copyControls(){
       const text = JSON.stringify(snapshotConfig(), null, 2);
-      try { await navigator.clipboard.writeText(text); console.log('Controls copied to clipboard.'); }
-      catch(e){ console.warn('Clipboard copy failed:', e); }
+      try {
+        await navigator.clipboard.writeText(text);
+        console.log('Controls copied to clipboard.');
+      } catch(e){
+        console.warn('Clipboard copy failed:', e);
+      }
     }
     window.printControls = printControls;
     window.copyControls  = copyControls;
-    document.getElementById('printControlsBtn').onclick = printControls;
-    document.getElementById('copyControlsBtn').onclick  = copyControls;
+    $('printControlsBtn').onclick = printControls;
+    $('copyControlsBtn').onclick  = copyControls;
 
   </script>
 </body>
