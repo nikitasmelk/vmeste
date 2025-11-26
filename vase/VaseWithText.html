@@ -30,7 +30,12 @@
     .row input[type="number"]{width:60px;background:#0d1a3a;color:#eaf0ff;border:1px solid #446;border-radius:6px;padding:4px 6px;font-size:12px}
     .two{display:flex;gap:8px;margin-top:8px}.two>button{flex:1 1 0;padding:8px 10px;border-radius:10px;border:1px solid #6aa2ff33;background:#0e1736;color:#d9e6ff;cursor:pointer}
     #toggleControls,#enableMotion{position:fixed;right:16px;z-index:10000;padding:10px 14px;border-radius:12px;border:1px solid #6aa2ff33;background:#0b1020;color:#cfe0ff;font:600 12px/1.2 system-ui;letter-spacing:.05em;box-shadow:0 6px 20px #0007}
-    #toggleControls{bottom:16px}#enableMotion{bottom:66px;display:none}
+    #toggleControls{bottom:16px}
+    #enableMotion{
+      bottom:66px;display:none;
+      pointer-events:auto; /* ensure UI can receive taps above canvas */
+      touch-action:manipulation; /* hint for mobile click latency removal */
+    }
   </style>
 </head>
 <body>
@@ -883,12 +888,12 @@
 
     buildBadges();
 
-    /* ---------- badge raycast + unified mouse/touch handling ---------- */
+    /* ---------- badge raycast + scoped mouse/touch handling (canvas only) ---------- */
     const raycaster=new THREE.Raycaster();
     const pointer=new THREE.Vector2();
 
     function handleBadgeHit(clientX, clientY){
-      if(!badgesReady || !badgeGroup.visible) return;
+      if(!badgesReady || !badgeGroup.visible) return false;
       const rect = renderer.domElement.getBoundingClientRect();
       const x = ((clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((clientY - rect.top) / rect.height) * 2 + 1;
@@ -896,27 +901,30 @@
       raycaster.setFromCamera(pointer, camera);
       const objects = [spotifyBadge, appleBadge].filter(Boolean);
       const hits = raycaster.intersectObjects(objects, false);
-      if(!hits.length) return;
+      if(!hits.length) return false;
       const obj = hits[0].object;
       let url = null;
       if(obj === spotifyBadge) url = 'https://open.spotify.com/';
       else if(obj === appleBadge) url = 'https://music.apple.com/';
-      if(!url) return;
+      if(!url) return false;
       window.open(url, '_blank', 'noopener');
+      return true;
     }
 
-    // Mouse / desktop click
-    window.addEventListener('click', (e)=>{
+    // Attach to the canvas ONLY so UI buttons remain clickable
+    renderer.domElement.addEventListener('click', (e)=>{
       handleBadgeHit(e.clientX, e.clientY);
     }, {passive:true});
 
-    // Direct touch tap (fixes iPhone canvas tap not triggering synthetic click reliably)
-    window.addEventListener('touchend', (e)=>{
+    renderer.domElement.addEventListener('touchend', (e)=>{
       const t = e.changedTouches && e.changedTouches[0];
       if(!t) return;
-      handleBadgeHit(t.clientX, t.clientY);
-      // Prevent extra synthetic click
-      e.preventDefault();
+      const handled = handleBadgeHit(t.clientX, t.clientY);
+      // Prevent extra synthetic click ONLY if we actually opened a link
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }, {passive:false});
 
     /* ---------- audio ---------- */
@@ -998,14 +1006,19 @@
     window.addEventListener('resize',updateLayout,{passive:true});
     window.addEventListener('orientationchange',updateLayout,{passive:true});
     if(window.visualViewport) window.visualViewport.addEventListener('resize',updateLayout,{passive:true});
-    window.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-    window.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
+
+    // Prevent scroll/zoom gestures ONLY on the canvas, not the whole window (so UI stays clickable)
+    renderer.domElement.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+    renderer.domElement.addEventListener('wheel', e=>e.preventDefault(), {passive:false});
+
     setupInput(); updateLayout();
 
     /* ---------- UI + bindings ---------- */
     const panel=document.getElementById('panel'); const toggle=document.getElementById('toggleControls'); const $=id=>document.getElementById(id);
     function togglePanel(){ panel.style.display = (panel.style.display==='block') ? 'none' : 'block'; }
-    toggle.addEventListener('click',togglePanel); window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='h') togglePanel(); });
+    // Guard: toggle may be commented out in HTML
+    if (toggle) toggle.addEventListener('click',togglePanel);
+    window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='h') togglePanel(); });
 
     document.getElementById('tabs').addEventListener('click', e=>{
       const btn=e.target.closest('.tab-btn'); if(!btn) return;
@@ -1101,20 +1114,21 @@
       bindRange('hdrThickNum','hdrThick', ()=>headerCfg.thickness, v=>{headerCfg.thickness=v; if(headerMat){headerMat.thickness=v; upd();} rebuildHeaderGeometry();});
       bindRange('hdrEmissNum','hdrEmiss', ()=>headerCfg.emissiveIntensity, v=>{headerCfg.emissiveIntensity=v; if(headerMat){headerMat.emissiveIntensity=v; upd();}});
 
-      bindRange('bdgSizeNum','bdgSize', ()=>badgesCfg.sizeMul, v=>{
-        badgesCfg.sizeMul = Math.max(0.3, Math.min(3,v));
+      const badgesCfgLocal = badgesCfg; // alias for clarity
+      bindRange('bdgSizeNum','bdgSize', ()=>badgesCfgLocal.sizeMul, v=>{
+        badgesCfgLocal.sizeMul = Math.max(0.3, Math.min(3,v));
         updateBadgesTransform();
       });
-      bindRange('bdgXOffNum','bdgXOff', ()=>badgesCfg.offsetXMul, v=>{
-        badgesCfg.offsetXMul = Math.max(0, Math.min(2,v));
+      bindRange('bdgXOffNum','bdgXOff', ()=>badgesCfgLocal.offsetXMul, v=>{
+        badgesCfgLocal.offsetXMul = Math.max(0, Math.min(2,v));
         updateBadgesTransform();
       });
-      bindRange('bdgYPosNum','bdgYPos', ()=>badgesCfg.yPos, v=>{
-        badgesCfg.yPos = v;
+      bindRange('bdgYPosNum','bdgYPos', ()=>badgesCfgLocal.yPos, v=>{
+        badgesCfgLocal.yPos = v;
         updateBadgesTransform();
       });
-      bindRange('bdgZOffNum','bdgZOff', ()=>badgesCfg.zOffset, v=>{
-        badgesCfg.zOffset = v;
+      bindRange('bdgZOffNum','bdgZOff', ()=>badgesCfgLocal.zOffset, v=>{
+        badgesCfgLocal.zOffset = v;
         updateBadgesTransform();
       });
     }
