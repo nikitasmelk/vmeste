@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
-  <title>Biome — Spin + Audio</title>
+   <title>Wasapok</title>
+  <link rel="icon" type="image/x-icon" href="DiamondIcon.png">
   <style>
-    html,body{height:100dvh;width:100vw}
-    body{margin:0;background:#000;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial}
+    html,body{height:100dvh;width:100vw;}
+    body{margin:0;background:#000;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;cursor: url('./diamondCur'), auto}
     canvas{display:block;width:100vw!important;height:100dvh!important}
     .panel{position:fixed;top:12px;left:12px;z-index:9999;width:min(94vw,460px);max-height:calc(100dvh - 24px);overflow:auto;border-radius:14px;background:#0b1020e0;border:1px solid #88a7ff2a;color:#eaf0ff;box-shadow:0 8px 28px #000a;font-size:12px;display:none}
     .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#0f1a38a6;border-bottom:1px solid #5c75b42a;position:sticky;top:0}
@@ -127,8 +128,8 @@
     </div>
   </div>
 
-  <button id="toggleControls">Controls (H)</button>
-  <button id="enableMotion">Enable Motion</button>
+  <!-- <button id="toggleControls">Controls (H)</button> -->
+  <button id="enableMotion">Enable Fun</button>
 
   <script type="importmap">
     {
@@ -162,30 +163,188 @@
 
     /* ---------- presets ---------- */
     const desktop = {
-      room:{width:18.766829958988648,height:10.18770767198562,depth:14.5,positionZ:-10.8,imageZoom:0.96,borderOpacity:0,wallEmissive:0.38,wallDispAmp:0.006,wallDispSpeed:2.39},
-      lights:{exposure:0.86,ambient:1.91,hemisphere:2,rim:1.87,key:1.68,vaseLight:{intensity:6,distance:8.6,decay:1.6,y:0.1}},
-      vase:{userScaleMult:3.2,userTallY:1.06,z:-10.7,y:-4.8},
-      spin:{damping:0.997,minSpin:0.11,swipeImpulse:0.02},
-      post:{pixelSize:5,ditherStrength:1},
-      water:{amp:1.61,freq:40,speed:0.82,falloff:0.9,alpha:0.44,radius:2.9,pixel:24,yOffset:-0.05,tint:[0.45,0.75,1]},
-      glass:{transmission:0.86,thickness:4,ior:2.5,roughness:0.05,clearcoat:1,ccRough:0.9,envIntensity:1.51,metalness:0.63,color:[1,1,1],attnColor:[0.66,0.79,1]},
-      _internal:{WATER_RADIUS_FACTOR:0.74,TILT_MARGIN:1.1247358823385865},
-      header:{opacity:0.99,sizeMul:0.56,x:0,y:2.5,z:-2.5,locked:true,metalness:0.97,roughness:0,clearcoat:0.12,clearcoatRoughness:0.84,envIntensity:2.47,transmission:1,thickness:2,emissiveIntensity:1},
-      badges:{sizeMul:1.53,thicknessMul:2.8,offsetXMul:1.01,heightMul:1.6,zOffset:1.4,forceVisible:false,activated:true},
+      room:{
+        width:18.766829922078774,
+        height:10.18770767198562,
+        depth:14.5,
+        positionZ:-10.8,
+        imageZoom:0.96,
+        borderOpacity:0,
+        wallEmissive:0.38,
+        wallDispAmp:0.006,
+        wallDispSpeed:2.39
+      },
+      lights:{
+        exposure:0.86,
+        ambient:1.85,
+        hemisphere:2.6,
+        rim:1.87,
+        key:1.68,
+        vaseLight:{
+          intensity:4.82,
+          distance:10.6,
+          decay:1.1,
+          y:0.32
+        }
+      },
+      vase:{
+        userScaleMult:3.11,
+        userTallY:1.06,
+        z:-10.7,
+        y:-4.8
+      },
+      spin:{
+        damping:0.997,
+        minSpin:0.11,
+        swipeImpulse:0.02
+      },
+      post:{
+        pixelSize:5,
+        ditherStrength:0.41
+      },
+      water:{
+        amp:0,
+        freq:38.3,
+        speed:0.53,
+        falloff:1.05,
+        alpha:0.35,
+        radius:2.5,
+        pixel:6,
+        yOffset:-0.05,
+        tint:[0.45,0.75,1]
+      },
+      glass:{
+        transmission:1,
+        thickness:0.76,
+        ior:2.5,
+        roughness:0,
+        clearcoat:0.52,
+        ccRough:0.27,
+        envIntensity:1.33,
+        metalness:0.94,
+        color:[1,1,1],
+        attnColor:[0.66,0.79,1]
+      },
+      _internal:{
+        WATER_RADIUS_FACTOR:0.74,
+        TILT_MARGIN:1.1247358823385865
+      },
+      header:{
+        opacity:0.99,
+        sizeMul:0.63,
+        x:0,
+        y:2.5,
+        z:-3.7,
+        locked:true,
+        metalness:1,
+        roughness:0.04,
+        clearcoat:1,
+        clearcoatRoughness:0,
+        envIntensity:1.27,
+        transmission:0,
+        thickness:2.31,
+        emissiveIntensity:0.28
+      },
+      badges:{
+        sizeMul:2.44,
+        offsetXMul:1.15,
+        yPos:4.4,
+        zOffset:1.9,
+        activated:true
+      },
       _preset:'desktop'
     };
 
     const phone = {
-      room:{width:3.2466138193122998,height:7.026005291024567,depth:6.6,positionZ:-10.4,imageZoom:0.96,borderOpacity:0,wallEmissive:0.32,wallDispAmp:0.011,wallDispSpeed:2.19},
-      lights:{exposure:0.77,ambient:0.79,hemisphere:2.87,rim:3.34,key:1.47,vaseLight:{intensity:10.26,distance:2.9,decay:2.5,y:0.77}},
-      vase:{userScaleMult:0.98,userTallY:1.04,z:-9.3,y:-3.1},
-      spin:{damping:0.997,minSpin:0.11,swipeImpulse:0.02},
-      post:{pixelSize:5,ditherStrength:1},
-      water:{amp:0,freq:23.9,speed:0.82,falloff:0.9,alpha:0.44,radius:2.9,pixel:24,yOffset:-0.05,tint:[0.45,0.75,1]},
-      glass:{transmission:0.98,thickness:2.98,ior:2.5,roughness:0,clearcoat:0.03,ccRough:0.67,envIntensity:1.58,metalness:0.8,color:[1,1,1],attnColor:[0.66,0.79,1]},
-      _internal:{WATER_RADIUS_FACTOR:0.74,TILT_MARGIN:1.1247358823385865},
-      header:{opacity:0.99,sizeMul:0.74,x:-2.3,y:-4.3,z:7.6,locked:true,metalness:0.15,roughness:0.07,clearcoat:0.46,clearcoatRoughness:0.74,envIntensity:2.18,transmission:1,thickness:2,emissiveIntensity:1},
-      badges:{sizeMul:1.13,thicknessMul:2.91,offsetXMul:0.4,heightMul:2,zOffset:2.8,forceVisible:false,activated:true},
+      room:{
+        width:3.2466138193122998,
+        height:7.026005291024567,
+        depth:6.6,
+        positionZ:-10.4,
+        imageZoom:0.96,
+        borderOpacity:0,
+        wallEmissive:0.32,
+        wallDispAmp:0.011,
+        wallDispSpeed:2.19
+      },
+      lights:{
+        exposure:1.49,
+        ambient:0.82,
+        hemisphere:3.48,
+        rim:3.76,
+        key:1.47,
+        vaseLight:{
+          intensity:7.17,
+          distance:2.9,
+          decay:2.5,
+          y:0.77
+        }
+      },
+      vase:{
+        userScaleMult:1.47,
+        userTallY:1.55,
+        z:-9.3,
+        y:-3
+      },
+      spin:{
+        damping:0.997,
+        minSpin:0.11,
+        swipeImpulse:0.0437
+      },
+      post:{
+        pixelSize:4,
+        ditherStrength:0.52
+      },
+      water:{
+        amp:0,
+        freq:26.5,
+        speed:0.82,
+        falloff:0.9,
+        alpha:0.44,
+        radius:2.9,
+        pixel:24,
+        yOffset:-0.05,
+        tint:[0.45,0.75,1]
+      },
+      glass:{
+        transmission:0.91,
+        thickness:2.22,
+        ior:2.12,
+        roughness:0,
+        clearcoat:0.81,
+        ccRough:0.67,
+        envIntensity:1.58,
+        metalness:1,
+        color:[1,1,1],
+        attnColor:[0.66,0.79,1]
+      },
+      _internal:{
+        WATER_RADIUS_FACTOR:0.74,
+        TILT_MARGIN:1.1247358823385865
+      },
+      header:{
+        opacity:0.99,
+        sizeMul:2.6,
+        x:0,
+        y:9.4,
+        z:-29.6,
+        locked:true,
+        metalness:0.98,
+        roughness:0,
+        clearcoat:0.93,
+        clearcoatRoughness:0.59,
+        envIntensity:1.79,
+        transmission:0.67,
+        thickness:2.58,
+        emissiveIntensity:1
+      },
+      badges:{
+        sizeMul:1.14,
+        offsetXMul:0.4,
+        yPos:3.5,
+        zOffset:4,
+        activated:true
+      },
       _preset:'phone'
     };
 
@@ -383,7 +542,9 @@
     function applyVaseScale(){ if(!vase)return; const portraitBoost=(isPortrait() && presetChoice==='phone')?1.7:1.0; const s=vaseBaseScale*portraitBoost*userScaleMult; vase.scale.set(s,s*userTallY,s); }
 
     /* ---------- header (3D text) ---------- */
-    const HEADER_TEXT='Biome .•.•.•:::Plain.';
+    const HEADER_TEXT = (presetChoice === 'phone')
+      ? 'Biome \n.•.•.•:::Plain.'
+      : 'Biome .•.•.•:::Plain.';
     const FONT_URL='./Sprintura.otf';
     const headerGroup=new THREE.Group(); scene.add(headerGroup);
     let headerMesh=null, headerMat=null, headerFont=null;
