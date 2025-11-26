@@ -726,7 +726,7 @@
         }
       }
 
-      const maxSpin = FULL_SPIN*20.0;
+      const maxSpin = FULL_SPIN*100.0;
       if(Math.abs(angVel)>maxSpin) angVel=Math.sign(angVel)*maxSpin;
 
       const k = Math.min(1, Math.abs(angVel)/(FULL_SPIN*1.2));
