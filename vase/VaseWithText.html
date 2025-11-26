@@ -24,7 +24,7 @@
   </style>
 </head>
 <body>
-  <!-- Controls UI (same sections as before; trimmed to relevant pieces for space) -->
+  <!-- Controls UI -->
   <div class="panel" id="panel">
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="vaseTab">vase</button>
@@ -32,7 +32,8 @@
       <button class="tab-btn" data-tab="lightsTab">lights</button>
       <button class="tab-btn" data-tab="waterTab">water</button>
       <button class="tab-btn" data-tab="vaseFxTab">glass</button>
-      <button class="tab-btn" data-tab="headerTab">header + badges</button>
+      <button class="tab-btn" data-tab="headerTab">header</button>
+      <button class="tab-btn" data-tab="badgesTab">badges</button>
       <button class="tab-btn" data-tab="postTab">post</button>
     </div>
     <div class="tabpages">
@@ -53,7 +54,7 @@
         <h3>Room</h3>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
-        <div class="row"><label>Image Zoom</label><input id="zoomNum" type="number" step="0.01"><input id="zoom" type="range" min="0.5" max="3.0" step="0.01"></div>
+        <div class="row"><label>Image Zoom</label><input id="zoomNum" type="number" step="0.01"><input id="zoom" type="range" min="0.5" max="3.2" step="0.01"></div>
         <div class="row"><label>Border Opacity</label><input id="edgeNum" type="number" step="0.01"><input id="edge" type="range" min="0" max="1" step="0.01"></div>
       </div>
 
@@ -110,12 +111,13 @@
         <div class="row"><label>Transmission</label><input id="hdrTransNum" type="number" step="0.01"><input id="hdrTrans" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Depth/Thickness ×</label><input id="hdrThickNum" type="number" step="0.01"><input id="hdrThick" type="range" min="0.2" max="3" step="0.01"></div>
         <div class="row"><label>Emissive Intensity</label><input id="hdrEmissNum" type="number" step="0.01"><input id="hdrEmiss" type="range" min="0" max="3" step="0.01"></div>
+      </div>
 
+      <div class="tabpage" id="badgesTab">
         <h3>Badges</h3>
         <div class="row"><label>Badge Size ×</label><input id="bdgSizeNum" type="number" step="0.01"><input id="bdgSize" type="range" min="0.3" max="3" step="0.01"></div>
-        <div class="row"><label>Thickness ×</label><input id="bdgThickNum" type="number" step="0.01"><input id="bdgThick" type="range" min="0.5" max="4" step="0.01"></div>
         <div class="row"><label>X Offset ×</label><input id="bdgXOffNum" type="number" step="0.01"><input id="bdgXOff" type="range" min="0" max="2" step="0.01"></div>
-        <div class="row"><label>Height ×</label><input id="bdgHeightNum" type="number" step="0.01"><input id="bdgHeight" type="range" min="0" max="4" step="0.01"></div>
+        <div class="row"><label>Y Position</label><input id="bdgYPosNum" type="number" step="0.1"><input id="bdgYPos" type="range" min="-20" max="20" step="0.1"></div>
         <div class="row"><label>Z Offset</label><input id="bdgZOffNum" type="number" step="0.1"><input id="bdgZOff" type="range" min="-10" max="10" step="0.1"></div>
       </div>
 
@@ -160,7 +162,7 @@
     if (urlPreset === 'phone' || urlPreset === 'desktop') setStoredPreset(urlPreset);
     const presetChoice = getStoredPreset() || (isPhone() ? 'phone' : 'desktop');
 
-    /* ---------- presets (desktop/phone from your last message) ---------- */
+    /* ---------- presets ---------- */
     const desktop = {
       room:{width:18.766829958988648,height:10.18770767198562,depth:14.5,positionZ:-10.8,imageZoom:0.96,borderOpacity:0,wallEmissive:0.38,wallDispAmp:0.006,wallDispSpeed:2.39},
       lights:{exposure:0.86,ambient:1.91,hemisphere:2,rim:1.87,key:1.68,vaseLight:{intensity:6,distance:8.6,decay:1.6,y:0.1}},
@@ -190,6 +192,15 @@
     };
 
     const CONFIG = structuredClone(presetChoice==='phone' ? phone : desktop);
+
+    /* ---------- zoom state (for image zoom jumps) ---------- */
+    let zoomBase = CONFIG.room.imageZoom;         // user's "default" zoom (from slider)
+    let zoomCurrent = CONFIG.room.imageZoom;      // actual applied zoom
+    let zoomReturnFrom = zoomBase;
+    let zoomReturning = false;
+    let zoomReturnStartTime = 0;
+    const ZOOM_RETURN_DURATION = 1.0;
+    const ZOOM_TERMINAL_VALUES = [0.66, 0.48, 0.88, 0.96, 3.2];
 
     /* ---------- renderer, scene, camera ---------- */
     const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'high-performance'});
@@ -243,6 +254,44 @@
     function applyTextureZoom(texture, z){
       const r=1/Math.max(z,0.0001); texture.center.set(0.5,0.5);
       texture.repeat.set(r,r); texture.offset.set((1-r)*0.5,(1-r)*0.5); texture.needsUpdate=true;
+    }
+
+    // Helper to sync zoom value everywhere (state + texture + UI)
+    function applyZoom(v){
+      zoomCurrent = v;
+      CONFIG.room.imageZoom = v;
+      applyTextureZoom(wallTex, v);
+      const slider = document.getElementById('zoom');
+      const num = document.getElementById('zoomNum');
+      if(slider) slider.value = v;
+      if(num) num.value = v;
+    }
+
+    function triggerZoomJump(){
+      const vals = ZOOM_TERMINAL_VALUES;
+      const idx = Math.floor(Math.random()*vals.length);
+      const target = vals[idx];
+      zoomReturning = false;
+      applyZoom(target);
+    }
+
+    function startZoomReturn(time){
+      zoomReturnFrom = zoomCurrent;
+      zoomReturnStartTime = time;
+      zoomReturning = true;
+    }
+
+    function updateZoom(time){
+      if(!zoomReturning) return;
+      const tNorm = THREE.MathUtils.clamp((time - zoomReturnStartTime)/ZOOM_RETURN_DURATION, 0, 1);
+      // exponential ease towards base zoom
+      const k = 1.0 - Math.exp(-4.0*tNorm);
+      const v = THREE.MathUtils.lerp(zoomReturnFrom, zoomBase, k);
+      applyZoom(v);
+      if(tNorm >= 1.0){
+        zoomReturning = false;
+        applyZoom(zoomBase);
+      }
     }
 
     /* ---------- room box ---------- */
@@ -317,7 +366,7 @@
       vase.traverse(n=>{
         if(n.isMesh){
           const m=new THREE.MeshPhysicalMaterial(baseGlass);
-          m.emissive.setRGB(0.02,0.03,0.06); m.emissiveIntensity=0.08; // prevents initial black
+          m.emissive.setRGB(0.02,0.03,0.06); m.emissiveIntensity=0.08;
           glassMaterials.push(m); n.material=m;
         }
       });
@@ -367,54 +416,137 @@
     function rebuildHeaderGeometry(){
       if(!headerFont) return;
       if(headerMesh){ headerGroup.remove(headerMesh); headerMesh.geometry.dispose(); }
-      const geo=new TextGeometry(HEADER_TEXT,{font:headerFont,size:headerBaseSize()*headerCfg.sizeMul,height:headerBaseHeight()*headerCfg.sizeMul*headerCfg.thickness,curveSegments:10,bevelEnabled:true,bevelThickness:Math.min(ROOM_W,ROOM_H)*0.003*headerCfg.sizeMul*headerCfg.thickness,bevelSize:Math.min(ROOM_W,ROOM_H)*0.002*headerCfg.sizeMul*headerCfg.thickness,bevelSegments:4});
+      const geo=new TextGeometry(HEADER_TEXT,{
+        font:headerFont,
+        size:headerBaseSize()*headerCfg.sizeMul,
+        height:headerBaseHeight()*headerCfg.sizeMul*headerCfg.thickness,
+        curveSegments:10,
+        bevelEnabled:true,
+        bevelThickness:Math.min(ROOM_W,ROOM_H)*0.003*headerCfg.sizeMul*headerCfg.thickness,
+        bevelSize:Math.min(ROOM_W,ROOM_H)*0.002*headerCfg.sizeMul*headerCfg.thickness,
+        bevelSegments:4
+      });
       geo.computeBoundingBox(); geo.center();
       if(!headerMat) buildHeaderMaterial();
       headerMesh=new THREE.Mesh(geo, headerMat); headerMesh.renderOrder=999; headerGroup.add(headerMesh); applyHeaderTransform();
     }
     new TTFLoader().load(FONT_URL, json=>{
       headerFont=new Font(json); buildHeaderMaterial(); rebuildHeaderGeometry();
-      // Quick startup fix: jiggle header Z one frame (min -> restore)
-      quickHeaderZWake(); 
+      quickHeaderZWake();
     });
 
     function quickHeaderZWake(){
       const z0 = headerCfg.z;
       headerCfg.z = -40; applyHeaderTransform();
-      // Wait one RAF so renderer draws with changed depth, then restore
       requestAnimationFrame(()=>{
         headerCfg.z = z0; applyHeaderTransform();
       });
     }
 
-    /* ---------- spin physics + 10s hold ---------- */
+    /* ---------- spin physics + timed full-speed hold ---------- */
     let angVel=0, tilt=0, wobble=0;
     let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE=CONFIG.spin.swipeImpulse;
     const FULL_SPIN = (presetChoice==='phone')?6.0:5.0;
     const HOLD_SECS = 10.0;
-    let holdUntil = 0;
+
+    let holdActive = false;
+    let holdEndTime = 0;
+    let holdDir = 0;
+    let requestExtendHold = false;
+    let lastHoldActive = false;
 
     let dragging=false, lastX=0, lastT=0;
-    function getX(e){ if(e.touches?.length) return e.touches[0].clientX; if(e.changedTouches?.length) return e.changedTouches[0].clientX; return e.clientX||0; }
-    function onDown(e){ dragging=true; lastX=getX(e); lastT=performance.now(); maybeStartAudio(); }
-    function onMove(e){ if(!dragging) return; const now=performance.now(); const dx=getX(e)-lastX; const dt=Math.max(1, now-lastT); angVel += (dx/dt)*IMPULSE; lastX=getX(e); lastT=now; }
+
+    function getX(e){
+      if(e.touches?.length) return e.touches[0].clientX;
+      if(e.changedTouches?.length) return e.changedTouches[0].clientX;
+      return e.clientX||0;
+    }
+
+    function onDown(e){
+      dragging=true;
+      lastX=getX(e);
+      lastT=performance.now();
+      maybeStartAudio();
+    }
+
+    function onMove(e){
+      if(!dragging) return;
+      const now=performance.now();
+      const dx=getX(e)-lastX;
+      const dt=Math.max(1, now-lastT);
+      const dv=(dx/dt)*IMPULSE;
+      const prevVel = angVel;
+
+      angVel += dv;
+
+      // Opposite swipe cancels hold & zoom return will start on next frame
+      if(prevVel !== 0 && dv*prevVel < 0){
+        holdActive=false;
+        holdEndTime=0;
+      }
+
+      // Reinforcing swipe near full speed -> request/extend hold
+      if(dv*prevVel > 0 && Math.abs(angVel) >= FULL_SPIN*0.98){
+        requestExtendHold = true;
+      }
+
+      lastX=getX(e);
+      lastT=now;
+    }
+
     function onUp(){ dragging=false; }
-    window.addEventListener('mousedown',onDown,{passive:true}); window.addEventListener('mousemove',onMove,{passive:true}); window.addEventListener('mouseup',onUp,{passive:true});
-    window.addEventListener('touchstart',onDown,{passive:true}); window.addEventListener('touchmove',onMove,{passive:true}); window.addEventListener('touchend',onUp,{passive:true});
+
+    window.addEventListener('mousedown',onDown,{passive:true});
+    window.addEventListener('mousemove',onMove,{passive:true});
+    window.addEventListener('mouseup',onUp,{passive:true});
+    window.addEventListener('touchstart',onDown,{passive:true});
+    window.addEventListener('touchmove',onMove,{passive:true});
+    window.addEventListener('touchend',onUp,{passive:true});
 
     function updateVase(dt, time){
       if(!vaseReady) return;
-      const before = Math.abs(angVel);
-      if (before >= FULL_SPIN*0.98) holdUntil = time + HOLD_SECS;
-      const inHold = time < holdUntil;
+
+      const wasHoldActive = lastHoldActive;
+
+      // Handle hold start/extension
+      if(requestExtendHold && Math.abs(angVel) >= FULL_SPIN*0.98){
+        if(!holdActive){
+          // Newly entering full-speed "terminal" state
+          triggerZoomJump();
+        }
+        holdActive = true;
+        const s = Math.sign(angVel) || (holdDir || 1);
+        holdDir = s;
+        holdEndTime = time + HOLD_SECS;
+      }
+      requestExtendHold = false;
+
+      // Timed out hold
+      if(holdActive && time >= holdEndTime){
+        holdActive = false;
+      }
+
+      // If hold just ended (timeout or user reversed spin), start zoom return
+      if(wasHoldActive && !holdActive && zoomCurrent !== zoomBase){
+        startZoomReturn(time);
+      }
+
+      lastHoldActive = holdActive;
+
       const sgn = (angVel>=0?1:-1)||1;
-      if(inHold){
-        const target = FULL_SPIN;
-        angVel += (sgn*target - angVel) * Math.min(1, dt*5.0);
+
+      if(holdActive){
+        const dir = holdDir || sgn;
+        const target = dir * FULL_SPIN;
+        angVel += (target - angVel) * Math.min(1, dt*5.0);
       }else{
         angVel *= Math.pow(DAMPING, dt*60);
-        if(Math.abs(angVel) < MIN_SPIN) angVel = (angVel>=0?MIN_SPIN:-MIN_SPIN);
+        if(Math.abs(angVel) < MIN_SPIN){
+          angVel = (angVel>=0?MIN_SPIN:-MIN_SPIN);
+        }
       }
+
       const maxSpin = FULL_SPIN*1.6;
       if(Math.abs(angVel)>maxSpin) angVel=Math.sign(angVel)*maxSpin;
 
@@ -443,8 +575,19 @@
         const needsPerm = typeof DeviceOrientationEvent.requestPermission === 'function';
         if (needsPerm){
           enableMotionBtn.style.display='block';
-          enableMotionBtn.onclick=async()=>{ try{const r=await DeviceOrientationEvent.requestPermission(); if(r==='granted'){ window.addEventListener('deviceorientation', onDeviceOrientation, true); enableMotionBtn.remove(); } }catch(e){} maybeStartAudio(true); };
-        }else{ window.addEventListener('deviceorientation', onDeviceOrientation, true); }
+          enableMotionBtn.onclick=async()=>{
+            try{
+              const r=await DeviceOrientationEvent.requestPermission();
+              if(r==='granted'){
+                window.addEventListener('deviceorientation', onDeviceOrientation, true);
+                enableMotionBtn.remove();
+              }
+            }catch(e){}
+            maybeStartAudio(true);
+          };
+        }else{
+          window.addEventListener('deviceorientation', onDeviceOrientation, true);
+        }
       }else{
         window.addEventListener('pointermove', onPointerMove, {passive:true}); pointerMoveAttached=true;
       }
@@ -471,48 +614,76 @@
     function updateWaterCenter(){ if(!vaseReady) return; const w=new THREE.Vector3(); vaseGroup.getWorldPosition(w); const y=waterMesh.getWorldPosition(new THREE.Vector3()).y; waterUniforms.uCenter.value.set(w.x,y,w.z); }
     rebuildWaterCircle(); resizeWater();
 
-    /* ---------- badges (PNG on front/back only, sides glossy; tilt with room) ---------- */
-    const badgeGroup = new THREE.Group(); scene.add(badgeGroup); badgeGroup.visible=false;
-    let spotifyBadge=null, appleBadge=null, badgesReady=false, badgesActivated=false;
-    const badgesCfg = { sizeMul:CONFIG.badges.sizeMul, thicknessMul:CONFIG.badges.thicknessMul, offsetXMul:CONFIG.badges.offsetXMul, heightMul:CONFIG.badges.heightMul, zOffset:CONFIG.badges.zOffset };
+    /* ---------- badges (flat PNG planes; tilt with room) ---------- */
+    const badgeGroup = new THREE.Group();
+    scene.add(badgeGroup);
+    badgeGroup.visible = false;
+
+    let spotifyBadge=null, appleBadge=null;
+    let badgesReady=false, badgesActivated=false;
+
+    const badgesCfg = {
+      sizeMul: CONFIG.badges.sizeMul,
+      offsetXMul: CONFIG.badges.offsetXMul,
+      yPos: (typeof CONFIG.badges.yPos === 'number' ? CONFIG.badges.yPos : 0),
+      zOffset: CONFIG.badges.zOffset
+    };
 
     function buildBadges(){
-      const loader=new THREE.TextureLoader(); loader.setCrossOrigin('anonymous');
-      const spTex=loader.load('./spotify.png', t=>{t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=renderer.capabilities.getMaxAnisotropy();});
-      const apTex=loader.load('./apple.png',   t=>{t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=renderer.capabilities.getMaxAnisotropy();});
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
 
-      // Materials: index order for BoxGeometry: +x,-x,+y,-y,+z,-z
-      const makeMats=(map)=> {
-        const side = new THREE.MeshStandardMaterial({color:0x0f1a2c, metalness:0.4, roughness:0.35, envMap:cubeRT.texture, envMapIntensity:1.1});
-        const face = new THREE.MeshStandardMaterial({map, transparent:true, alphaTest:0.03, metalness:0.15, roughness:0.35, envMap:cubeRT.texture, envMapIntensity:1.2});
-        return [side,side,side,side,face,face];
-      };
+      const spTex = loader.load('./spotify.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.transparent = true;
+      });
+      const apTex = loader.load('./apple.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.transparent = true;
+      });
 
-      const geo = new THREE.BoxGeometry(1,1,1); // will scale to rectangle
+      const geo = new THREE.PlaneGeometry(1,1);
+      const makeMat = (map)=> new THREE.MeshBasicMaterial({
+        map,
+        transparent:true,
+        alphaTest:0.02,
+        depthWrite:false,
+        side:THREE.DoubleSide,
+        toneMapped:false
+      });
 
-      spotifyBadge = new THREE.Mesh(geo, makeMats(spTex));
-      appleBadge   = new THREE.Mesh(geo, makeMats(apTex));
-      spotifyBadge.castShadow=appleBadge.castShadow=false;
-      spotifyBadge.receiveShadow=appleBadge.receiveShadow=false;
+      spotifyBadge = new THREE.Mesh(geo, makeMat(spTex));
+      appleBadge   = new THREE.Mesh(geo, makeMat(apTex));
+      spotifyBadge.renderOrder = 10;
+      appleBadge.renderOrder   = 10;
 
-      badgeGroup.add(spotifyBadge); badgeGroup.add(appleBadge);
-      badgesReady=true; updateBadgesTransform();
+      badgeGroup.add(spotifyBadge);
+      badgeGroup.add(appleBadge);
+
+      badgesReady = true;
+      updateBadgesTransform();
     }
 
     function updateBadgesTransform(){
       if(!badgesReady || !vaseReady) return;
-      const center=new THREE.Vector3(); vaseGroup.getWorldPosition(center);
+      const center = new THREE.Vector3();
+      vaseGroup.getWorldPosition(center);
 
-      const width = Math.min(ROOM_W,ROOM_H) * 0.12 * badgesCfg.sizeMul;   // X
-      const height= width * 0.75 * badgesCfg.heightMul;                    // Y
-      const depth = width * 0.22 * badgesCfg.thicknessMul;                 // Z thickness
-
-      const xOff = Math.min(ROOM_W,ROOM_D) * 0.4 * badgesCfg.offsetXMul;
-      const yOff = Math.min(ROOM_H,ROOM_D) * 0.15 * badgesCfg.heightMul;
+      const s = Math.min(ROOM_W, ROOM_H) * 0.12 * badgesCfg.sizeMul;
+      const xOff = Math.min(ROOM_W, ROOM_D) * 0.4 * badgesCfg.offsetXMul;
+      const yPos = center.y + badgesCfg.yPos;
       const zPos = center.z + badgesCfg.zOffset;
 
-      if(spotifyBadge){ spotifyBadge.scale.set(width, height, depth); spotifyBadge.position.set(center.x-xOff, center.y+yOff, zPos); }
-      if(appleBadge){   appleBadge.scale.set(width, height, depth);   appleBadge.position.set(center.x+xOff, center.y+yOff, zPos); }
+      if(spotifyBadge){
+        spotifyBadge.scale.set(s, s, 1);
+        spotifyBadge.position.set(center.x - xOff, yPos, zPos);
+      }
+      if(appleBadge){
+        appleBadge.scale.set(s, s, 1);
+        appleBadge.position.set(center.x + xOff, yPos, zPos);
+      }
     }
 
     buildBadges();
@@ -524,7 +695,8 @@
       const rect=renderer.domElement.getBoundingClientRect();
       pointer.set( ((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1 );
       raycaster.setFromCamera(pointer, camera);
-      const hits=raycaster.intersectObjects([spotifyBadge, appleBadge].filter(Boolean), false);
+      const objects = [spotifyBadge, appleBadge].filter(Boolean);
+      const hits=raycaster.intersectObjects(objects, false);
       if(!hits.length) return;
       const obj=hits[0].object;
       if(obj===spotifyBadge) window.open('https://open.spotify.com/', '_blank', 'noopener');
@@ -562,6 +734,7 @@
       const dt=Math.min(clock.getDelta(),0.033); const time=clock.elapsedTime;
 
       updateVase(dt,time);
+      updateZoom(time);
 
       const speedAbs=Math.abs(angVel);
       if(wallShader){ const dir=(angVel>=0?1:-1); wallShader.uniforms.uTime.value += dt * dir * (1.0 + Math.min(3.0, speedAbs*2.4)); }
@@ -572,7 +745,7 @@
       // Audio & header opacity
       updateAudio(speedAbs); updateHeaderOpacity(speedAbs);
 
-      // Live env map from vase center to avoid black reflections at start
+      // Live env map from vase center
       cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
       if(vaseReady && vase) vase.visible=false;
       cubeCam.update(renderer, scene);
@@ -583,13 +756,13 @@
       room.rotation.y += (targetRY - room.rotation.y)*0.06;
       edges.rotation.copy(room.rotation);
 
-      // Make badges inherit the room tilt for immersion
+      // Badges tilt with room
       badgeGroup.rotation.copy(room.rotation);
 
       // Header faces camera
       if(headerMesh){ headerGroup.lookAt(camera.position); }
 
-      // Water uniforms + badge follow
+      // Water + badges follow vase
       updateWaterCenter(); waterUniforms.uTime.value=time; waterUniforms.uSpinAbs.value=speedAbs;
       updateBadgesTransform();
 
@@ -606,7 +779,6 @@
       renderer.toneMappingExposure = CONFIG.lights.exposure;
       key.position.set(1.5,-ROOM_H*0.1, room.position.z + ROOM_D*0.05);
       resizePost(); applyVaseScale(); resizeWater(); adjustRoomToViewport(); updateBadgesTransform();
-      // Ensure badges keep tilting with room after layout changes
       badgeGroup.rotation.copy(room.rotation);
     }
     window.addEventListener('resize',updateLayout,{passive:true});
@@ -616,7 +788,7 @@
     window.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
     setupInput(); updateLayout();
 
-    /* ---------- Ray click helper used; UI bindings (same pattern) ---------- */
+    /* ---------- UI + bindings ---------- */
     const panel=document.getElementById('panel'); const toggle=document.getElementById('toggleControls'); const $=id=>document.getElementById(id);
     function togglePanel(){ panel.style.display = (panel.style.display==='block') ? 'none' : 'block'; }
     toggle.addEventListener('click',togglePanel); window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='h') togglePanel(); });
@@ -650,7 +822,15 @@
     // Room
     bindRange('dNum','d', ()=>ROOM_D, v=>{ROOM_D=v; adjustRoomToViewport();});
     bindRange('zNum','z', ()=>room.position.z, v=>{room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport();});
-    bindRange('zoomNum','zoom', ()=>CONFIG.room.imageZoom, v=>{CONFIG.room.imageZoom=v; applyTextureZoom(wallTex,v);});
+    bindRange('zoomNum','zoom', ()=>zoomBase, v=>{
+      zoomBase = v;
+      // If we're not in an effect, snap immediately
+      if(!zoomReturning && !holdActive){
+        applyZoom(v);
+      }else{
+        CONFIG.room.imageZoom = v;
+      }
+    });
     bindRange('edgeNum','edge', ()=>edges.material.opacity, v=>{edges.material.opacity=Math.max(0,Math.min(1,v)); edges.material.needsUpdate=true;});
 
     // Lights
@@ -692,7 +872,7 @@
     bindRange('glassEnvNum','glassEnv', ()=>CONFIG.glass.envIntensity, v=>{CONFIG.glass.envIntensity=v; applyGlass();});
     bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness, v=>{CONFIG.glass.metalness=v; applyGlass();});
 
-    // Header UI
+    // Header + badges UI
     function bindHeaderUI(){
       const upd=()=>{ if(headerMat) headerMat.needsUpdate=true; };
       bindRange('hdrSizeNum','hdrSize', ()=>headerCfg.sizeMul, v=>{headerCfg.sizeMul=Math.max(0.2,Math.min(3,v)); rebuildHeaderGeometry();});
@@ -707,14 +887,30 @@
       bindRange('hdrTransNum','hdrTrans', ()=>headerCfg.transmission, v=>{headerCfg.transmission=v; if(headerMat){headerMat.transmission=v; upd();}});
       bindRange('hdrThickNum','hdrThick', ()=>headerCfg.thickness, v=>{headerCfg.thickness=v; if(headerMat){headerMat.thickness=v; upd();} rebuildHeaderGeometry();});
       bindRange('hdrEmissNum','hdrEmiss', ()=>headerCfg.emissiveIntensity, v=>{headerCfg.emissiveIntensity=v; if(headerMat){headerMat.emissiveIntensity=v; upd();}});
-      // Badges
-      bindRange('bdgSizeNum','bdgSize', ()=>badgesCfg.sizeMul, v=>{badgesCfg.sizeMul=Math.max(0.3,Math.min(3,v)); updateBadgesTransform();});
-      bindRange('bdgThickNum','bdgThick', ()=>badgesCfg.thicknessMul, v=>{badgesCfg.thicknessMul=Math.max(0.5,Math.min(4,v)); updateBadgesTransform();});
-      bindRange('bdgXOffNum','bdgXOff', ()=>badgesCfg.offsetXMul, v=>{badgesCfg.offsetXMul=Math.max(0,Math.min(2,v)); updateBadgesTransform();});
-      bindRange('bdgHeightNum','bdgHeight', ()=>badgesCfg.heightMul, v=>{badgesCfg.heightMul=Math.max(0,Math.min(4,v)); updateBadgesTransform();});
-      bindRange('bdgZOffNum','bdgZOff', ()=>badgesCfg.zOffset, v=>{badgesCfg.zOffset=v; updateBadgesTransform();});
+
+      // Badges tab
+      bindRange('bdgSizeNum','bdgSize', ()=>badgesCfg.sizeMul, v=>{
+        badgesCfg.sizeMul = Math.max(0.3, Math.min(3,v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgXOffNum','bdgXOff', ()=>badgesCfg.offsetXMul, v=>{
+        badgesCfg.offsetXMul = Math.max(0, Math.min(2,v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgYPosNum','bdgYPos', ()=>badgesCfg.yPos, v=>{
+        badgesCfg.yPos = v;
+        updateBadgesTransform();
+      });
+      bindRange('bdgZOffNum','bdgZOff', ()=>badgesCfg.zOffset, v=>{
+        badgesCfg.zOffset = v;
+        updateBadgesTransform();
+      });
     }
     bindHeaderUI();
+
+    // Post UI
+    bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{CONFIG.post.pixelSize=v; fsMat.uniforms.pixelSize.value=v;});
+    bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{CONFIG.post.ditherStrength=v; fsMat.uniforms.ditherStrength.value=v;});
 
     // Init UI values
     function initUI(){
@@ -727,28 +923,44 @@
       set('wAmp',CONFIG.water.amp); set('wFreq',CONFIG.water.freq); set('wSpeed',CONFIG.water.speed); set('wFall',CONFIG.water.falloff); set('wAlpha',CONFIG.water.alpha); set('wRad',CONFIG.water.radius); set('wPix',CONFIG.water.pixel); set('wY',CONFIG.water.yOffset);
       set('glassTrans',CONFIG.glass.transmission); set('glassThick',CONFIG.glass.thickness); set('glassIor',CONFIG.glass.ior); set('glassRough',CONFIG.glass.roughness); set('glassCC',CONFIG.glass.clearcoat); set('glassCCR',CONFIG.glass.ccRough); set('glassEnv',CONFIG.glass.envIntensity); set('glassMetal',CONFIG.glass.metalness);
       set('hdrSize',headerCfg.sizeMul); set('hdrX',headerCfg.x); set('hdrY',headerCfg.y); set('hdrZ',headerCfg.z); set('hdrMetal',headerCfg.metalness); set('hdrRough',headerCfg.roughness); set('hdrCC',headerCfg.clearcoat); set('hdrCCR',headerCfg.clearcoatRoughness); set('hdrEnv',headerCfg.envIntensity); set('hdrTrans',headerCfg.transmission); set('hdrThick',headerCfg.thickness); set('hdrEmiss',headerCfg.emissiveIntensity);
-      set('bdgSize',badgesCfg.sizeMul); set('bdgThick',badgesCfg.thicknessMul); set('bdgXOff',badgesCfg.offsetXMul); set('bdgHeight',badgesCfg.heightMul); set('bdgZOff',badgesCfg.zOffset);
+      set('bdgSize',badgesCfg.sizeMul); set('bdgXOff',badgesCfg.offsetXMul); set('bdgYPos',badgesCfg.yPos); set('bdgZOff',badgesCfg.zOffset);
+      set('pix',CONFIG.post.pixelSize); set('dith',CONFIG.post.ditherStrength);
     }
     initUI();
 
     // Controls panel shortcuts & print/copy
-    window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='p') console.log(JSON.stringify(snapshot(),null,2)); });
-    $('printControlsBtn').onclick=()=>console.log(JSON.stringify(snapshot(),null,2));
-    $('copyControlsBtn').onclick=async()=>{const text=JSON.stringify(snapshot(),null,2); try{await navigator.clipboard.writeText(text);}catch{}};
-    document.getElementById('tabs').addEventListener('click',()=>{}); // already wired
     function snapshot(){
       const snap=structuredClone(CONFIG);
       snap.room.width=ROOM_W; snap.room.height=ROOM_H; snap.room.depth=ROOM_D; snap.room.positionZ=room.position.z;
       snap.vase.z=vaseGroup.position.z; snap.vase.y=vaseGroup.position.y;
       snap._internal={WATER_RADIUS_FACTOR,TILT_MARGIN}; snap._preset=presetChoice;
-      snap.header={opacity:headerMat?headerMat.opacity:0,sizeMul:headerCfg.sizeMul,x:headerCfg.x,y:headerCfg.y,z:headerCfg.z,locked:headerOpacityLocked,metalness:headerCfg.metalness,roughness:headerCfg.roughness,clearcoat:headerCfg.clearcoat,clearcoatRoughness:headerCfg.clearcoatRoughness,envIntensity:headerCfg.envIntensity,transmission:headerCfg.transmission,thickness:headerCfg.thickness,emissiveIntensity:headerCfg.emissiveIntensity};
-      snap.badges={sizeMul:badgesCfg.sizeMul,thicknessMul:badgesCfg.thicknessMul,offsetXMul:badgesCfg.offsetXMul,heightMul:badgesCfg.heightMul,zOffset:badgesCfg.zOffset,activated:badgesActivated};
+      snap.header={
+        opacity:headerMat?headerMat.opacity:0,
+        sizeMul:headerCfg.sizeMul,
+        x:headerCfg.x,y:headerCfg.y,z:headerCfg.z,
+        locked:headerOpacityLocked,
+        metalness:headerCfg.metalness,
+        roughness:headerCfg.roughness,
+        clearcoat:headerCfg.clearcoat,
+        clearcoatRoughness:headerCfg.clearcoatRoughness,
+        envIntensity:headerCfg.envIntensity,
+        transmission:headerCfg.transmission,
+        thickness:headerCfg.thickness,
+        emissiveIntensity:headerCfg.emissiveIntensity
+      };
+      snap.badges = {
+        sizeMul:badgesCfg.sizeMul,
+        offsetXMul:badgesCfg.offsetXMul,
+        yPos:badgesCfg.yPos,
+        zOffset:badgesCfg.zOffset,
+        activated:badgesActivated
+      };
       return snap;
     }
 
-    // Controls toggle
-    document.getElementById('tabs').addEventListener('click',()=>{});
-    document.getElementById('toggleControls').addEventListener('click',()=>{panel.style.display = (panel.style.display==='block')?'none':'block';});
+    window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='p') console.log(JSON.stringify(snapshot(),null,2)); });
+    $('printControlsBtn').onclick=()=>console.log(JSON.stringify(snapshot(),null,2));
+    $('copyControlsBtn').onclick=async()=>{const text=JSON.stringify(snapshot(),null,2); try{await navigator.clipboard.writeText(text);}catch{}};
   </script>
 </body>
 </html>
