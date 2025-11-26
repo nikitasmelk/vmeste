@@ -8,7 +8,6 @@
     html,body{height:100dvh;width:100vw}
     body{margin:0;background:#000;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial}
     canvas{display:block;width:100vw!important;height:100dvh!important}
-    /* Controls (unchanged style) */
     .panel{position:fixed;top:12px;left:12px;z-index:9999;width:min(94vw,460px);max-height:calc(100dvh - 24px);overflow:auto;border-radius:14px;background:#0b1020e0;border:1px solid #88a7ff2a;color:#eaf0ff;box-shadow:0 8px 28px #000a;font-size:12px;display:none}
     .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#0f1a38a6;border-bottom:1px solid #5c75b42a;position:sticky;top:0}
     .tab-btn{padding:8px 10px;border-radius:10px;border:1px solid #6aa2ff33;background:#0e1736;color:#d9e6ff;cursor:pointer}
@@ -24,7 +23,6 @@
   </style>
 </head>
 <body>
-  <!-- Controls UI -->
   <div class="panel" id="panel">
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="vaseTab">vase</button>
@@ -193,9 +191,9 @@
 
     const CONFIG = structuredClone(presetChoice==='phone' ? phone : desktop);
 
-    /* ---------- zoom state (for image zoom jumps) ---------- */
-    let zoomBase = CONFIG.room.imageZoom;         // user's "default" zoom (from slider)
-    let zoomCurrent = CONFIG.room.imageZoom;      // actual applied zoom
+    /* ---------- zoom state ---------- */
+    let zoomBase = CONFIG.room.imageZoom;
+    let zoomCurrent = CONFIG.room.imageZoom;
     let zoomReturnFrom = zoomBase;
     let zoomReturning = false;
     let zoomReturnStartTime = 0;
@@ -217,7 +215,7 @@
     const camera = new THREE.PerspectiveCamera(55, vw()/vh(), 0.1, 100);
     camera.position.set(0,0,7.5);
 
-    /* ---------- wall (with mild shader warp) ---------- */
+    /* ---------- wall ---------- */
     const tLoader = new THREE.TextureLoader(); tLoader.setCrossOrigin("anonymous");
     const wallTex = tLoader.load('/reilly-album-cvr.jpeg', t=>{
       t.colorSpace = THREE.SRGBColorSpace;
@@ -252,11 +250,13 @@
     };
 
     function applyTextureZoom(texture, z){
-      const r=1/Math.max(z,0.0001); texture.center.set(0.5,0.5);
-      texture.repeat.set(r,r); texture.offset.set((1-r)*0.5,(1-r)*0.5); texture.needsUpdate=true;
+      const r=1/Math.max(z,0.0001);
+      texture.center.set(0.5,0.5);
+      texture.repeat.set(r,r);
+      texture.offset.set((1-r)*0.5,(1-r)*0.5);
+      texture.needsUpdate=true;
     }
 
-    // Helper to sync zoom value everywhere (state + texture + UI)
     function applyZoom(v){
       zoomCurrent = v;
       CONFIG.room.imageZoom = v;
@@ -284,7 +284,6 @@
     function updateZoom(time){
       if(!zoomReturning) return;
       const tNorm = THREE.MathUtils.clamp((time - zoomReturnStartTime)/ZOOM_RETURN_DURATION, 0, 1);
-      // exponential ease towards base zoom
       const k = 1.0 - Math.exp(-4.0*tNorm);
       const v = THREE.MathUtils.lerp(zoomReturnFrom, zoomBase, k);
       applyZoom(v);
@@ -322,7 +321,9 @@
       const aspect = vw()/vh();
       const openingZ = room.position.z + ROOM_D*0.5;
       const dTarget = computeTargetDistance(ROOM_D);
-      camera.fov = BASE_VFOV_DEG; camera.aspect = aspect; camera.position.set(0,0, openingZ + dTarget);
+      camera.fov = BASE_VFOV_DEG;
+      camera.aspect = aspect;
+      camera.position.set(0,0, openingZ + dTarget);
       const halfH = Math.tan(THREE.MathUtils.degToRad(BASE_VFOV_DEG)*0.5)*dTarget;
       const targetH = 2*halfH*TILT_MARGIN; const targetW = targetH*aspect;
       ROOM_H = targetH; ROOM_W = targetW;
@@ -347,7 +348,8 @@
     const cubeCam = new THREE.CubeCamera(0.1, 100, cubeRT); scene.add(cubeCam);
 
     /* ---------- vase ---------- */
-    const vaseGroup = new THREE.Group(); scene.add(vaseGroup);
+    const vaseGroup = new THREE.Group();
+    scene.add(vaseGroup);
     const vaseLight = new THREE.PointLight(0xaad4ff, CONFIG.lights.vaseLight.intensity, CONFIG.lights.vaseLight.distance, CONFIG.lights.vaseLight.decay);
     vaseLight.position.set(0, CONFIG.lights.vaseLight.y, 0); vaseGroup.add(vaseLight);
 
@@ -403,13 +405,23 @@
     function headerBaseHeight(){ return Math.min(ROOM_W,ROOM_H)*0.035; }
     function buildHeaderMaterial(){
       headerMat=new THREE.MeshPhysicalMaterial({
-        color:0xCFE0FF, metalness:headerCfg.metalness, roughness:headerCfg.roughness,
-        clearcoat:headerCfg.clearcoat, clearcoatRoughness:headerCfg.clearcoatRoughness,
-        envMap:cubeRT.texture, envMapIntensity:headerCfg.envIntensity,
-        transmission:headerCfg.transmission, thickness:headerCfg.thickness,
-        ior:1.45, side:THREE.FrontSide, transparent:true, opacity:0.0,
-        depthTest:false, depthWrite:false,
-        emissive:new THREE.Color(0x6f8bbf), emissiveIntensity:headerCfg.emissiveIntensity
+        color:0xCFE0FF,
+        metalness:headerCfg.metalness,
+        roughness:headerCfg.roughness,
+        clearcoat:headerCfg.clearcoat,
+        clearcoatRoughness:headerCfg.clearcoatRoughness,
+        envMap:cubeRT.texture,
+        envMapIntensity:headerCfg.envIntensity,
+        transmission:headerCfg.transmission,
+        thickness:headerCfg.thickness,
+        ior:1.45,
+        side:THREE.FrontSide,
+        transparent:true,
+        opacity:0.0,
+        depthTest:false,
+        depthWrite:false,
+        emissive:new THREE.Color(0x6f8bbf),
+        emissiveIntensity:headerCfg.emissiveIntensity
       });
     }
     function applyHeaderTransform(){ headerGroup.position.set(headerCfg.x, headerCfg.y, headerCfg.z); }
@@ -428,20 +440,17 @@
       });
       geo.computeBoundingBox(); geo.center();
       if(!headerMat) buildHeaderMaterial();
-      headerMesh=new THREE.Mesh(geo, headerMat); headerMesh.renderOrder=999; headerGroup.add(headerMesh); applyHeaderTransform();
+      headerMesh=new THREE.Mesh(geo, headerMat);
+      headerMesh.renderOrder=999;
+      headerGroup.add(headerMesh);
+      applyHeaderTransform();
     }
-    new TTFLoader().load(FONT_URL, json=>{
-      headerFont=new Font(json); buildHeaderMaterial(); rebuildHeaderGeometry();
-      quickHeaderZWake();
-    });
 
-    function quickHeaderZWake(){
-      const z0 = headerCfg.z;
-      headerCfg.z = -40; applyHeaderTransform();
-      requestAnimationFrame(()=>{
-        headerCfg.z = z0; applyHeaderTransform();
-      });
-    }
+    new TTFLoader().load(FONT_URL, json=>{
+      headerFont=new Font(json);
+      buildHeaderMaterial();
+      rebuildHeaderGeometry();
+    });
 
     /* ---------- spin physics + timed full-speed hold ---------- */
     let angVel=0, tilt=0, wobble=0;
@@ -480,13 +489,11 @@
 
       angVel += dv;
 
-      // Opposite swipe cancels hold & zoom return will start on next frame
       if(prevVel !== 0 && dv*prevVel < 0){
         holdActive=false;
         holdEndTime=0;
       }
 
-      // Reinforcing swipe near full speed -> request/extend hold
       if(dv*prevVel > 0 && Math.abs(angVel) >= FULL_SPIN*0.98){
         requestExtendHold = true;
       }
@@ -509,10 +516,8 @@
 
       const wasHoldActive = lastHoldActive;
 
-      // Handle hold start/extension
       if(requestExtendHold && Math.abs(angVel) >= FULL_SPIN*0.98){
         if(!holdActive){
-          // Newly entering full-speed "terminal" state
           triggerZoomJump();
         }
         holdActive = true;
@@ -522,12 +527,10 @@
       }
       requestExtendHold = false;
 
-      // Timed out hold
       if(holdActive && time >= holdEndTime){
         holdActive = false;
       }
 
-      // If hold just ended (timeout or user reversed spin), start zoom return
       if(wasHoldActive && !holdActive && zoomCurrent !== zoomBase){
         startZoomReturn(time);
       }
@@ -605,16 +608,37 @@
     function resizePost(){ rt.setSize(vw(),vh()); fsMat.uniforms.resolution.value.set(vw(),vh()); }
 
     /* ---------- water ---------- */
-    const waterUniforms={uTime:{value:0},uCenter:{value:new THREE.Vector3(0,0,0)},uAmp:{value:CONFIG.water.amp},uFreq:{value:CONFIG.water.freq},uSpeed:{value:CONFIG.water.speed},uFalloff:{value:CONFIG.water.falloff},uAlpha:{value:CONFIG.water.alpha},uRadius:{value:CONFIG.water.radius},uPixel:{value:CONFIG.water.pixel},uColor:{value:new THREE.Color().setRGB(...CONFIG.water.tint)},uSpinAbs:{value:0}};
-    const waterMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,uniforms:waterUniforms,vertexShader:`varying vec3 vWorld;varying vec2 vUv;void main(){vUv=uv;vec4 wp=modelMatrix*vec4(position,1.0);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,fragmentShader:`precision highp float;varying vec3 vWorld;varying vec2 vUv;uniform vec3 uCenter;uniform float uTime,uAmp,uFreq,uSpeed,uFalloff,uAlpha,uRadius,uPixel,uSpinAbs;uniform vec3 uColor;vec2 pix(vec2 uv){float p=max(1.0,uPixel);return floor(uv*p)/p;}void main(){vec2 p=vWorld.xz-uCenter.xz;float d=length(p);float nd=clamp(d/uRadius,0.0,1.0);float w=sin(d*uFreq-(uTime*(uSpeed*(1.0+uSpinAbs*2.0))));float fall=exp(-nd*uFalloff*4.0);float h=w*uAmp*(0.5+uSpinAbs*1.4)*fall;float ring=smoothstep(0.0,1.0,abs(w));vec3 col=uColor*(0.6+1.6*h+0.5*ring);float a=clamp(uAlpha*(0.35+0.9*h+0.25*ring),0.0,1.0);vec2 uvq=pix(vUv);col*=(0.9+0.2*fract(uvq.x*128.0+uvq.y*96.0));gl_FragColor=vec4(col,a);}`}
-    );
-    let waterMesh=new THREE.Mesh(new THREE.CircleGeometry(1,128), waterMat); waterMesh.rotation.x=-Math.PI/2; room.add(waterMesh);
+    const waterUniforms={
+      uTime:{value:0},
+      uCenter:{value:new THREE.Vector3(0,0,0)},
+      uAmp:{value:CONFIG.water.amp},
+      uFreq:{value:CONFIG.water.freq},
+      uSpeed:{value:CONFIG.water.speed},
+      uFalloff:{value:CONFIG.water.falloff},
+      uAlpha:{value:CONFIG.water.alpha},
+      uRadius:{value:CONFIG.water.radius},
+      uPixel:{value:CONFIG.water.pixel},
+      uColor:{value:new THREE.Color().setRGB(...CONFIG.water.tint)},
+      uSpinAbs:{value:0}
+    };
+    const waterMat=new THREE.ShaderMaterial({
+      transparent:true,
+      depthWrite:false,
+      depthTest:true,
+      blending:THREE.AdditiveBlending,
+      uniforms:waterUniforms,
+      vertexShader:`varying vec3 vWorld;varying vec2 vUv;void main(){vUv=uv;vec4 wp=modelMatrix*vec4(position,1.0);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
+      fragmentShader:`precision highp float;varying vec3 vWorld;varying vec2 vUv;uniform vec3 uCenter;uniform float uTime,uAmp,uFreq,uSpeed,uFalloff,uAlpha,uRadius,uPixel,uSpinAbs;uniform vec3 uColor;vec2 pix(vec2 uv){float p=max(1.0,uPixel);return floor(uv*p)/p;}void main(){vec2 p=vWorld.xz-uCenter.xz;float d=length(p);float nd=clamp(d/uRadius,0.0,1.0);float w=sin(d*uFreq-(uTime*(uSpeed*(1.0+uSpinAbs*2.0))));float fall=exp(-nd*uFalloff*4.0);float h=w*uAmp*(0.5+uSpinAbs*1.4)*fall;float ring=smoothstep(0.0,1.0,abs(w));vec3 col=uColor*(0.6+1.6*h+0.5*ring);float a=clamp(uAlpha*(0.35+0.9*h+0.25*ring),0.0,1.0);vec2 uvq=pix(vUv);col*=(0.9+0.2*fract(uvq.x*128.0+uvq.y*96.0));gl_FragColor=vec4(col,a);}`
+    });
+    let waterMesh=new THREE.Mesh(new THREE.CircleGeometry(1,128), waterMat);
+    waterMesh.rotation.x=-Math.PI/2;
+    room.add(waterMesh);
     function rebuildWaterCircle(){ const r=Math.max(ROOM_W,ROOM_D)*WATER_RADIUS_FACTOR; waterMesh.geometry.dispose(); waterMesh.geometry=new THREE.CircleGeometry(r,128); }
     function resizeWater(){ waterMesh.position.set(0,-ROOM_H*0.5+0.07+CONFIG.water.yOffset,0); }
     function updateWaterCenter(){ if(!vaseReady) return; const w=new THREE.Vector3(); vaseGroup.getWorldPosition(w); const y=waterMesh.getWorldPosition(new THREE.Vector3()).y; waterUniforms.uCenter.value.set(w.x,y,w.z); }
     rebuildWaterCircle(); resizeWater();
 
-    /* ---------- badges (flat PNG planes; tilt with room) ---------- */
+    /* ---------- badges (flat planes) ---------- */
     const badgeGroup = new THREE.Group();
     scene.add(badgeGroup);
     badgeGroup.visible = false;
@@ -688,7 +712,6 @@
 
     buildBadges();
 
-    // Badge click -> links
     const raycaster=new THREE.Raycaster(); const pointer=new THREE.Vector2();
     window.addEventListener('click', (e)=>{
       if(!badgesReady || !badgeGroup.visible) return;
@@ -739,30 +762,28 @@
       const speedAbs=Math.abs(angVel);
       if(wallShader){ const dir=(angVel>=0?1:-1); wallShader.uniforms.uTime.value += dt * dir * (1.0 + Math.min(3.0, speedAbs*2.4)); }
 
-      // Badges: reveal at first full speed; remain afterwards
       if(!badgesActivated && speedAbs>=FULL_SPIN){ badgesActivated=true; if(badgesReady) badgeGroup.visible=true; }
 
-      // Audio & header opacity
       updateAudio(speedAbs); updateHeaderOpacity(speedAbs);
 
-      // Live env map from vase center
+      // dynamic envmap: exclude vase + header from capture to avoid recursion/artefacts
       cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
-      if(vaseReady && vase) vase.visible=false;
+      const headerWasVisible = headerGroup.visible;
+      const vaseWasVisible = vaseGroup.visible;
+      if(vaseReady && vase) vase.visible = false;
+      headerGroup.visible = false;
       cubeCam.update(renderer, scene);
-      if(vaseReady && vase) vase.visible=true;
+      if(vaseReady && vase) vase.visible = true;
+      headerGroup.visible = headerWasVisible;
+      vaseGroup.visible = vaseWasVisible;
 
-      // Room tilt
       room.rotation.x += (targetRX - room.rotation.x)*0.06;
       room.rotation.y += (targetRY - room.rotation.y)*0.06;
       edges.rotation.copy(room.rotation);
-
-      // Badges tilt with room
       badgeGroup.rotation.copy(room.rotation);
 
-      // Header faces camera
       if(headerMesh){ headerGroup.lookAt(camera.position); }
 
-      // Water + badges follow vase
       updateWaterCenter(); waterUniforms.uTime.value=time; waterUniforms.uSpinAbs.value=speedAbs;
       updateBadgesTransform();
 
@@ -811,8 +832,8 @@
     // Vase
     bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{CONFIG.vase.userScaleMult=v; userScaleMult=v; applyVaseScale();});
     bindRange('vaseYNum','vaseY', ()=>CONFIG.vase.userTallY, v=>{CONFIG.vase.userTallY=v; userTallY=v; applyVaseScale();});
-    bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{CONFIG.vase.z=v; vaseGroup.position.z=v; updateBadgesTransform();});
-    bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{CONFIG.vase.y=v; vaseGroup.position.y=v; updateBadgesTransform();});
+    bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{CONFIG.vase.z=v; vaseGroup.position.z=v; updateBadgesTransform(); syncVasePositionInputs();});
+    bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{CONFIG.vase.y=v; vaseGroup.position.y=v; updateBadgesTransform(); syncVasePositionInputs();});
 
     // Spin
     bindRange('dampNum','damp', ()=>CONFIG.spin.damping, v=>{CONFIG.spin.damping=v; DAMPING=v;});
@@ -824,7 +845,6 @@
     bindRange('zNum','z', ()=>room.position.z, v=>{room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport();});
     bindRange('zoomNum','zoom', ()=>zoomBase, v=>{
       zoomBase = v;
-      // If we're not in an effect, snap immediately
       if(!zoomReturning && !holdActive){
         applyZoom(v);
       }else{
@@ -888,7 +908,6 @@
       bindRange('hdrThickNum','hdrThick', ()=>headerCfg.thickness, v=>{headerCfg.thickness=v; if(headerMat){headerMat.thickness=v; upd();} rebuildHeaderGeometry();});
       bindRange('hdrEmissNum','hdrEmiss', ()=>headerCfg.emissiveIntensity, v=>{headerCfg.emissiveIntensity=v; if(headerMat){headerMat.emissiveIntensity=v; upd();}});
 
-      // Badges tab
       bindRange('bdgSizeNum','bdgSize', ()=>badgesCfg.sizeMul, v=>{
         badgesCfg.sizeMul = Math.max(0.3, Math.min(3,v));
         updateBadgesTransform();
@@ -908,11 +927,11 @@
     }
     bindHeaderUI();
 
-    // Post UI
+    // Post
     bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{CONFIG.post.pixelSize=v; fsMat.uniforms.pixelSize.value=v;});
     bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{CONFIG.post.ditherStrength=v; fsMat.uniforms.ditherStrength.value=v;});
 
-    // Init UI values
+    // Init UI
     function initUI(){
       const set=(id,v)=>{ setVal(id,v); setVal(id+'Num',v); };
       set('vase',CONFIG.vase.userScaleMult); set('vaseY',CONFIG.vase.userTallY); set('vaseZ',CONFIG.vase.z); set('vaseYPos',CONFIG.vase.y);
@@ -928,7 +947,6 @@
     }
     initUI();
 
-    // Controls panel shortcuts & print/copy
     function snapshot(){
       const snap=structuredClone(CONFIG);
       snap.room.width=ROOM_W; snap.room.height=ROOM_H; snap.room.depth=ROOM_D; snap.room.positionZ=room.position.z;
