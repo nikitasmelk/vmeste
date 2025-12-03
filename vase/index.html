@@ -6,156 +6,72 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
   />
-  <title>Biome — Spin + Audio</title>
+  <title>Wasapok</title>
+  <link rel="icon" type="image/x-icon" href="DiamondIcon.png">
   <style>
-    html, body { height: 100dvh; width: 100vw; }
-    body {
-      margin: 0; background: #000; overflow: hidden;
-      overscroll-behavior: none; touch-action: none;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
+    html,body{height:100dvh;width:100vw;}
+    body{
+      margin:0;
+      background:#000;
+      overflow:hidden;
+      touch-action:none;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;
+      cursor: url('./diamondCur'), auto;
     }
-    canvas { display: block; width: 100vw !important; height: 100dvh !important; }
-
-    /* Panel */
-    .panel {
-      position: fixed; top: 12px; left: 12px; z-index: 20;
-      width: min(94vw, 420px);
-      max-height: calc(100dvh - 24px);
-      overflow: hidden;
-      border-radius: 14px; backdrop-filter: blur(8px);
-      background: #0b1020e0; border: 1px solid #88a7ff2a; color: #eaf0ff;
-      box-shadow: 0 8px 28px #000a; font-size: 12px; letter-spacing: .02em;
-      display: none;
+    canvas{display:block;width:100vw!important;height:100dvh!important}
+    .panel{position:fixed;top:12px;left:12px;z-index:9999;width:min(94vw,460px);max-height:calc(100dvh - 24px);overflow:auto;border-radius:14px;background:#0b1020e0;border:1px solid #88a7ff2a;color:#eaf0ff;box-shadow:0 8px 28px #000a;font-size:12px;display:none}
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#0f1a38a6;border-bottom:1px solid #5c75b42a;position:sticky;top:0}
+    .tab-btn{padding:8px 10px;border-radius:10px;border:1px solid #6aa2ff33;background:#0e1736;color:#d9e6ff;cursor:pointer}
+    .tab-btn.active{background:#1a2a62;border-color:#89a6ff66}
+    .tabpages{padding:10px}.tabpage{display:none}.tabpage.active{display:block}
+    h3{margin:4px 0 10px;font-size:13px;color:#cfe0ff}
+    .row{display:grid;grid-template-columns:1fr 60px;gap:8px;align-items:center;margin:6px 0}
+    .row input[type="range"]{width:100%}
+    .row input[type="number"]{width:60px;background:#0d1a3a;color:#eaf0ff;border:1px solid #446;border-radius:6px;padding:4px 6px;font-size:12px}
+    .two{display:flex;gap:8px;margin-top:8px}.two>button{flex:1 1 0;padding:8px 10px;border-radius:10px;border:1px solid #6aa2ff33;background:#0e1736;color:#d9e6ff;cursor:pointer}
+    #toggleControls,#enableMotion{position:fixed;right:16px;z-index:10000;padding:10px 14px;border-radius:12px;border:1px solid #6aa2ff33;background:#0b1020;color:#cfe0ff;font:600 12px/1.2 system-ui;letter-spacing:.05em;box-shadow:0 6px 20px #0007}
+    #toggleControls{bottom:16px}
+    #enableMotion{
+      bottom:66px;display:none;
+      pointer-events:auto;
+      touch-action:manipulation;
     }
-    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px;
-      background: #0f1a38a6; border-bottom: 1px solid #5c75b42a; }
-    .tab-btn {
-      padding: 8px 10px; border-radius: 10px; border:1px solid #6aa2ff33;
-      background:#0e1736; color:#d9e6ff; cursor:pointer; text-align:center;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .tab-btn.active { background:#1a2a62; border-color:#89a6ff66; color:#eaf0ff; }
-    .tabpages { padding: 10px; overflow: auto; max-height: calc(100dvh - 120px); }
-    .tabpage { display: none; } .tabpage.active { display: block; }
-    h3 { margin: 4px 0 10px; font-size: 13px; color:#cfe0ff; }
-    .row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; align-items: center; margin: 6px 0; }
-    .row input[type="range"] { width: 100%; }
-    .row input[type="number"] {
-      width: 60px; background:#0d1a3a; color:#eaf0ff; border:1px solid #446;
-      border-radius:6px; padding:4px 6px; font-size:12px;
-    }
-    .hint { opacity:.8; font-size:11px; margin:6px 0 2px; }
-    .two { display:flex; gap:8px; margin-top:8px; }
-    .two > button {
-      flex:1 1 0; padding:8px 10px; border-radius:10px; border:1px solid #6aa2ff33;
-      background:#0e1736; color:#d9e6ff; cursor:pointer;
-    }
-    .inline { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .swatch { display:flex; gap:6px; }
-    .swatch input[type="number"] { width:52px; }
-
-    #enableMotion {
-      position: fixed; inset: auto 16px 66px auto; z-index: 22;
-      padding: 10px 14px; border-radius: 12px; border: 1px solid #6aa2ff33;
-      background: #0b1020; color: #cfe0ff; font: 600 12px/1.2 system-ui;
-      letter-spacing: .05em; box-shadow: 0 6px 20px #0007; display: none;
-    }
-
-    /* Popup */
-    .popup-wrap { position: fixed; inset: 0; z-index: 30; display: none;
-      align-items: center; justify-content: center; background: rgba(0,0,0,0.35); backdrop-filter: blur(2px); }
-    .popup {
-      position: relative; width: min(92vw, 420px); max-width: 92vw; padding: 16px 14px 14px;
-      border-radius: 16px;
-      background:
-        repeating-linear-gradient(0deg, #1a2350 0 2px, #0e1638 2px 4px),
-        linear-gradient(180deg, #122058cc, #0a1234cc);
-      border: 2px solid #8fb0ff66;
-      box-shadow:
-        0 0 0 4px #1b2c6a88 inset,
-        0 10px 28px #000a,
-        0 0 40px #7da5ff33 inset;
-      color: #eaf0ff; transform: translateY(8px) scale(0.98); opacity: 0;
-      transition: transform .22s ease, opacity .22s ease; image-rendering: pixelated;
-    }
-    .popup.show { transform: translateY(0) scale(1); opacity: 1; }
-    .popup h4 { margin: 0 0 10px; font-size: 16px; letter-spacing: .04em; color:#cfe0ff; }
-    .popup p { margin: 0 0 12px; font-size: 12px; opacity: .9; }
-    .popup-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-    .btn-tile {
-      display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 12px; cursor: pointer; text-decoration: none;
-      border: 1px solid #8fb0ff55; background: #0c1538aa; color: #cfe0ff;
-      box-shadow: 0 2px 0 #000a inset, 0 0 16px #6aa2ff22 inset;
-      transition: transform .08s ease, box-shadow .12s ease;
-    }
-    .btn-label { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
-    .logo { width: 32px; height: 32px; filter: drop-shadow(0 0 8px #88a7ff55); }
-    .popup-close {
-      position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border-radius: 8px;
-      display: grid; place-items: center; cursor: pointer;
-      border: 1px solid #8fb0ff55; background: #0c1538cc; color:#eaf0ff;
-      font-size: 16px; line-height: 1; user-select: none;
-      box-shadow: 0 2px 0 #000a inset, 0 0 12px #6aa2ff22 inset;
-      transition: transform .08s ease;
-    }
-    .popup-close:active { transform: translateY(1px) scale(0.98); }
   </style>
 </head>
 <body>
-
-  <!-- Controls -->
   <div class="panel" id="panel">
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="vaseTab">vase</button>
-      <button class="tab-btn" data-tab="roomTab">room size & framing</button>
-      <button class="tab-btn" data-tab="wallImgTab">wall image controls</button>
-      <button class="tab-btn" data-tab="lightsTab">lights controls</button>
-      <button class="tab-btn" data-tab="roomFxTab">room effects</button>
-      <button class="tab-btn" data-tab="waterTab">water effects</button>
-      <button class="tab-btn" data-tab="globalFxTab">global effects</button>
-      <button class="tab-btn" data-tab="vaseFxTab">vase effects</button>
+      <button class="tab-btn" data-tab="roomTab">room</button>
+      <button class="tab-btn" data-tab="lightsTab">lights</button>
+      <button class="tab-btn" data-tab="waterTab">water</button>
+      <button class="tab-btn" data-tab="vaseFxTab">glass</button>
+      <button class="tab-btn" data-tab="headerTab">header</button>
+      <button class="tab-btn" data-tab="badgesTab">badges</button>
+      <button class="tab-btn" data-tab="postTab">post</button>
     </div>
-
     <div class="tabpages">
-      <!-- Vase -->
       <div class="tabpage active" id="vaseTab">
         <h3>Vase</h3>
         <div class="row"><label>Scale ×</label><input id="vaseNum" type="number" step="0.01"><input id="vase" type="range" min="0.2" max="4.0" step="0.01"></div>
-        <div class="row"><label>Tallness (Y)</label><input id="vaseYNum" type="number" step="0.01"><input id="vaseY" type="range" min="0.5" max="3.0" step="0.01"></div>
+        <div class="row"><label>Tallness Y</label><input id="vaseYNum" type="number" step="0.01"><input id="vaseY" type="range" min="0.5" max="3.0" step="0.01"></div>
         <div class="row"><label>Pos Z</label><input id="vaseZNum" type="number" step="0.1"><input id="vaseZ" type="range" min="-40" max="2" step="0.1"></div>
         <div class="row"><label>Pos Y</label><input id="vaseYPosNum" type="number" step="0.1"><input id="vaseYPos" type="range" min="-10" max="8" step="0.1"></div>
         <h3>Spin</h3>
         <div class="row"><label>Damping</label><input id="dampNum" type="number" step="0.001"><input id="damp" type="range" min="0.90" max="0.999" step="0.001"></div>
         <div class="row"><label>Min Spin</label><input id="minNum" type="number" step="0.01"><input id="min" type="range" min="0.0" max="0.6" step="0.01"></div>
         <div class="row"><label>Swipe Impulse</label><input id="impNum" type="number" step="0.0001"><input id="imp" type="range" min="0.0005" max="0.05" step="0.0001"></div>
-        <div class="two">
-          <button id="printControlsBtn">Print controls</button>
-          <button id="copyControlsBtn">Copy controls</button>
-        </div>
+        <div class="two"><button id="printControlsBtn">Print controls</button><button id="copyControlsBtn">Copy controls</button></div>
       </div>
 
-      <!-- Room size & framing -->
       <div class="tabpage" id="roomTab">
-        <h3>Room Size (Auto-fit)</h3>
-        <div class="hint">Width & Height auto-fit to viewport so no outside is visible.</div>
+        <h3>Room</h3>
         <div class="row"><label>Depth</label><input id="dNum" type="number" step="0.1"><input id="d" type="range" min="3" max="40" step="0.1"></div>
-        <h3>Framing</h3>
         <div class="row"><label>Room Z</label><input id="zNum" type="number" step="0.1"><input id="z" type="range" min="-40" max="0" step="0.1"></div>
-        <div class="two">
-          <button id="fitPortrait">Refit (Portrait)</button>
-          <button id="fitDesktop">Refit (Desktop)</button>
-        </div>
-      </div>
-
-      <!-- Wall image controls -->
-      <div class="tabpage" id="wallImgTab">
-        <h3>Wall Image</h3>
-        <div class="row"><label>Image Zoom</label><input id="zoomNum" type="number" step="0.01"><input id="zoom" type="range" min="0.5" max="3.0" step="0.01"></div>
+        <div class="row"><label>Image Zoom</label><input id="zoomNum" type="number" step="0.01"><input id="zoom" type="range" min="0.5" max="3.2" step="0.01"></div>
         <div class="row"><label>Border Opacity</label><input id="edgeNum" type="number" step="0.01"><input id="edge" type="range" min="0" max="1" step="0.01"></div>
       </div>
 
-      <!-- Lights controls -->
       <div class="tabpage" id="lightsTab">
         <h3>Lights</h3>
         <div class="row"><label>Exposure</label><input id="expNum" type="number" step="0.01"><input id="exp" type="range" min="0.2" max="3.5" step="0.01"></div>
@@ -170,17 +86,8 @@
         <div class="row"><label>Y Position</label><input id="vlYNum" type="number" step="0.01"><input id="vlY" type="range" min="-4" max="4" step="0.01"></div>
       </div>
 
-      <!-- Room effects -->
-      <div class="tabpage" id="roomFxTab">
-        <h3>Room Effects</h3>
-        <div class="row"><label>Wall Emissive</label><input id="emisNum" type="number" step="0.01"><input id="emis" type="range" min="0" max="1" step="0.01"></div>
-        <div class="row"><label>Disp Amp</label><input id="dispNum" type="number" step="0.001"><input id="disp" type="range" min="0" max="0.15" step="0.001"></div>
-        <div class="row"><label>Disp Speed</label><input id="dsNum" type="number" step="0.01"><input id="ds" type="range" min="0" max="8" step="0.01"></div>
-      </div>
-
-      <!-- Water effects -->
       <div class="tabpage" id="waterTab">
-        <h3>Water (visible & fast)</h3>
+        <h3>Water</h3>
         <div class="row"><label>Amplitude</label><input id="wAmpNum" type="number" step="0.01"><input id="wAmp" type="range" min="0" max="3.0" step="0.01"></div>
         <div class="row"><label>Frequency</label><input id="wFreqNum" type="number" step="0.1"><input id="wFreq" type="range" min="1" max="60" step="0.1"></div>
         <div class="row"><label>Wave Speed</label><input id="wSpeedNum" type="number" step="0.01"><input id="wSpeed" type="range" min="0" max="8" step="0.01"></div>
@@ -189,26 +96,10 @@
         <div class="row"><label>Radius</label><input id="wRadNum" type="number" step="0.1"><input id="wRad" type="range" min="0.5" max="8.0" step="0.1"></div>
         <div class="row"><label>Pixelation</label><input id="wPixNum" type="number" step="1"><input id="wPix" type="range" min="1" max="48" step="1"></div>
         <div class="row"><label>Y Offset</label><input id="wYNum" type="number" step="0.01"><input id="wY" type="range" min="-3" max="3" step="0.01"></div>
-        <div class="inline">
-          <span>Tint (RGB 0..1)</span>
-          <div class="swatch">
-            <input id="wR" type="number" min="0" max="1" step="0.01">
-            <input id="wG" type="number" min="0" max="1" step="0.01">
-            <input id="wB" type="number" min="0" max="1" step="0.01">
-          </div>
-        </div>
       </div>
 
-      <!-- Global effects -->
-      <div class="tabpage" id="globalFxTab">
-        <h3>Global Effects</h3>
-        <div class="row"><label>Pixel Size</label><input id="pixNum" type="number" step="1"><input id="pix" type="range" min="1" max="24" step="1"></div>
-        <div class="row"><label>Dither Strength</label><input id="dithNum" type="number" step="0.01"><input id="dith" type="range" min="0" max="1" step="0.01"></div>
-      </div>
-
-      <!-- Vase effects -->
       <div class="tabpage" id="vaseFxTab">
-        <h3>Glass Material (live)</h3>
+        <h3>Glass</h3>
         <div class="row"><label>Transmission</label><input id="glassTransNum" type="number" step="0.01"><input id="glassTrans" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Thickness</label><input id="glassThickNum" type="number" step="0.01"><input id="glassThick" type="range" min="0.1" max="4" step="0.01"></div>
         <div class="row"><label>IOR</label><input id="glassIorNum" type="number" step="0.01"><input id="glassIor" type="range" min="1.0" max="2.5" step="0.01"></div>
@@ -217,56 +108,44 @@
         <div class="row"><label>CC Roughness</label><input id="glassCCRNum" type="number" step="0.01"><input id="glassCCR" type="range" min="0" max="1" step="0.01"></div>
         <div class="row"><label>Env Intensity</label><input id="glassEnvNum" type="number" step="0.01"><input id="glassEnv" type="range" min="0" max="4" step="0.01"></div>
         <div class="row"><label>Metalness</label><input id="glassMetalNum" type="number" step="0.01"><input id="glassMetal" type="range" min="0" max="1" step="0.01"></div>
+      </div>
 
-        <h3>Base Color (RGB 0..1)</h3>
-        <div class="inline swatch">
-          <input id="glassColR" type="number" min="0" max="1" step="0.01">
-          <input id="glassColG" type="number" min="0" max="1" step="0.01">
-          <input id="glassColB" type="number" min="0" max="1" step="0.01">
-        </div>
+      <div class="tabpage" id="headerTab">
+        <h3>Header Text (opacity auto)</h3>
+        <div class="row"><label>Size ×</label><input id="hdrSizeNum" type="number" step="0.01" min="0.2" max="3"><input id="hdrSize" type="range" min="0.2" max="3" step="0.01"></div>
+        <div class="row"><label>Pos X</label><input id="hdrXNum" type="number" step="0.1"><input id="hdrX" type="range" min="-40" max="40" step="0.1"></div>
+        <div class="row"><label>Pos Y</label><input id="hdrYNum" type="number" step="0.1"><input id="hdrY" type="range" min="-20" max="20" step="0.1"></div>
+        <div class="row"><label>Pos Z</label><input id="hdrZNum" type="number" step="0.1"><input id="hdrZ" type="range" min="-40" max="40" step="0.1"></div>
+        <h3>Header Material</h3>
+        <div class="row"><label>Metalness</label><input id="hdrMetalNum" type="number" step="0.01"><input id="hdrMetal" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Roughness</label><input id="hdrRoughNum" type="number" step="0.01"><input id="hdrRough" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Clearcoat</label><input id="hdrCCNum" type="number" step="0.01"><input id="hdrCC" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>CC Roughness</label><input id="hdrCCRNum" type="number" step="0.01"><input id="hdrCCR" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Env Intensity</label><input id="hdrEnvNum" type="number" step="0.01"><input id="hdrEnv" type="range" min="0" max="4" step="0.01"></div>
+        <div class="row"><label>Transmission</label><input id="hdrTransNum" type="number" step="0.01"><input id="hdrTrans" type="range" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Depth/Thickness ×</label><input id="hdrThickNum" type="number" step="0.01"><input id="hdrThick" type="range" min="0.2" max="3" step="0.01"></div>
+        <div class="row"><label>Emissive Intensity</label><input id="hdrEmissNum" type="number" step="0.01"><input id="hdrEmiss" type="range" min="0" max="3" step="0.01"></div>
+      </div>
 
-        <h3>Transmission Tint (RGB 0..1)</h3>
-        <div class="inline swatch">
-          <input id="glassAttR" type="number" min="0" max="1" step="0.01">
-          <input id="glassAttG" type="number" min="0" max="1" step="0.01">
-          <input id="glassAttB" type="number" min="0" max="1" step="0.01">
-        </div>
+      <div class="tabpage" id="badgesTab">
+        <h3>Badges</h3>
+        <div class="row"><label>Badge Size ×</label><input id="bdgSizeNum" type="number" step="0.01"><input id="bdgSize" type="range" min="0.3" max="3" step="0.01"></div>
+        <div class="row"><label>X Offset ×</label><input id="bdgXOffNum" type="number" step="0.01"><input id="bdgXOff" type="range" min="0" max="2" step="0.01"></div>
+        <div class="row"><label>Y Position</label><input id="bdgYPosNum" type="number" step="0.1"><input id="bdgYPos" type="range" min="-20" max="20" step="0.1"></div>
+        <div class="row"><label>Z Offset</label><input id="bdgZOffNum" type="number" step="0.1"><input id="bdgZOff" type="range" min="-10" max="10" step="0.1"></div>
+      </div>
+
+      <div class="tabpage" id="postTab">
+        <h3>Post</h3>
+        <div class="row"><label>Pixel Size</label><input id="pixNum" type="number" step="1"><input id="pix" type="range" min="1" max="24" step="1"></div>
+        <div class="row"><label>Dither Strength</label><input id="dithNum" type="number" step="0.01"><input id="dith" type="range" min="0" max="1" step="0.01"></div>
       </div>
     </div>
   </div>
 
+  <!-- <button id="toggleControls">Controls (H)</button> -->
   <button id="enableMotion">Enable Fun</button>
 
-
-  <!-- Spin Popup -->
-  <div class="popup-wrap" id="spinPopupWrap" aria-hidden="true">
-    <div class="popup" id="spinPopup" role="dialog" aria-modal="true" aria-labelledby="popTitle">
-      <button class="popup-close" id="popClose" aria-label="Close">✕</button>
-      <h4 id="popTitle">ritual complete</h4>
-      <p>select reward</p>
-      <div class="popup-buttons">
-        <a class="btn-tile" id="btnSpotify" href="https://open.spotify.com/" target="_blank" rel="noopener">
-          <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
-            <rect x="2" y="2" width="60" height="60" rx="12" fill="#1DB954"/>
-            <path d="M15 26c13-5 21-4 33 1" stroke="#0b2a12" stroke-width="6" stroke-linecap="round" fill="none"/>
-            <path d="M16 36c10-4 18-3 30 1" stroke="#0b2a12" stroke-width="5" stroke-linecap="round" fill="none" opacity=".9"/>
-            <path d="M17 44c8-3 14-2 24 1" stroke="#0b2a12" stroke-width="4" stroke-linecap="round" fill="none" opacity=".8"/>
-          </svg>
-          <span class="btn-label">Spotify</span>
-        </a>
-        <a class="btn-tile" id="btnApple" href="https://music.apple.com/" target="_blank" rel="noopener">
-          <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
-            <rect x="2" y="2" width="60" height="60" rx="12" fill="#fb2d61"/>
-            <path d="M42 14l-18 4v22c0 2-2 4-5 4s-5-2-5-4 2-4 5-4c2 0 4 1 5 2V22l18-4v16c0 2-2 4-5 4s-5-2-5-4 2-4 5-4c2 0 4 1 5 2V14z"
-                  fill="#380410" opacity=".9"/>
-          </svg>
-          <span class="btn-label">Apple&nbsp;Music</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- three.js -->
   <script type="importmap">
     {
       "imports": {
@@ -279,8 +158,11 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { TTFLoader } from 'three/addons/loaders/TTFLoader.js';
+    import { Font } from 'three/addons/loaders/FontLoader.js';
+    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-    /* -------------------- helpers & environment -------------------- */
+    /* ---------- utility ---------- */
     const vw = ()=> (window.visualViewport?.width  || window.innerWidth);
     const vh = ()=> (window.visualViewport?.height || window.innerHeight);
     const isPortrait = ()=> vh() >= vw();
@@ -294,945 +176,981 @@
     if (urlPreset === 'phone' || urlPreset === 'desktop') setStoredPreset(urlPreset);
     const presetChoice = getStoredPreset() || (isPhone() ? 'phone' : 'desktop');
 
-    /* -------------------- PRESETS (your values) -------------------- */
-    const desktopDefaults = {
-      room:{ width:18.766829958988648, height:10.18770767198562, depth:14.5, positionZ:-10.8, imageZoom:0.96, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
-      lights:{ exposure:0.86, ambient:1.91, hemisphere:2.0, rim:1.87, key:1.68, vaseLight:{ intensity:6.0, distance:8.6, decay:1.6, y:0.1 } },
-      vase:{ userScaleMult:3.2, userTallY:1.06, z:-10.7, y:-4.8 },
-      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
-      post:{ pixelSize:5, ditherStrength:1.0 },
-      water:{ amp:1.61, freq:40.0, speed:0.82, falloff:0.9, alpha:0.44, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
-      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:0.63, color:[1,1,1], attnColor:[0.66,0.79,1] },
-      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
-    };
-    const phoneDefaults = {
-      room:{ width:3.2466138193122998, height:7.026005291024567, depth:8.1, positionZ:-2.4, imageZoom:1.0, borderOpacity:0.0, wallEmissive:0.38, wallDispAmp:0.006, wallDispSpeed:2.39 },
-      lights:{ exposure:2.74, ambient:1.72, hemisphere:2.36, rim:3.22, key:1.47, vaseLight:{ intensity:7.16, distance:28.2, decay:2.7, y:0.4 } },
-      vase:{ userScaleMult:1.37, userTallY:1.81, z:-0.9, y:-3.3 },
-      spin:{ damping:0.997, minSpin:0.11, swipeImpulse:0.02 },
-      post:{ pixelSize:3, ditherStrength:1.0 },
-      water:{ amp:1.27, freq:40.0, speed:0.82, falloff:0.9, alpha:0.05, radius:2.9, pixel:24, yOffset:-0.05, tint:[0.45, 0.75, 1.0] },
-      glass:{ transmission:0.86, thickness:4.0, ior:2.5, roughness:0.05, clearcoat:1.0, ccRough:0.9, envIntensity:1.51, metalness:1.0, color:[1,1,1], attnColor:[0.66,0.79,1] },
-      _internal:{ WATER_RADIUS_FACTOR:0.74, TILT_MARGIN:1.1247358823385865 }
+    /* ---------- presets ---------- */
+    const desktop = {
+      room:{
+        width:18.766829922078774,
+        height:10.18770767198562,
+        depth:14.5,
+        positionZ:-10.8,
+        imageZoom:0.96,
+        borderOpacity:0,
+        wallEmissive:0.38,
+        wallDispAmp:0.006,
+        wallDispSpeed:2.39
+      },
+      lights:{
+        exposure:0.86,
+        ambient:1.85,
+        hemisphere:2.6,
+        rim:1.87,
+        key:1.68,
+        vaseLight:{
+          intensity:4.82,
+          distance:10.6,
+          decay:1.1,
+          y:0.32
+        }
+      },
+      vase:{
+        userScaleMult:3.11,
+        userTallY:1.06,
+        z:-10.7,
+        y:-4.8
+      },
+      spin:{
+        damping:0.997,
+        minSpin:0.2,
+        swipeImpulse:0.14
+      },
+      post:{
+        pixelSize:5,
+        ditherStrength:0.41
+      },
+      water:{
+        amp:0,
+        freq:38.3,
+        speed:0.53,
+        falloff:1.05,
+        alpha:0.35,
+        radius:2.5,
+        pixel:6,
+        yOffset:-0.05,
+        tint:[0.45,0.75,1]
+      },
+      glass:{
+        transmission:1,
+        thickness:0.76,
+        ior:2.5,
+        roughness:0,
+        clearcoat:0.52,
+        ccRough:0.27,
+        envIntensity:1.33,
+        metalness:0.94,
+        color:[1,1,1],
+        attnColor:[0.66,0.79,1]
+      },
+      _internal:{
+        WATER_RADIUS_FACTOR:0.74,
+        TILT_MARGIN:1.1247358823385865
+      },
+      header:{
+        opacity:0.99,
+        sizeMul:0.63,
+        x:0,
+        y:2.5,
+        z:-3.7,
+        locked:true,
+        metalness:1,
+        roughness:0.04,
+        clearcoat:1,
+        clearcoatRoughness:0,
+        envIntensity:1.27,
+        transmission:0,
+        thickness:2.31,
+        emissiveIntensity:0.28
+      },
+      badges:{
+        sizeMul:2.44,
+        offsetXMul:1.15,
+        yPos:4.4,
+        zOffset:1.9,
+        activated:true
+      },
+      _preset:'desktop'
     };
 
-    const CONFIG = structuredClone(presetChoice === 'phone' ? phoneDefaults : desktopDefaults);
+    const phone = {
+      room:{
+        width:3.2466138193122998,
+        height:7.026005291024567,
+        depth:6.6,
+        positionZ:-10.4,
+        imageZoom:0.96,
+        borderOpacity:0,
+        wallEmissive:0.32,
+        wallDispAmp:0.011,
+        wallDispSpeed:2.19
+      },
+      lights:{
+        exposure:1.49,
+        ambient:0.82,
+        hemisphere:3.48,
+        rim:3.76,
+        key:1.47,
+        vaseLight:{
+          intensity:7.17,
+          distance:2.9,
+          decay:2.5,
+          y:0.77
+        }
+      },
+      vase:{
+        userScaleMult:1.47,
+        userTallY:1.55,
+        z:-9.3,
+        y:-3
+      },
+      spin:{
+        damping:0.997,
+        minSpin:0.2,
+        swipeImpulse:0.14
+      },
+      post:{
+        pixelSize:4,
+        ditherStrength:0.52
+      },
+      water:{
+        amp:0,
+        freq:26.5,
+        speed:0.82,
+        falloff:0.9,
+        alpha:0.44,
+        radius:2.9,
+        pixel:24,
+        yOffset:-0.05,
+        tint:[0.45,0.75,1]
+      },
+      glass:{
+        transmission:0.91,
+        thickness:2.22,
+        ior:2.12,
+        roughness:0,
+        clearcoat:0.81,
+        ccRough:0.67,
+        envIntensity:1.58,
+        metalness:1,
+        color:[1,1,1],
+        attnColor:[0.66,0.79,1]
+      },
+      _internal:{
+        WATER_RADIUS_FACTOR:0.74,
+        TILT_MARGIN:1.1247358823385865
+      },
+      header:{
+        opacity:0.99,
+        sizeMul:2.6,
+        x:0,
+        y:9.4,
+        z:-29.6,
+        locked:true,
+        metalness:0.98,
+        roughness:0,
+        clearcoat:0.93,
+        clearcoatRoughness:0.59,
+        envIntensity:1.79,
+        transmission:0.67,
+        thickness:2.58,
+        emissiveIntensity:1
+      },
+      badges:{
+        sizeMul:1.6,
+        offsetXMul:0.6,
+        yPos:4.7,
+        zOffset:-1,
+        activated:true
+      },
+      _preset:'phone'
+    };
 
-    /* -------------------- renderer -------------------- */
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 1.8));
+    const CONFIG = structuredClone(presetChoice==='phone' ? phone : desktop);
+
+    /* ---------- zoom state ---------- */
+    let zoomBase = CONFIG.room.imageZoom;
+    let zoomCurrent = CONFIG.room.imageZoom;
+    const ZOOM_TERMINAL_VALUES = [0.66, 0.48, 0.88, 0.96, 3.2];
+
+    /* ---------- renderer, scene, camera ---------- */
+    const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'high-performance'});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isPhone()?1.5:1.8));
     renderer.setSize(vw(), vh(), false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = CONFIG.lights.exposure;
-    renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
-    /* -------------------- scene / camera -------------------- */
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0d1220, 18, 40);
 
     const camera = new THREE.PerspectiveCamera(55, vw()/vh(), 0.1, 100);
-    camera.position.set(0, 0, 7.5);
+    camera.position.set(0,0,7.5);
 
-    /* -------------------- texture / walls -------------------- */
-    const textureURL = "/reilly-album-cvr.jpeg";
+    /* ---------- wall ---------- */
     const tLoader = new THREE.TextureLoader(); tLoader.setCrossOrigin("anonymous");
-    const tex = tLoader.load(textureURL, ()=>{
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      applyTextureZoom(tex, CONFIG.room.imageZoom);
+    const wallTex = tLoader.load('/reilly-album-cvr.jpeg', t=>{
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      applyTextureZoom(t, CONFIG.room.imageZoom);
     });
-
     const wallMat = new THREE.MeshStandardMaterial({
-      map: tex, side: THREE.BackSide, roughness: 0.8, metalness: 0.0,
+      map: wallTex, side: THREE.BackSide,
+      roughness: 0.8, metalness: 0.0,
       emissive: new THREE.Color(0x2a365c),
       emissiveIntensity: CONFIG.room.wallEmissive,
       envMapIntensity: 0.18
     });
-
-    let wallShaderRef = null;
-    wallMat.onBeforeCompile = (shader)=>{
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <common>',
-        `#include <common>
-         uniform float uTime;
-         uniform float uDispAmp;
-         uniform float uDispSpeed;`
-      );
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        `#ifdef USE_MAP
+    let wallShader=null;
+    wallMat.onBeforeCompile = (s)=>{
+      s.fragmentShader = s.fragmentShader
+        .replace('#include <common>', `#include <common>
+          uniform float uTime; uniform float uDispAmp; uniform float uDispSpeed;`)
+        .replace('#include <map_fragment>', `#ifdef USE_MAP
           vec2 uv2 = vMapUv;
-          float g = 120.0;
-          vec2 grid = floor(uv2 * g)/g;
-          float t = uTime * uDispSpeed;
-          vec2 warp = vec2(
-            sin(grid.y*40.0 + t*2.2),
-            cos(grid.x*40.0 - t*1.7)
-          ) * uDispAmp;
-          vec4 sampledDiffuseColor = texture2D(map, uv2 + warp);
+          float g=120.0; vec2 grid=floor(uv2*g)/g;
+          float t=uTime*uDispSpeed;
+          vec2 warp=vec2( sin(grid.y*40.0+t*2.2), cos(grid.x*40.0-t*1.7) )*uDispAmp;
+          vec4 sampledDiffuseColor = texture2D(map, uv2+warp);
           diffuseColor *= sampledDiffuseColor;
-        #endif`
-      );
-      shader.uniforms.uTime      = { value: 0.0 };
-      shader.uniforms.uDispAmp   = { value: CONFIG.room.wallDispAmp };
-      shader.uniforms.uDispSpeed = { value: CONFIG.room.wallDispSpeed };
-      wallShaderRef = shader;
+        #endif`);
+      s.uniforms.uTime      = { value: 0 };
+      s.uniforms.uDispAmp   = { value: CONFIG.room.wallDispAmp };
+      s.uniforms.uDispSpeed = { value: CONFIG.room.wallDispSpeed };
+      wallShader = s;
     };
 
-    function applyTextureZoom(texture, z=1.0){
-      const r = 1 / Math.max(z, 0.0001);
-      texture.center.set(0.5, 0.5);
-      texture.repeat.set(r, r);
-      texture.offset.set((1 - r) * 0.5, (1 - r) * 0.5);
-      texture.needsUpdate = true;
+    function applyTextureZoom(texture, z){
+      const r=1/Math.max(z,0.0001);
+      texture.center.set(0.5,0.5);
+      texture.repeat.set(r,r);
+      texture.offset.set((1-r)*0.5,(1-r)*0.5);
+      texture.needsUpdate=true;
     }
 
-    /* -------------------- room geometry (auto-fit) -------------------- */
-    let ROOM_W=CONFIG.room.width, ROOM_H=CONFIG.room.height, ROOM_D=CONFIG.room.depth;
-    function buildRoomGeometry(w, h, d){
-      const geo = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
-      const tileW = 1/4, tileH = 1/3;
-      const regions = { px:{u0:0.5,v0:1/3}, nx:{u0:0.0,v0:1/3}, py:{u0:0.25,v0:2/3}, ny:{u0:0.25,v0:0.0}, pz:{u0:0.25,v0:1/3}, nz:{u0:0.75,v0:1/3} };
-      const uv = geo.getAttribute('uv'); const arr = uv.array; const stride = 12;
-      const faces=[regions.px,regions.nx,regions.py,regions.ny,regions.pz,regions.nz];
-      const put=(off,u0,v0,u1,v1,flipH)=>{
-        let A=[u0,v0],B=[u1,v0],C=[u1,v1],D=[u0,v1];
-        if (flipH){ [A,B,C,D]=[[B[0],B[1]],[A[0],A[1]],[D[0],D[1]],[C[0],C[1]]]; }
-        const uvs=[A[0],A[1], B[0],B[1], D[0],D[1],  B[0],B[1], C[0],C[1], D[0],D[1]];
-        for(let i=0;i<12;i++) arr[off+i]=uvs[i];
-      };
-      for(let f=0; f<6; f++){
-        const r=faces[f]; const u0=r.u0, v0=r.v0, u1=u0+tileW, v1=v0+tileH;
-        put(f*stride,u0,v0,u1,v1,true);
+    function applyZoom(v){
+      zoomCurrent = v;
+      CONFIG.room.imageZoom = v;
+      applyTextureZoom(wallTex, v);
+      const slider = document.getElementById('zoom');
+      const num = document.getElementById('zoomNum');
+      if(slider) slider.value = v;
+      if(num) num.value = v;
+    }
+
+    function triggerZoomJump(){
+      const vals = ZOOM_TERMINAL_VALUES;
+      const eps = 1e-3;
+      // pick a random value different from the current zoom
+      let candidates = vals.filter(v => Math.abs(v - zoomCurrent) > eps);
+      if(candidates.length === 0){
+        candidates = vals.slice();
       }
-      uv.needsUpdate = true; return geo;
+      const target = candidates[Math.floor(Math.random()*candidates.length)];
+      zoomBase = target;
+      applyZoom(target);
     }
 
-    const roomGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
-    const room = new THREE.Mesh(roomGeo, wallMat);
-    room.position.set(0, 0, CONFIG.room.positionZ);
-    scene.add(room);
+    /* ---------- room box ---------- */
+    let ROOM_W=CONFIG.room.width, ROOM_H=CONFIG.room.height, ROOM_D=CONFIG.room.depth;
+    function buildRoomGeometry(w,h,d){
+      const geo = new THREE.BoxGeometry(w,h,d,1,1,1);
+      const uv = geo.getAttribute('uv'); const A=uv.array;
+      const tileW=1/4,tileH=1/3;
+      const faces=[
+        {u0:0.5,v0:1/3},{u0:0.0,v0:1/3},{u0:0.25,v0:2/3},
+        {u0:0.25,v0:0.0},{u0:0.25,v0:1/3},{u0:0.75,v0:1/3}
+      ];
+      const put=(off,u0,v0,u1,v1)=>{ const uvs=[u0,v0,u1,v0,u0,v1, u1,v0,u1,v1,u0,v1]; for(let i=0;i<12;i++)A[off+i]=uvs[i];};
+      for(let f=0;f<6;f++){ const r=faces[f]; put(f*12, r.u0,r.v0, r.u0+tileW, r.v0+tileH); }
+      uv.needsUpdate=true; return geo;
+    }
+    const roomGeo = buildRoomGeometry(ROOM_W,ROOM_H,ROOM_D);
+    const room = new THREE.Mesh(roomGeo, wallMat); room.position.set(0,0,CONFIG.room.positionZ); scene.add(room);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(roomGeo), new THREE.LineBasicMaterial({color:0xF0F6FF,transparent:true,opacity:CONFIG.room.borderOpacity}));
+    edges.position.copy(room.position); scene.add(edges);
 
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(roomGeo),
-      new THREE.LineBasicMaterial({ color: 0xF0F6FF, transparent: true, opacity: CONFIG.room.borderOpacity })
-    );
-    edges.position.copy(room.position);
-    scene.add(edges);
-
-    /* -------------------- AUTO-FIT sizing -------------------- */
     const BASE_VFOV_DEG = 55;
-    const INPUT_MAX_TILT = 0.085;
-
     let WATER_RADIUS_FACTOR = CONFIG._internal?.WATER_RADIUS_FACTOR ?? 0.74;
-    let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? (1.12 / Math.cos(INPUT_MAX_TILT * 1.08));
+    let TILT_MARGIN = CONFIG._internal?.TILT_MARGIN ?? 1.1247358823385865;
 
-    function computeTargetDistance(depth){
-      return THREE.MathUtils.clamp(depth * 0.6, 6.0, 20.0);
-    }
-
-    function rebuildRoom(){
-      const newGeo = buildRoomGeometry(ROOM_W, ROOM_H, ROOM_D);
-      room.geometry.dispose(); room.geometry=newGeo;
-      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
-      resizeWater(); rebuildWaterCircle();
-    }
-
+    function computeTargetDistance(depth){ return THREE.MathUtils.clamp(depth*0.6, 6.0, 20.0); }
     function adjustRoomToViewport(){
       const aspect = vw()/vh();
-      const vfovRad = THREE.MathUtils.degToRad(BASE_VFOV_DEG);
-      const openingZ = room.position.z + ROOM_D * 0.5;
-      const dTarget  = computeTargetDistance(ROOM_D);
-
+      const openingZ = room.position.z + ROOM_D*0.5;
+      const dTarget = computeTargetDistance(ROOM_D);
       camera.fov = BASE_VFOV_DEG;
       camera.aspect = aspect;
-      camera.position.set(0, 0, openingZ + dTarget);
-
-      const halfH = Math.tan(vfovRad * 0.5) * dTarget;
-      const targetH = 2 * halfH * TILT_MARGIN;
-      const targetW = targetH * aspect;
-
-      ROOM_H = targetH;
-      ROOM_W = targetW;
-      rebuildRoom();
-
-      const backZ = room.position.z - ROOM_D * 0.5;
-      const margin = Math.max(0.5, Math.min(5, ROOM_D * 0.25));
-      camera.near = Math.max(0.01, (camera.position.z - openingZ) * 0.25);
-      camera.far  = Math.max(50, (camera.position.z - backZ) + margin);
-      camera.updateProjectionMatrix();
+      camera.position.set(0,0, openingZ + dTarget);
+      const halfH = Math.tan(THREE.MathUtils.degToRad(BASE_VFOV_DEG)*0.5)*dTarget;
+      const targetH = 2*halfH*TILT_MARGIN; const targetW = targetH*aspect;
+      ROOM_H = targetH; ROOM_W = targetW;
+      const newGeo = buildRoomGeometry(ROOM_W,ROOM_H,ROOM_D);
+      room.geometry.dispose(); room.geometry=newGeo;
+      edges.geometry.dispose(); edges.geometry=new THREE.EdgesGeometry(newGeo);
+      rebuildWaterCircle(); resizeWater();
+      if(headerFont) rebuildHeaderGeometry();
+      camera.near = 0.05; camera.far = 120; camera.updateProjectionMatrix();
     }
 
-    /* -------------------- lights -------------------- */
+    /* ---------- lights ---------- */
     const amb = new THREE.AmbientLight(0xffffff, CONFIG.lights.ambient); scene.add(amb);
     const hemi = new THREE.HemisphereLight(0x9fbfff, 0x202a44, CONFIG.lights.hemisphere); scene.add(hemi);
-    const rim = new THREE.DirectionalLight(0xeef3ff, CONFIG.lights.rim); rim.position.set(-1.4, 2.2, 1.6); scene.add(rim);
+    const rim = new THREE.DirectionalLight(0xeef3ff, CONFIG.lights.rim); rim.position.set(-1.4,2.2,1.6); scene.add(rim);
     const key = new THREE.PointLight(0xffffff, CONFIG.lights.key, 18, 2.0);
-    key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
-    scene.add(key);
+    key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05); scene.add(key);
 
-    /* -------------------- envmap + vase -------------------- */
-    const cubeRT = new THREE.WebGLCubeRenderTarget(256, { generateMipmaps:true, minFilter:THREE.LinearMipmapLinearFilter, magFilter:THREE.LinearFilter });
+    /* ---------- dynamic envmap ---------- */
+    const cubeRT = new THREE.WebGLCubeRenderTarget(256,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
     cubeRT.texture.colorSpace = THREE.SRGBColorSpace;
     const cubeCam = new THREE.CubeCamera(0.1, 100, cubeRT); scene.add(cubeCam);
 
-    const vaseGroup = new THREE.Group(); scene.add(vaseGroup);
+    /* ---------- vase ---------- */
+    const vaseGroup = new THREE.Group();
+    scene.add(vaseGroup);
     const vaseLight = new THREE.PointLight(0xaad4ff, CONFIG.lights.vaseLight.intensity, CONFIG.lights.vaseLight.distance, CONFIG.lights.vaseLight.decay);
-    vaseLight.position.set(0, CONFIG.lights.vaseLight.y, 0);
-    vaseGroup.add(vaseLight);
+    vaseLight.position.set(0, CONFIG.lights.vaseLight.y, 0); vaseGroup.add(vaseLight);
 
     let vase=null, vaseReady=false, vaseBaseScale=1, userScaleMult=CONFIG.vase.userScaleMult, userTallY=CONFIG.vase.userTallY;
-    const glassMaterials = [];
-
-    const VASE_URL = "./vaseNew.glb";
-    const gltf = new GLTFLoader();
-    gltf.load(VASE_URL, g=>{
+    const glassMaterials=[];
+    new GLTFLoader().load('./vaseNew.glb', g=>{
       vase = g.scene;
-
       const baseGlass = {
-        color: new THREE.Color().setRGB(...CONFIG.glass.color),
-        metalness: CONFIG.glass.metalness,
-        roughness: CONFIG.glass.roughness,
-        transmission: CONFIG.glass.transmission,
-        thickness: CONFIG.glass.thickness,
-        ior: CONFIG.glass.ior,
-        clearcoat: CONFIG.glass.clearcoat,
-        clearcoatRoughness: CONFIG.glass.ccRough,
-        attenuationColor: new THREE.Color().setRGB(...CONFIG.glass.attnColor),
-        attenuationDistance: 2.0,
-        envMap: cubeRT.texture,
-        envMapIntensity: CONFIG.glass.envIntensity
+        color:new THREE.Color().setRGB(...CONFIG.glass.color),
+        metalness:CONFIG.glass.metalness, roughness:CONFIG.glass.roughness,
+        transmission:CONFIG.glass.transmission, thickness:CONFIG.glass.thickness, ior:CONFIG.glass.ior,
+        clearcoat:CONFIG.glass.clearcoat, clearcoatRoughness:CONFIG.glass.ccRough,
+        attenuationColor:new THREE.Color().setRGB(...CONFIG.glass.attnColor), attenuationDistance:2.0,
+        envMap:cubeRT.texture, envMapIntensity:CONFIG.glass.envIntensity
       };
-
       vase.traverse(n=>{
         if(n.isMesh){
-          const m = new THREE.MeshPhysicalMaterial(baseGlass);
-          n.material = m;
-          glassMaterials.push(m);
+          const m=new THREE.MeshPhysicalMaterial(baseGlass);
+          m.emissive.setRGB(0.02,0.03,0.06); m.emissiveIntensity=0.08;
+          glassMaterials.push(m); n.material=m;
         }
       });
-
-      vaseBaseScale = autoScaleToRoom(vase);
-      applyVaseScale();
-      vaseGroup.add(vase);
-      placeOnFloor(vaseGroup);
+      vaseBaseScale = autoScaleToRoom(vase); applyVaseScale();
+      vaseGroup.add(vase); placeOnFloor(vaseGroup);
       vaseGroup.position.set(0, CONFIG.vase.y, CONFIG.vase.z);
-      vaseReady = true;
-      syncVasePositionInputs();
+      vaseReady=true; syncVasePositionInputs();
+    });
+    function roomFloorY(){return -ROOM_H*0.5+0.02}
+    function placeOnFloor(obj){ obj.updateMatrixWorld(true); const bbox=new THREE.Box3().setFromObject(obj); obj.position.y += (roomFloorY() - bbox.min.y); }
+    function autoScaleToRoom(obj){ const bbox=new THREE.Box3().setFromObject(obj); const s=new THREE.Vector3(); bbox.getSize(s); const maxTarget=Math.min(ROOM_H*0.38, ROOM_W*0.38); return maxTarget/Math.max(s.x,s.y,s.z); }
+    function applyVaseScale(){ if(!vase)return; const portraitBoost=(isPortrait() && presetChoice==='phone')?1.7:1.0; const s=vaseBaseScale*portraitBoost*userScaleMult; vase.scale.set(s,s*userTallY,s); }
+
+    /* ---------- header (3D text) ---------- */
+    const HEADER_TEXT = (presetChoice === 'phone')
+      ? 'Biome \n.•.•.•:::Plain.'
+      : 'Biome .•.•.•:::Plain.';
+    const FONT_URL='./Sprintura.otf';
+    const headerGroup=new THREE.Group(); 
+    // scene.add(headerGroup);
+    let headerMesh=null, headerMat=null, headerFont=null;
+    const headerCfg={
+      sizeMul: CONFIG.header?.sizeMul ?? 1.0,
+      x: CONFIG.header?.x ?? 0, y: CONFIG.header?.y ?? 2.0, z: CONFIG.header?.z ?? 6.0,
+      metalness: CONFIG.header?.metalness ?? 1.0,
+      roughness: CONFIG.header?.roughness ?? 0.18,
+      clearcoat: CONFIG.header?.clearcoat ?? 1.0,
+      clearcoatRoughness: CONFIG.header?.clearcoatRoughness ?? 0.35,
+      envIntensity: CONFIG.header?.envIntensity ?? 1.6,
+      transmission: CONFIG.header?.transmission ?? 0.32,
+      thickness: CONFIG.header?.thickness ?? 1.0,
+      emissiveIntensity: CONFIG.header?.emissiveIntensity ?? 0.32
+    };
+    let headerOpacityLocked=false; const HEADER_OPACITY_MAX=0.99;
+
+    function headerBaseSize(){ return Math.min(ROOM_W,ROOM_H)*0.145; }
+    function headerBaseHeight(){ return Math.min(ROOM_W,ROOM_H)*0.035; }
+    function buildHeaderMaterial(){
+      headerMat=new THREE.MeshPhysicalMaterial({
+        color:0xCFE0FF,
+        metalness:headerCfg.metalness,
+        roughness:headerCfg.roughness,
+        clearcoat:headerCfg.clearcoat,
+        clearcoatRoughness:headerCfg.clearcoatRoughness,
+        envMap:cubeRT.texture,
+        envMapIntensity:headerCfg.envIntensity,
+        transmission:headerCfg.transmission,
+        thickness:headerCfg.thickness,
+        ior:1.45,
+        side:THREE.FrontSide,
+        transparent:true,
+        opacity:0.0,
+        depthTest:false,
+        depthWrite:false,
+        emissive:new THREE.Color(0x6f8bbf),
+        emissiveIntensity:headerCfg.emissiveIntensity
+      });
+    }
+    function applyHeaderTransform(){ headerGroup.position.set(headerCfg.x, headerCfg.y, headerCfg.z); }
+    function rebuildHeaderGeometry(){
+      if(!headerFont) return;
+      if(headerMesh){ headerGroup.remove(headerMesh); headerMesh.geometry.dispose(); }
+      const geo=new TextGeometry(HEADER_TEXT,{
+        font:headerFont,
+        size:headerBaseSize()*headerCfg.sizeMul,
+        height:headerBaseHeight()*headerCfg.sizeMul*headerCfg.thickness,
+        curveSegments:10,
+        bevelEnabled:true,
+        bevelThickness:Math.min(ROOM_W,ROOM_H)*0.003*headerCfg.sizeMul*headerCfg.thickness,
+        bevelSize:Math.min(ROOM_W,ROOM_H)*0.002*headerCfg.sizeMul*headerCfg.thickness,
+        bevelSegments:4
+      });
+      geo.computeBoundingBox(); geo.center();
+      if(!headerMat) buildHeaderMaterial();
+      headerMesh=new THREE.Mesh(geo, headerMat);
+      headerMesh.renderOrder=999;
+      headerGroup.add(headerMesh);
+      applyHeaderTransform();
+    }
+
+    new TTFLoader().load(FONT_URL, json=>{
+      headerFont=new Font(json);
+      buildHeaderMaterial();
+      rebuildHeaderGeometry();
     });
 
-    function applyGlassConfigToMaterials(){
-      for (const m of glassMaterials){
-        m.transmission       = CONFIG.glass.transmission;
-        m.thickness          = CONFIG.glass.thickness;
-        m.ior                = CONFIG.glass.ior;
-        m.roughness          = CONFIG.glass.roughness;
-        m.clearcoat          = CONFIG.glass.clearcoat;
-        m.clearcoatRoughness = CONFIG.glass.ccRough;
-        m.envMapIntensity    = CONFIG.glass.envIntensity;
-        m.metalness          = CONFIG.glass.metalness;
-        m.color.setRGB(...CONFIG.glass.color);
-        m.attenuationColor.setRGB(...CONFIG.glass.attnColor);
-        m.envMap             = cubeRT.texture;
-        m.needsUpdate        = true;
-      }
-    }
+    /* ---------- spin physics + timed full-speed hold ---------- */
+    let angVel=0, tilt=0, wobble=0;
+    let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE=CONFIG.spin.swipeImpulse;
+    const FULL_SPIN = (presetChoice==='phone')?9.0:8.0;
+    const HOLD_SECS = 10.0;
 
-    function roomFloorY(){ return -ROOM_H * 0.5 + 0.02; }
-    function placeOnFloor(obj){
-      obj.updateMatrixWorld(true);
-      const bbox = new THREE.Box3().setFromObject(obj);
-      const floorY = roomFloorY();
-      obj.position.y += (floorY - bbox.min.y);
-    }
-    function autoScaleToRoom(obj){
-      const bbox = new THREE.Box3().setFromObject(obj);
-      const size = new THREE.Vector3(); bbox.getSize(size);
-      const maxTarget = Math.min(ROOM_H * 0.38, ROOM_W * 0.38);
-      return maxTarget / Math.max(size.x, size.y, size.z);
-    }
-    function applyVaseScale(){
-      if(!vase) return;
-      const portraitBoost = (isPortrait() && (presetChoice==='phone')) ? 1.7 : 1.0;
-      const s = vaseBaseScale * portraitBoost * userScaleMult;
-      vase.scale.set(s, s*userTallY, s);
-    }
-
-    /* -------------------- spin physics with speed-based sway -------------------- */
-    let angVel=0, tilt=0, wobblePhase=0;
-    let DAMPING=CONFIG.spin.damping, MIN_SPIN=CONFIG.spin.minSpin, IMPULSE_SCALE=CONFIG.spin.swipeImpulse;
-
-    const SPEED_REF = 4;
-    const TILT_IDLE_DEG = 45;
-    const TILT_MIN_DEG  = 10;
+    let holdActive = false;
+    let holdEndTime = 0;
+    let holdDir = 0;
+    let requestExtendHold = false;
 
     let dragging=false, lastX=0, lastT=0;
-    function getPointerX(e){ if(e.touches?.length) return e.touches[0].clientX; if(e.changedTouches?.length) return e.changedTouches[0].clientX; return e.clientX??0; }
-    function onSwipeDown(e){ dragging=true; lastX=getPointerX(e); lastT=performance.now(); maybeStartAudio(); }
-    function onSwipeMove(e){ if(!dragging) return; const now=performance.now(); const x=getPointerX(e); const dx=x-lastX; const dt=Math.max(1, now-lastT); angVel += (dx/dt)*IMPULSE_SCALE; lastX=x; lastT=now; }
-    function onSwipeUp(){ dragging=false; }
-    window.addEventListener('mousedown', onSwipeDown, {passive:true});
-    window.addEventListener('mousemove', onSwipeMove, {passive:true});
-    window.addEventListener('mouseup',   onSwipeUp,   {passive:true});
-    window.addEventListener('touchstart',onSwipeDown, {passive:true});
-    window.addEventListener('touchmove', onSwipeMove, {passive:true});
-    window.addEventListener('touchend',  onSwipeUp,   {passive:true});
 
-    function updateVase(dt){
+    function getX(e){
+      if(e.touches?.length) return e.touches[0].clientX;
+      if(e.changedTouches?.length) return e.changedTouches[0].clientX;
+      return e.clientX||0;
+    }
+
+    function onDown(e){
+      dragging=true;
+      lastX=getX(e);
+      lastT=performance.now();
+      maybeStartAudio();
+    }
+
+    function onMove(e){
+      if(!dragging) return;
+      const now=performance.now();
+      const dx=getX(e)-lastX;
+      const dt=Math.max(1, now-lastT);
+      const dv=(dx/dt)*IMPULSE;
+      const prevVel = angVel;
+
+      angVel += dv;
+
+      if(prevVel !== 0 && dv*prevVel < 0){
+        holdActive=false;
+        holdEndTime=0;
+      }
+
+      if(dv*prevVel > 0 && Math.abs(angVel) >= FULL_SPIN*0.98){
+        requestExtendHold = true;
+      }
+
+      lastX=getX(e);
+      lastT=now;
+    }
+
+    function onUp(){ dragging=false; }
+
+    window.addEventListener('mousedown',onDown,{passive:true});
+    window.addEventListener('mousemove',onMove,{passive:true});
+    window.addEventListener('mouseup',onUp,{passive:true});
+    window.addEventListener('touchstart',onDown,{passive:true});
+    window.addEventListener('touchmove',onMove,{passive:true});
+    window.addEventListener('touchend',onUp,{passive:true});
+
+    function updateVase(dt, time){
       if(!vaseReady) return;
 
-      angVel *= Math.pow(DAMPING, dt*60);
-      const floor = (angVel>=0 ? MIN_SPIN : -MIN_SPIN);
-      if (Math.abs(angVel) < Math.abs(floor)) angVel = floor;
+      if(requestExtendHold && Math.abs(angVel) >= FULL_SPIN*0.98){
+        if(!holdActive){
+          triggerZoomJump();
+        }
+        holdActive = true;
+        const s = Math.sign(angVel) || (holdDir || 1);
+        holdDir = s;
+        holdEndTime = time + HOLD_SECS;
+      }
+      requestExtendHold = false;
 
-      const speedNorm = Math.min(1, Math.abs(angVel)/SPEED_REF);
+      if(holdActive && time >= holdEndTime){
+        holdActive = false;
+      }
 
-      const targetTilt = THREE.MathUtils.degToRad(
-        THREE.MathUtils.lerp(TILT_IDLE_DEG, TILT_MIN_DEG, speedNorm)
-      );
+      const sgn = (angVel>=0?1:-1)||1;
+
+      if(holdActive){
+        const dir = holdDir || sgn;
+        const target = dir * FULL_SPIN;
+        angVel += (target - angVel) * Math.min(1, dt*5.0);
+      }else{
+        angVel *= Math.pow(DAMPING, dt*60);
+        if(Math.abs(angVel) < MIN_SPIN){
+          angVel = (angVel>=0?MIN_SPIN:-MIN_SPIN);
+        }
+      }
+
+      const maxSpin = FULL_SPIN*100.0;
+      if(Math.abs(angVel)>maxSpin) angVel=Math.sign(angVel)*maxSpin;
+
+      const k = Math.min(1, Math.abs(angVel)/(FULL_SPIN*1.2));
+      const targetTilt = THREE.MathUtils.degToRad(THREE.MathUtils.lerp(45,10,k));
       tilt += (targetTilt - tilt) * Math.min(1, dt*3.0);
+      const wobA = THREE.MathUtils.lerp(0.11,0.03,k);
+      const wobF = THREE.MathUtils.lerp(0.8,3.2,k);
+      wobble += wobF*dt;
 
-      const wobbleAmp = THREE.MathUtils.lerp(0.11, 0.03, speedNorm);
-      const wobbleFreq = THREE.MathUtils.lerp(0.8, 3.2, speedNorm);
-      wobblePhase += wobbleFreq * dt;
-
-      vaseGroup.rotation.y += angVel * dt;
-      vaseGroup.rotation.x = tilt + Math.sin(wobblePhase) * wobbleAmp;
-      vaseGroup.rotation.z = Math.cos(wobblePhase*0.9) * (wobbleAmp * 0.6);
+      vaseGroup.rotation.y += angVel*dt;
+      vaseGroup.rotation.x = tilt + Math.sin(wobble)*wobA;
+      vaseGroup.rotation.z = Math.cos(wobble*0.9)*(wobA*0.6);
     }
 
-    /* -------------------- pointer/gyro tilt -------------------- */
-    const enableMotionBtn = document.getElementById('enableMotion');
-    let targetRX=0, targetRY=0;
-    let baseBeta=null, baseGamma=null, pointerMoveAttached=false;
-
-    function onPointerMoveDesktop(e){
-      const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1;
-      targetRY = x*0.085;
-      targetRX = -y*0.085*0.6;
-    }
-    function onDeviceOrientation(e){
-      if (baseBeta===null) baseBeta=e.beta||0;
-      if (baseGamma===null) baseGamma=e.gamma||0;
-      const dB=(e.beta||0)-baseBeta, dG=(e.gamma||0)-baseGamma;
-      targetRY = THREE.MathUtils.clamp(dG/45,-1,1)*0.085;
-      targetRX = -THREE.MathUtils.clamp(dB/60,-1,1)*0.085*0.6;
-    }
-    function setupInputMode(){
-      if (pointerMoveAttached){ window.removeEventListener('pointermove', onPointerMoveDesktop); pointerMoveAttached=false; }
+    /* ---------- input tilt ---------- */
+    const enableMotionBtn=document.getElementById('enableMotion');
+    let targetRX=0,targetRY=0, baseB=null,baseG=null, pointerMoveAttached=false;
+    function onPointerMove(e){ const x=(e.clientX/vw())*2-1, y=(e.clientY/vh())*2-1; targetRY=x*0.085; targetRX=-y*0.085*0.6; }
+    function onDeviceOrientation(e){ if(baseB===null) baseB=e.beta||0; if(baseG===null) baseG=e.gamma||0; const dB=(e.beta||0)-baseB, dG=(e.gamma||0)-baseG; targetRY=THREE.MathUtils.clamp(dG/45,-1,1)*0.085; targetRX=-THREE.MathUtils.clamp(dB/60,-1,1)*0.085*0.6; }
+    function setupInput(){
+      if(pointerMoveAttached){ window.removeEventListener('pointermove',onPointerMove); pointerMoveAttached=false; }
       window.removeEventListener('deviceorientation', onDeviceOrientation, true);
-      enableMotionBtn.style.display = 'none';
-      if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent){
+      enableMotionBtn.style.display='none';
+      if(isPortrait() && presetChoice==='phone' && window.DeviceOrientationEvent){
         const needsPerm = typeof DeviceOrientationEvent.requestPermission === 'function';
         if (needsPerm){
-          enableMotionBtn.style.display = 'block';
-          enableMotionBtn.onclick = async ()=>{
-            try {
-              const resp=await DeviceOrientationEvent.requestPermission();
-              if(resp==='granted'){
+          enableMotionBtn.style.display='block';
+          enableMotionBtn.onclick=async()=>{
+            try{
+              const r=await DeviceOrientationEvent.requestPermission();
+              if(r==='granted'){
                 window.addEventListener('deviceorientation', onDeviceOrientation, true);
                 enableMotionBtn.remove();
               }
-            } catch(e){ console.warn(e); }
+            }catch(e){}
             maybeStartAudio(true);
           };
-        } else {
+        }else{
           window.addEventListener('deviceorientation', onDeviceOrientation, true);
         }
-      } else {
-        window.addEventListener('pointermove', onPointerMoveDesktop, {passive:true});
-        pointerMoveAttached=true;
+      }else{
+        window.addEventListener('pointermove', onPointerMove, {passive:true}); pointerMoveAttached=true;
       }
     }
 
-    /* -------------------- post process -------------------- */
-    let rt = new THREE.WebGLRenderTarget(vw(), vh(), { minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, depthBuffer:true, stencilBuffer:false });
-    const screenScene = new THREE.Scene();
-    const screenCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-
-    const fsMat = new THREE.ShaderMaterial({
-      uniforms:{
-        tDiffuse: { value: rt.texture },
-        resolution: { value: new THREE.Vector2(vw(), vh()) },
-        pixelSize: { value: CONFIG.post.pixelSize },
-        ditherStrength: { value: CONFIG.post.ditherStrength }
-      },
-      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }`,
-      fragmentShader: `
-        precision highp float;
-        uniform sampler2D tDiffuse;
-        uniform vec2 resolution;
-        uniform float pixelSize;
-        uniform float ditherStrength;
-        varying vec2 vUv;
-        float bayer(vec2 p){
-          int x = int(mod(p.x, 4.0));
-          int y = int(mod(p.y, 4.0));
-          int m[16];
-          m[0]=0; m[1]=8; m[2]=2; m[3]=10;
-          m[4]=12; m[5]=4; m[6]=14; m[7]=6;
-          m[8]=3; m[9]=11; m[10]=1; m[11]=9;
-          m[12]=15; m[13]=7; m[14]=13; m[15]=5;
-          int idx = y*4 + x;
-          return float(m[idx]) / 16.0;
-        }
-        void main(){
-          vec2 px = vec2(max(1.0, pixelSize));
-          vec2 uv = floor(vUv * resolution / px) * px / resolution;
-          vec3 col = texture2D(tDiffuse, uv).rgb;
-          float luma = dot(col, vec3(0.2126,0.7152,0.0722));
-          vec2 grid = floor(vUv * resolution / px);
-          float thresh = bayer(grid);
-          float d = smoothstep(0.0, 1.0, luma + (thresh - 0.5) * ditherStrength);
-          col = mix(col*0.9, col*1.1, d);
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `
+    /* ---------- post ---------- */
+    let rt = new THREE.WebGLRenderTarget(vw(),vh(),{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
+    const screenScene=new THREE.Scene(); const screenCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    const fsMat=new THREE.ShaderMaterial({
+      uniforms:{tDiffuse:{value:rt.texture},resolution:{value:new THREE.Vector2(vw(),vh())},pixelSize:{value:CONFIG.post.pixelSize},ditherStrength:{value:CONFIG.post.ditherStrength}},
+      vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
+      fragmentShader:`precision highp float;uniform sampler2D tDiffuse;uniform vec2 resolution;uniform float pixelSize;uniform float ditherStrength;varying vec2 vUv;float bayer(vec2 p){int x=int(mod(p.x,4.0));int y=int(mod(p.y,4.0));int m[16];m[0]=0;m[1]=8;m[2]=2;m[3]=10;m[4]=12;m[5]=4;m[6]=14;m[7]=6;m[8]=3;m[9]=11;m[10]=1;m[11]=9;m[12]=15;m[13]=7;m[14]=13;m[15]=5;int idx=y*4+x;return float(m[idx])/16.0;}void main(){vec2 px=vec2(max(1.0,pixelSize));vec2 uv=floor(vUv*resolution/px)*px/resolution;vec3 col=texture2D(tDiffuse,uv).rgb;float luma=dot(col,vec3(0.2126,0.7152,0.0722));vec2 grid=floor(vUv*resolution/px);float thresh=bayer(grid);float d=smoothstep(0.0,1.0,luma+(thresh-0.5)*ditherStrength);col=mix(col*0.9,col*1.1,d);gl_FragColor=vec4(col,1.0);}`
     });
-    const fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), fsMat);
-    screenScene.add(fsQuad);
-    function resizePost(){
-      rt.setSize(vw(), vh());
-      fsMat.uniforms.resolution.value.set(vw(), vh());
-    }
+    const fsQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2), fsMat); screenScene.add(fsQuad);
+    function resizePost(){ rt.setSize(vw(),vh()); fsMat.uniforms.resolution.value.set(vw(),vh()); }
 
-    /* -------------------- Water (tilts with room) -------------------- */
-    const waterUniforms = {
-      uTime: { value: 0 },
-      uCenter: { value: new THREE.Vector3(0, 0, 0) },
-      uAmp: { value: CONFIG.water.amp },
-      uFreq: { value: CONFIG.water.freq },
-      uSpeed: { value: CONFIG.water.speed },
-      uFalloff: { value: CONFIG.water.falloff },
-      uAlpha: { value: CONFIG.water.alpha },
-      uRadius: { value: CONFIG.water.radius },
-      uPixel: { value: CONFIG.water.pixel },
-      uColor: { value: new THREE.Color().setRGB(...CONFIG.water.tint) },
-      uSpinAbs: { value: 0 }
+    /* ---------- water ---------- */
+    const waterUniforms={
+      uTime:{value:0},
+      uCenter:{value:new THREE.Vector3(0,0,0)},
+      uAmp:{value:CONFIG.water.amp},
+      uFreq:{value:CONFIG.water.freq},
+      uSpeed:{value:CONFIG.water.speed},
+      uFalloff:{value:CONFIG.water.falloff},
+      uAlpha:{value:CONFIG.water.alpha},
+      uRadius:{value:CONFIG.water.radius},
+      uPixel:{value:CONFIG.water.pixel},
+      uColor:{value:new THREE.Color().setRGB(...CONFIG.water.tint)},
+      uSpinAbs:{value:0}
+    };
+    const waterMat=new THREE.ShaderMaterial({
+      transparent:true,
+      depthWrite:false,
+      depthTest:true,
+      blending:THREE.AdditiveBlending,
+      uniforms:waterUniforms,
+      vertexShader:`varying vec3 vWorld;varying vec2 vUv;void main(){vUv=uv;vec4 wp=modelMatrix*vec4(position,1.0);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
+      fragmentShader:`precision highp float;varying vec3 vWorld;varying vec2 vUv;uniform vec3 uCenter;uniform float uTime,uAmp,uFreq,uSpeed,uFalloff,uAlpha,uRadius,uPixel,uSpinAbs;uniform vec3 uColor;vec2 pix(vec2 uv){float p=max(1.0,uPixel);return floor(uv*p)/p;}void main(){vec2 p=vWorld.xz-uCenter.xz;float d=length(p);float nd=clamp(d/uRadius,0.0,1.0);float w=sin(d*uFreq-(uTime*(uSpeed*(1.0+uSpinAbs*2.0))));float fall=exp(-nd*uFalloff*4.0);float h=w*uAmp*(0.5+uSpinAbs*1.4)*fall;float ring=smoothstep(0.0,1.0,abs(w));vec3 col=uColor*(0.6+1.6*h+0.5*ring);float a=clamp(uAlpha*(0.35+0.9*h+0.25*ring),0.0,1.0);vec2 uvq=pix(vUv);col*=(0.9+0.2*fract(uvq.x*128.0+uvq.y*96.0));gl_FragColor=vec4(col,a);}`
+    });
+    let waterMesh=new THREE.Mesh(new THREE.CircleGeometry(1,128), waterMat);
+    waterMesh.rotation.x=-Math.PI/2;
+    room.add(waterMesh);
+    function rebuildWaterCircle(){ const r=Math.max(ROOM_W,ROOM_D)*WATER_RADIUS_FACTOR; waterMesh.geometry.dispose(); waterMesh.geometry=new THREE.CircleGeometry(r,128); }
+    function resizeWater(){ waterMesh.position.set(0,-ROOM_H*0.5+0.07+CONFIG.water.yOffset,0); }
+    function updateWaterCenter(){ if(!vaseReady) return; const w=new THREE.Vector3(); vaseGroup.getWorldPosition(w); const y=waterMesh.getWorldPosition(new THREE.Vector3()).y; waterUniforms.uCenter.value.set(w.x,y,w.z); }
+    rebuildWaterCircle(); resizeWater();
+
+    /* ---------- badges (flat planes) ---------- */
+    const badgeGroup = new THREE.Group();
+    // scene.add(badgeGroup);
+    badgeGroup.visible = false;
+
+    let spotifyBadge=null, appleBadge=null;
+    let badgesReady=false, badgesActivated=false;
+
+    const badgesCfg = {
+      sizeMul: CONFIG.badges.sizeMul,
+      offsetXMul: CONFIG.badges.offsetXMul,
+      yPos: (typeof CONFIG.badges.yPos === 'number' ? CONFIG.badges.yPos : 0),
+      zOffset: CONFIG.badges.zOffset
     };
 
-    const waterMat = new THREE.ShaderMaterial({
-      transparent:true, depthWrite:false, depthTest:true, blending: THREE.AdditiveBlending,
-      uniforms: waterUniforms,
-      vertexShader: `
-        varying vec3 vWorld;
-        varying vec2 vUv;
-        void main(){
-          vUv = uv;
-          vec4 wp = modelMatrix * vec4(position, 1.0);
-          vWorld = wp.xyz;
-          gl_Position = projectionMatrix * viewMatrix * wp;
-        }
-      `,
-      fragmentShader: `
-        precision highp float;
-        varying vec3 vWorld;
-        varying vec2 vUv;
-        uniform vec3  uCenter;
-        uniform float uTime, uAmp, uFreq, uSpeed, uFalloff, uAlpha, uRadius, uPixel, uSpinAbs;
-        uniform vec3  uColor;
-        vec2 pix(vec2 uv){ float p = max(1.0, uPixel); return floor(uv * p) / p; }
-        void main(){
-          vec2  p  = vWorld.xz - uCenter.xz;
-          float d  = length(p);
-          float nd = clamp(d / uRadius, 0.0, 1.0);
-          float w = sin(d * uFreq - (uTime * (uSpeed * (1.0 + uSpinAbs*2.0))));
-          float fall = exp(-nd * uFalloff * 4.0);
-          float h = w * uAmp * (0.5 + uSpinAbs*1.4) * fall;
-          float ring = smoothstep(0.0, 1.0, abs(w));
-          vec3  col  = uColor * (0.6 + 1.6 * h + 0.5 * ring);
-          float a    = clamp(uAlpha * (0.35 + 0.9 * h + 0.25 * ring), 0.0, 1.0);
-          vec2 uvq = pix(vUv);
-          col *= (0.9 + 0.2 * fract(uvq.x * 128.0 + uvq.y * 96.0));
-          gl_FragColor = vec4(col, a);
-        }
-      `
-    });
+    function buildBadges(){
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
 
-    const waterGeo = new THREE.CircleGeometry(1.0, 128);
-    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-    waterMesh.rotation.x = -Math.PI/2;
-    room.add(waterMesh);
+      const spTex = loader.load('./spotify.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.transparent = true;
+      });
+      const apTex = loader.load('./apple.png', t=>{
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.transparent = true;
+      });
 
-    function rebuildWaterCircle(){
-      const radius = Math.max(ROOM_W, ROOM_D) * WATER_RADIUS_FACTOR;
-      waterMesh.geometry.dispose();
-      waterMesh.geometry = new THREE.CircleGeometry(radius, 128);
-    }
-    function resizeWater(){
-      waterMesh.position.set(0, -ROOM_H*0.5 + 0.07 + CONFIG.water.yOffset, 0);
-    }
-    rebuildWaterCircle();
-    resizeWater();
+      const geo = new THREE.PlaneGeometry(1,1);
+      const makeMat = (map)=> new THREE.MeshBasicMaterial({
+        map,
+        transparent:true,
+        alphaTest:0.02,
+        depthWrite:false,
+        side:THREE.DoubleSide,
+        toneMapped:false
+      });
 
-    function updateWaterCenterFromVase(){
-      if(!vaseReady) return;
-      const world = new THREE.Vector3();
-      vaseGroup.getWorldPosition(world);
-      const waterY = waterMesh.getWorldPosition(new THREE.Vector3()).y;
-      waterUniforms.uCenter.value.set(world.x, waterY, world.z);
+      spotifyBadge = new THREE.Mesh(geo, makeMat(spTex));
+      appleBadge   = new THREE.Mesh(geo, makeMat(apTex));
+      spotifyBadge.renderOrder = 10;
+      appleBadge.renderOrder   = 10;
+
+      badgeGroup.add(spotifyBadge);
+      badgeGroup.add(appleBadge);
+
+      badgesReady = true;
+      updateBadgesTransform();
     }
 
-    /* -------------------- resize & layout -------------------- */
-    function updateLayout(){
-      renderer.setSize(vw(), vh(), false);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 1.8));
-      renderer.toneMappingExposure = CONFIG.lights.exposure;
-      key.position.set(1.5, -ROOM_H*0.1, room.position.z + ROOM_D*0.05);
-      resizePost();
-      applyVaseScale();
-      resizeWater();
-      adjustRoomToViewport();
-    }
-    window.addEventListener('resize', updateLayout, {passive:true});
-    window.addEventListener('orientationchange', updateLayout, {passive:true});
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', updateLayout, {passive:true});
-    window.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
-    window.addEventListener('wheel',     e=>e.preventDefault(), {passive:false});
+    function updateBadgesTransform(){
+      if(!badgesReady || !vaseReady) return;
+      const center = new THREE.Vector3();
+      vaseGroup.getWorldPosition(center);
 
-    setupInputMode();
-    updateLayout();
+      const s = Math.min(ROOM_W, ROOM_H) * 0.12 * badgesCfg.sizeMul;
+      const xOff = Math.min(ROOM_W, ROOM_D) * 0.4 * badgesCfg.offsetXMul;
+      const yPos = center.y + badgesCfg.yPos;
+      const zPos = center.z + badgesCfg.zOffset;
 
-    /* -------------------- Spin Popup + thresholds -------------------- */
-    const popWrap = document.getElementById('spinPopupWrap');
-    const popCard = document.getElementById('spinPopup');
-    const popClose = document.getElementById('popClose');
-
-    let popupVisible = false;
-    let lastPopupTime = 0;
-    const POPUP_COOLDOWN_MS = 3500;
-    const SPIN_POP_THRESHOLD = (presetChoice==='phone') ? 6.0  : 5.0; // popup open threshold
-
-    function showPopup(){
-      if (popupVisible) return;
-      popupVisible = true;
-      popWrap.style.display = 'flex';
-      requestAnimationFrame(()=> popCard.classList.add('show'));
-      // Force audio to full-normal while visible
-      forceFastAudio();
-    }
-    function hidePopup(){
-      if (!popupVisible) return;
-      popupVisible = false;
-      popCard.classList.remove('show');
-      setTimeout(()=> { popWrap.style.display = 'none'; }, 180);
-    }
-
-    popClose.addEventListener('click', hidePopup);
-    popWrap.addEventListener('click', (e)=>{ if (e.target === popWrap) hidePopup(); });
-
-    /* -------------------- Web Audio: continuous mapping -------------------- */
-    // NOTE: if you uploaded the file here, point to that path:
-    const AUDIO_URL = "./WACK.mp3";
-
-    const AUDIO_IDLE_RATE = 0.25;
-    const AUDIO_IDLE_LPF  = 380;
-    const AUDIO_NORMAL_RATE = 1.0;
-    const AUDIO_NORMAL_LPF  = 18000;
-    const AUDIO_SMOOTH = 0.18;
-    const AUDIO_SPEED_FOR_FULL = (presetChoice==='phone') ? 6.0 : 5.0;
-
-    let audioCtx = null;
-    let audioBuffer = null;
-    let sourceNode = null;
-    let filterNode = null;
-    let gainNode = null;
-    let audioReady = false;
-    let audioStarted = false;
-
-    async function loadAudioBuffer(ctx){
-      if (audioBuffer) return audioBuffer;
-      const res = await fetch(AUDIO_URL);
-      const arr = await res.arrayBuffer();
-      audioBuffer = await ctx.decodeAudioData(arr);
-      return audioBuffer;
-    }
-
-    function buildGraph(ctx){
-      filterNode = ctx.createBiquadFilter();
-      filterNode.type = 'lowpass';
-      filterNode.frequency.value = AUDIO_IDLE_LPF;
-      filterNode.Q.value = 0.0001;
-
-      gainNode = ctx.createGain();
-      gainNode.gain.value = 0.9;
-
-      filterNode.connect(gainNode).connect(ctx.destination);
-    }
-
-    function startLoopingSource(ctx){
-      if (!audioBuffer) return;
-      stopSource();
-      sourceNode = ctx.createBufferSource();
-      sourceNode.buffer = audioBuffer;
-      sourceNode.loop = true;
-      sourceNode.playbackRate.value = AUDIO_IDLE_RATE;
-      sourceNode.connect(filterNode);
-      const t = ctx.currentTime;
-      sourceNode.start(t + 0.01);
-      audioStarted = true;
-    }
-
-    function stopSource(){
-      if (sourceNode){
-        try { sourceNode.stop(); } catch(_) {}
-        try { sourceNode.disconnect(); } catch(_) {}
-        sourceNode = null;
+      if(spotifyBadge){
+        spotifyBadge.scale.set(s, s, 1);
+        spotifyBadge.position.set(center.x - xOff, yPos, zPos);
+      }
+      if(appleBadge){
+        appleBadge.scale.set(s, s, 1);
+        appleBadge.position.set(center.x + xOff, yPos, zPos);
       }
     }
 
-    async function initAudio(forceResume=false){
-      if (!audioCtx){
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        buildGraph(audioCtx);
-      }
-      if (audioCtx.state === 'suspended' && forceResume){
-        try { await audioCtx.resume(); } catch(e){ /* ignore */ }
-      }
-      if (!audioBuffer){
-        try { await loadAudioBuffer(audioCtx); } catch(e){ console.warn('Audio load failed:', e); return; }
-      }
-      if (!audioStarted){
-        startLoopingSource(audioCtx);
-        setIdleAudioTargets(); // begin in idle state
-      }
-      audioReady = true;
+    buildBadges();
+
+    /* ---------- badge raycast + scoped mouse/touch handling (canvas only) ---------- */
+    const raycaster=new THREE.Raycaster();
+    const pointer=new THREE.Vector2();
+
+    function handleBadgeHit(clientX, clientY){
+      if(!badgesReady || !badgeGroup.visible) return false;
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      pointer.set(x, y);
+      raycaster.setFromCamera(pointer, camera);
+      const objects = [spotifyBadge, appleBadge].filter(Boolean);
+      const hits = raycaster.intersectObjects(objects, false);
+      if(!hits.length) return false;
+      const obj = hits[0].object;
+      let url = null;
+      if(obj === spotifyBadge) url = 'https://open.spotify.com/';
+      else if(obj === appleBadge) url = 'https://music.apple.com/';
+      if(!url) return false;
+      window.open(url, '_blank', 'noopener');
+      return true;
     }
 
-    async function maybeStartAudio(force=false){
-      if (!audioReady || (audioCtx && audioCtx.state==='suspended') || !audioStarted){
-        await initAudio(force);
+    renderer.domElement.addEventListener('click', (e)=>{
+      handleBadgeHit(e.clientX, e.clientY);
+    }, {passive:true});
+
+    renderer.domElement.addEventListener('touchend', (e)=>{
+      const t = e.changedTouches && e.changedTouches[0];
+      if(!t) return;
+      const handled = handleBadgeHit(t.clientX, t.clientY);
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
       }
+    }, {passive:false});
+
+    /* ---------- audio ---------- */
+    const AUDIO_URL="./soundtrackComp.mp3"; const A_IDLE=0.25, A_IDLE_LPF=380, A_NORM=1.0, A_NORM_LPF=18000, A_SMOOTH=0.18;
+    let audioCtx=null, audioBuffer=null, sourceNode=null, filterNode=null, gainNode=null, audioReady=false, audioStarted=false;
+    async function loadAudio(ctx){ if(audioBuffer) return audioBuffer; const res=await fetch(AUDIO_URL); const arr=await res.arrayBuffer(); audioBuffer=await ctx.decodeAudioData(arr); return audioBuffer; }
+    function buildGraph(ctx){ filterNode=ctx.createBiquadFilter(); filterNode.type='lowpass'; filterNode.frequency.value=A_IDLE_LPF; gainNode=ctx.createGain(); gainNode.gain.value=0.9; filterNode.connect(gainNode).connect(ctx.destination); }
+    function startSource(ctx){ if(!audioBuffer) return; stopSource(); sourceNode=ctx.createBufferSource(); sourceNode.buffer=audioBuffer; sourceNode.loop=true; sourceNode.playbackRate.value=A_IDLE; sourceNode.connect(filterNode); sourceNode.start(ctx.currentTime+0.01); audioStarted=true; }
+    function stopSource(){ if(sourceNode){ try{sourceNode.stop()}catch{} try{sourceNode.disconnect()}catch{} sourceNode=null; } }
+    async function initAudio(force=false){ if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); buildGraph(audioCtx); } if(audioCtx.state==='suspended'&&force){ try{await audioCtx.resume()}catch{} } if(!audioBuffer){ try{await loadAudio(audioCtx)}catch(e){return;} } if(!audioStarted){ startSource(audioCtx); setIdleTargets(); } audioReady=true; }
+    async function maybeStartAudio(force=false){ if(!audioReady || (audioCtx && audioCtx.state==='suspended') || !audioStarted){ await initAudio(force); } }
+    function setIdleTargets(){ if(!audioCtx||!filterNode||!sourceNode) return; const t=audioCtx.currentTime+0.01; filterNode.frequency.setTargetAtTime(A_IDLE_LPF,t,A_SMOOTH); sourceNode.playbackRate.setTargetAtTime(A_IDLE,t,A_SMOOTH); }
+    function ease(t){ return t*t*(3-2*t); }
+    function updateAudio(speed){ if(!audioReady||!sourceNode||!filterNode) return; const k=ease(THREE.MathUtils.clamp(speed/Math.max(0.001,FULL_SPIN),0,1)); const rate=THREE.MathUtils.lerp(A_IDLE,A_NORM,k); const lpf=THREE.MathUtils.lerp(A_IDLE_LPF,A_NORM_LPF,k); const t=audioCtx.currentTime+0.01; sourceNode.playbackRate.setTargetAtTime(rate,t,A_SMOOTH); filterNode.frequency.setTargetAtTime(lpf,t,A_SMOOTH); }
+    window.addEventListener('load',()=>{initAudio(false)},{once:true}); window.addEventListener('pointerdown',()=>{maybeStartAudio(true)},{once:true});
+
+    /* ---------- header opacity from spin ---------- */
+    function updateHeaderOpacity(speed){
+      if(!headerMat || headerOpacityLocked) return;
+      const t = THREE.MathUtils.clamp(speed/Math.max(0.001,FULL_SPIN),0,1);
+      const k = ease(t);
+      const op = HEADER_OPACITY_MAX * (1.0 - Math.exp(-4.0*k));
+      headerMat.opacity = op;
+      if(k>=0.999){ headerMat.opacity=HEADER_OPACITY_MAX; headerOpacityLocked=true; }
     }
 
-    function easeCubic(t){ return t*t*(3 - 2*t); } // smoothstep-like cubic
-
-    function setIdleAudioTargets(){
-      if (!audioCtx || !filterNode || !sourceNode) return;
-      const t = audioCtx.currentTime + 0.01;
-      filterNode.frequency.cancelScheduledValues(t);
-      filterNode.frequency.setTargetAtTime(AUDIO_IDLE_LPF, t, AUDIO_SMOOTH);
-      sourceNode.playbackRate.cancelScheduledValues(t);
-      sourceNode.playbackRate.setTargetAtTime(AUDIO_IDLE_RATE, t, AUDIO_SMOOTH);
-    }
-
-    function setFastAudioTargets(){
-      if (!audioCtx || !filterNode || !sourceNode) return;
-      const t = audioCtx.currentTime + 0.01;
-      filterNode.frequency.cancelScheduledValues(t);
-      filterNode.frequency.setTargetAtTime(AUDIO_NORMAL_LPF, t, AUDIO_SMOOTH);
-      sourceNode.playbackRate.cancelScheduledValues(t);
-      sourceNode.playbackRate.setTargetAtTime(AUDIO_NORMAL_RATE, t, AUDIO_SMOOTH);
-    }
-
-    function forceFastAudio(){ // used while popup is visible
-      if (!audioReady) return;
-      setFastAudioTargets();
-    }
-
-    // Continuous mapping per frame (unless popup forces full)
-    function updateAudioBySpeed(speedAbs){
-      if (!audioReady || !sourceNode || !filterNode) return;
-      if (popupVisible){ // override while popup open
-        setFastAudioTargets();
-        return;
-      }
-      const k = easeCubic(THREE.MathUtils.clamp(speedAbs / Math.max(0.001, AUDIO_SPEED_FOR_FULL), 0, 1));
-      const rate = THREE.MathUtils.lerp(AUDIO_IDLE_RATE, AUDIO_NORMAL_RATE, k);
-      const lpf  = THREE.MathUtils.lerp(AUDIO_IDLE_LPF,  AUDIO_NORMAL_LPF,  k);
-      const t = audioCtx.currentTime + 0.01;
-      sourceNode.playbackRate.cancelScheduledValues(t);
-      sourceNode.playbackRate.setTargetAtTime(rate, t, AUDIO_SMOOTH);
-      filterNode.frequency.cancelScheduledValues(t);
-      filterNode.frequency.setTargetAtTime(lpf, t, AUDIO_SMOOTH);
-    }
-
-    // Try to start on load (desktop may need gesture)
-    window.addEventListener('load', ()=> { initAudio(false); }, {once:true});
-    window.addEventListener('pointerdown', ()=> { maybeStartAudio(true); }, {once:true});
-
-    /* -------------------- render loop -------------------- */
-    const clock = new THREE.Clock();
-    const tmpV3 = new THREE.Vector3();
-
+    /* ---------- main loop ---------- */
+    const clock=new THREE.Clock(); const tmpV3=new THREE.Vector3();
     function animate(){
       requestAnimationFrame(animate);
-      const dt = Math.min(clock.getDelta(), 0.033);
-      const timeSec = clock.elapsedTime;
+      const dt=Math.min(clock.getDelta(),0.033); const time=clock.elapsedTime;
 
-      // Walls react to spin speed
-      if (wallShaderRef){
-        const dir = (angVel >= 0 ? 1.0 : -1.0);
-        const speedFactor = 1.0 + Math.min(3.0, Math.abs(angVel) * 2.4);
-        wallShaderRef.uniforms.uTime.value += dt * dir * speedFactor;
-      }
+      updateVase(dt,time);
 
-      // Popup opening condition (unchanged)
-      const speedAbs = Math.abs(angVel);
-      if (speedAbs > SPIN_POP_THRESHOLD){
-        const now = performance.now();
-        if (!popupVisible && (now - lastPopupTime) > POPUP_COOLDOWN_MS){
-          lastPopupTime = now; showPopup();
-        }
-      }
+      const speedAbs=Math.abs(angVel);
+      if(wallShader){ const dir=(angVel>=0?1:-1); wallShader.uniforms.uTime.value += dt * dir * (1.0 + Math.min(3.0, speedAbs*2.4)); }
 
-      // Audio follows speed continuously (and is forced normal while popup is open)
-      updateAudioBySpeed(speedAbs);
+      if(!badgesActivated && speedAbs>=FULL_SPIN){ badgesActivated=true; if(badgesReady) badgeGroup.visible=true; }
 
-      // Envmap probe at vase
-      if (vaseReady && vase){
-        vase.visible = false;
-        cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
-        cubeCam.update(renderer, scene);
-        vase.visible = true;
-      }
+      updateAudio(speedAbs); updateHeaderOpacity(speedAbs);
 
-      // Smooth room tilt
-      room.rotation.x += (targetRX - room.rotation.x) * 0.06;
-      room.rotation.y += (targetRY - room.rotation.y) * 0.06;
+      cubeCam.position.copy(vaseGroup.getWorldPosition(tmpV3));
+      const headerWasVisible = headerGroup.visible;
+      const vaseWasVisible = vaseGroup.visible;
+      if(vaseReady && vase) vase.visible = false;
+      headerGroup.visible = false;
+      cubeCam.update(renderer, scene);
+      if(vaseReady && vase) vase.visible = true;
+      headerGroup.visible = headerWasVisible;
+      vaseGroup.visible = vaseWasVisible;
+
+      room.rotation.x += (targetRX - room.rotation.x)*0.06;
+      room.rotation.y += (targetRY - room.rotation.y)*0.06;
       edges.rotation.copy(room.rotation);
+      badgeGroup.rotation.copy(room.rotation);
 
-      updateVase(dt);
+      if(headerMesh){ headerGroup.lookAt(camera.position); }
 
-      // Water uniforms
-      updateWaterCenterFromVase();
-      waterUniforms.uTime.value = timeSec;
-      waterUniforms.uSpinAbs.value = Math.abs(angVel);
+      updateWaterCenter(); waterUniforms.uTime.value=time; waterUniforms.uSpinAbs.value=speedAbs;
+      updateBadgesTransform();
 
-      // Render -> post
-      const usePost = (CONFIG.post.pixelSize > 1) || (CONFIG.post.ditherStrength > 0.0001);
-      if (usePost){
-        renderer.setRenderTarget(rt);
-        renderer.render(scene, camera);
-        renderer.setRenderTarget(null);
-        renderer.render(screenScene, screenCam);
-      } else {
-        renderer.render(scene, camera);
-      }
+      const usePost = (CONFIG.post.pixelSize>1)||(CONFIG.post.ditherStrength>0.0001);
+      if(usePost){ renderer.setRenderTarget(rt); renderer.render(scene,camera); renderer.setRenderTarget(null); renderer.render(screenScene,screenCam); }
+      else{ renderer.render(scene,camera); }
     }
     animate();
 
-    /* -------------------- Tabs & UI binding -------------------- */
-    const panel = document.getElementById('panel');
+    /* ---------- layout / resize ---------- */
+    function updateLayout(){
+      renderer.setSize(vw(),vh(),false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isPhone()?1.5:1.8));
+      renderer.toneMappingExposure = CONFIG.lights.exposure;
+      key.position.set(1.5,-ROOM_H*0.1, room.position.z + ROOM_D*0.05);
+      resizePost(); applyVaseScale(); resizeWater(); adjustRoomToViewport(); updateBadgesTransform();
+      badgeGroup.rotation.copy(room.rotation);
+    }
+    window.addEventListener('resize',updateLayout,{passive:true});
+    window.addEventListener('orientationchange',updateLayout,{passive:true});
+    if(window.visualViewport) window.visualViewport.addEventListener('resize',updateLayout,{passive:true});
 
-    document.getElementById('tabs').addEventListener('click', (e)=>{
-      const btn = e.target.closest('.tab-btn'); if(!btn) return;
-      for (const b of e.currentTarget.querySelectorAll('.tab-btn')) b.classList.toggle('active', b===btn);
-      for (const page of document.querySelectorAll('.tabpage')) page.classList.toggle('active', page.id === btn.dataset.tab);
+    renderer.domElement.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+    renderer.domElement.addEventListener('wheel', e=>e.preventDefault(), {passive:false});
+
+    setupInput(); updateLayout();
+
+    /* ---------- UI + bindings ---------- */
+    const panel=document.getElementById('panel'); const toggle=document.getElementById('toggleControls'); const $=id=>document.getElementById(id);
+    function togglePanel(){ panel.style.display = (panel.style.display==='block') ? 'none' : 'block'; }
+    if (toggle) toggle.addEventListener('click',togglePanel);
+    window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='h') togglePanel(); });
+
+    document.getElementById('tabs').addEventListener('click', e=>{
+      const btn=e.target.closest('.tab-btn'); if(!btn) return;
+      for(const b of e.currentTarget.querySelectorAll('.tab-btn')) b.classList.toggle('active', b===btn);
+      for(const pg of document.querySelectorAll('.tabpage')) pg.classList.toggle('active', pg.id===btn.dataset.tab);
     });
 
-    const $ = id => document.getElementById(id);
-    function bindRange(numId, rangeId, getVal, setVal){
-      const num=$(numId), range=$(rangeId);
-      const init = getVal(); num.value = init; range.value = init;
-      const sync=(v)=>{ const val = +v; num.value=val; range.value=val; setVal(val); };
-      num.addEventListener('change', e=>sync(e.target.value));
-      range.addEventListener('input', e=>sync(e.target.value));
+    function setVal(id,v){ const el=$(id); if(el) el.value=v; }
+    function bindRange(numId, rangeId, getVal, setValFn){
+      const num=$(numId), range=$(rangeId); const init=getVal(); num.value=init; range.value=init;
+      const sync=v=>{ const val=+v; num.value=val; range.value=val; setValFn(val); };
+      num.addEventListener('change', e=>sync(e.target.value)); range.addEventListener('input', e=>sync(e.target.value));
     }
-    function setVal(id, val){ const el=document.getElementById(id); if(el){ el.value=val; } }
 
-    function syncVasePositionInputs(){ $('vaseZ').value = $('vaseZNum').value = vaseGroup.position.z; $('vaseYPos').value = $('vaseYPosNum').value = vaseGroup.position.y; }
+    function syncVasePositionInputs(){ $('vaseZ').value=$('vaseZNum').value=vaseGroup.position.z; $('vaseYPos').value=$('vaseYPosNum').value=vaseGroup.position.y; }
 
-    // Vase bindings
-    bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{ CONFIG.vase.userScaleMult = Math.max(0.05, v); userScaleMult = CONFIG.vase.userScaleMult; applyVaseScale(); });
-    bindRange('vaseYNum','vaseY', ()=>CONFIG.vase.userTallY, v=>{ CONFIG.vase.userTallY = Math.max(0.05, v); userTallY = CONFIG.vase.userTallY; applyVaseScale(); });
-    bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{ CONFIG.vase.z=v; vaseGroup.position.z=v; });
-    bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{ CONFIG.vase.y=v; vaseGroup.position.y=v; });
+    // Vase
+    bindRange('vaseNum','vase', ()=>CONFIG.vase.userScaleMult, v=>{CONFIG.vase.userScaleMult=v; userScaleMult=v; applyVaseScale();});
+    bindRange('vaseYNum','vaseY', ()=>CONFIG.vase.userTallY, v=>{CONFIG.vase.userTallY=v; userTallY=v; applyVaseScale();});
+    bindRange('vaseZNum','vaseZ', ()=>CONFIG.vase.z, v=>{CONFIG.vase.z=v; vaseGroup.position.z=v; updateBadgesTransform(); syncVasePositionInputs();});
+    bindRange('vaseYPosNum','vaseYPos', ()=>CONFIG.vase.y, v=>{CONFIG.vase.y=v; vaseGroup.position.y=v; updateBadgesTransform(); syncVasePositionInputs();});
 
     // Spin
-    bindRange('dampNum','damp', ()=>CONFIG.spin.damping, v=>{ CONFIG.spin.damping=v; DAMPING=v; });
-    bindRange('minNum','min', ()=>CONFIG.spin.minSpin, v=>{ CONFIG.spin.minSpin=v; MIN_SPIN=v; });
-    bindRange('impNum','imp', ()=>CONFIG.spin.swipeImpulse, v=>{ CONFIG.spin.swipeImpulse=v; IMPULSE_SCALE=v; });
+    bindRange('dampNum','damp', ()=>CONFIG.spin.damping, v=>{CONFIG.spin.damping=v; DAMPING=v;});
+    bindRange('minNum','min', ()=>CONFIG.spin.minSpin, v=>{CONFIG.spin.minSpin=v; MIN_SPIN=v;});
+    bindRange('impNum','imp', ()=>CONFIG.spin.swipeImpulse, v=>{CONFIG.spin.swipeImpulse=v; IMPULSE=v;});
 
-    // Room size (AUTO: only depth & z)
-    bindRange('dNum','d', ()=>ROOM_D, v=>{ ROOM_D=v; adjustRoomToViewport(); });
-    bindRange('zNum','z', ()=>room.position.z, v=>{ room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport(); });
-
-    $('fitPortrait').onclick = ()=>{
-      room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      adjustRoomToViewport();
-    };
-    $('fitDesktop').onclick = ()=>{
-      room.position.z = -ROOM_D * 0.5; edges.position.copy(room.position);
-      adjustRoomToViewport();
-    };
-
-    // Wall image
-    bindRange('zoomNum','zoom', ()=>CONFIG.room.imageZoom, v=>{ CONFIG.room.imageZoom=v; applyTextureZoom(tex, v); });
-    bindRange('edgeNum','edge', ()=>edges.material.opacity, v=>{ edges.material.opacity = Math.max(0, Math.min(1, v)); edges.material.needsUpdate=true; });
+    // Room
+    bindRange('dNum','d', ()=>ROOM_D, v=>{ROOM_D=v; adjustRoomToViewport();});
+    bindRange('zNum','z', ()=>room.position.z, v=>{room.position.z=v; edges.position.copy(room.position); adjustRoomToViewport();});
+    bindRange('zoomNum','zoom', ()=>zoomCurrent, v=>{
+      zoomBase = v;
+      applyZoom(v);
+    });
+    bindRange('edgeNum','edge', ()=>edges.material.opacity, v=>{edges.material.opacity=Math.max(0,Math.min(1,v)); edges.material.needsUpdate=true;});
 
     // Lights
-    bindRange('expNum','exp', ()=>CONFIG.lights.exposure, v=>{ CONFIG.lights.exposure=v; renderer.toneMappingExposure=v; });
-    bindRange('ambNum','amb', ()=>CONFIG.lights.ambient, v=>{ CONFIG.lights.ambient=v; amb.intensity=v; });
-    bindRange('hemNum','hem', ()=>CONFIG.lights.hemisphere, v=>{ CONFIG.lights.hemisphere=v; hemi.intensity=v; });
-    bindRange('rimNum','rim', ()=>CONFIG.lights.rim, v=>{ CONFIG.lights.rim=v; rim.intensity=v; });
-    bindRange('keyNum','key', ()=>CONFIG.lights.key, v=>{ CONFIG.lights.key=v; key.intensity=v; });
-    bindRange('vlINum','vlI', ()=>CONFIG.lights.vaseLight.intensity, v=>{ CONFIG.lights.vaseLight.intensity=v; vaseLight.intensity=v; });
-    bindRange('vlDNum','vlD', ()=>CONFIG.lights.vaseLight.distance,  v=>{ CONFIG.lights.vaseLight.distance=v;  vaseLight.distance=v;  });
-    bindRange('vlDecNum','vlDec', ()=>CONFIG.lights.vaseLight.decay, v=>{ CONFIG.lights.vaseLight.decay=v;  vaseLight.decay=v;  });
-    bindRange('vlYNum','vlY', ()=>CONFIG.lights.vaseLight.y,        v=>{ CONFIG.lights.vaseLight.y=v;      vaseLight.position.y=v; });
+    bindRange('expNum','exp', ()=>CONFIG.lights.exposure, v=>{CONFIG.lights.exposure=v; renderer.toneMappingExposure=v;});
+    bindRange('ambNum','amb', ()=>CONFIG.lights.ambient, v=>{CONFIG.lights.ambient=v; amb.intensity=v;});
+    bindRange('hemNum','hem', ()=>CONFIG.lights.hemisphere, v=>{CONFIG.lights.hemisphere=v; hemi.intensity=v;});
+    bindRange('rimNum','rim', ()=>CONFIG.lights.rim, v=>{CONFIG.lights.rim=v; rim.intensity=v;});
+    bindRange('keyNum','key', ()=>CONFIG.lights.key, v=>{CONFIG.lights.key=v; key.intensity=v;});
+    bindRange('vlINum','vlI', ()=>CONFIG.lights.vaseLight.intensity, v=>{CONFIG.lights.vaseLight.intensity=v; vaseLight.intensity=v;});
+    bindRange('vlDNum','vlD', ()=>CONFIG.lights.vaseLight.distance, v=>{CONFIG.lights.vaseLight.distance=v; vaseLight.distance=v;});
+    bindRange('vlDecNum','vlDec', ()=>CONFIG.lights.vaseLight.decay, v=>{CONFIG.lights.vaseLight.decay=v; vaseLight.decay=v;});
+    bindRange('vlYNum','vlY', ()=>CONFIG.lights.vaseLight.y, v=>{CONFIG.lights.vaseLight.y=v; vaseLight.position.y=v;});
 
-    // Room FX
-    bindRange('emisNum','emis', ()=>CONFIG.room.wallEmissive, v=>{ CONFIG.room.wallEmissive=v; wallMat.emissiveIntensity=v; wallMat.needsUpdate=true; });
-    bindRange('dispNum','disp', ()=>CONFIG.room.wallDispAmp,  v=>{ CONFIG.room.wallDispAmp=v;  if(wallShaderRef) wallShaderRef.uniforms.uDispAmp.value=v; });
-    bindRange('dsNum','ds',     ()=>CONFIG.room.wallDispSpeed,v=>{ CONFIG.room.wallDispSpeed=v;if(wallShaderRef) wallShaderRef.uniforms.uDispSpeed.value=v; });
+    // Water
+    bindRange('wAmpNum','wAmp', ()=>CONFIG.water.amp, v=>{CONFIG.water.amp=v; waterUniforms.uAmp.value=v;});
+    bindRange('wFreqNum','wFreq', ()=>CONFIG.water.freq, v=>{CONFIG.water.freq=v; waterUniforms.uFreq.value=v;});
+    bindRange('wSpeedNum','wSpeed', ()=>CONFIG.water.speed, v=>{CONFIG.water.speed=v; waterUniforms.uSpeed.value=v;});
+    bindRange('wFallNum','wFall', ()=>CONFIG.water.falloff, v=>{CONFIG.water.falloff=v; waterUniforms.uFalloff.value=v;});
+    bindRange('wAlphaNum','wAlpha', ()=>CONFIG.water.alpha, v=>{CONFIG.water.alpha=v; waterUniforms.uAlpha.value=v;});
+    bindRange('wRadNum','wRad', ()=>CONFIG.water.radius, v=>{CONFIG.water.radius=v; rebuildWaterCircle();});
+    bindRange('wPixNum','wPix', ()=>CONFIG.water.pixel, v=>{CONFIG.water.pixel=v|0; waterUniforms.uPixel.value=v|0;});
+    bindRange('wYNum','wY', ()=>CONFIG.water.yOffset, v=>{CONFIG.water.yOffset=v; resizeWater();});
 
-    // Water uniforms
-    bindRange('wAmpNum','wAmp', ()=>CONFIG.water.amp,   v=>{ CONFIG.water.amp=v;   waterUniforms.uAmp.value=v; });
-    bindRange('wFreqNum','wFreq',()=>CONFIG.water.freq, v=>{ CONFIG.water.freq=v;  waterUniforms.uFreq.value=v; });
-    bindRange('wSpeedNum','wSpeed',()=>CONFIG.water.speed, v=>{ CONFIG.water.speed=v; waterUniforms.uSpeed.value=v; });
-    bindRange('wFallNum','wFall',()=>CONFIG.water.falloff, v=>{ CONFIG.water.falloff=v; waterUniforms.uFalloff.value=v; });
-    bindRange('wAlphaNum','wAlpha',()=>CONFIG.water.alpha, v=>{ CONFIG.water.alpha=v; waterUniforms.uAlpha.value=v; });
-    bindRange('wRadNum','wRad',()=>CONFIG.water.radius, v=>{ CONFIG.water.radius=v; waterUniforms.uRadius.value=v; });
-    bindRange('wPixNum','wPix',()=>CONFIG.water.pixel, v=>{ CONFIG.water.pixel=v|0; waterUniforms.uPixel.value=v|0; });
-    bindRange('wYNum','wY',()=>CONFIG.water.yOffset, v=>{ CONFIG.water.yOffset=v; resizeWater(); });
-    // Tint
-    $('wR').value = CONFIG.water.tint[0];
-    $('wG').value = CONFIG.water.tint[1];
-    $('wB').value = CONFIG.water.tint[2];
-    const setWTint=()=> waterUniforms.uColor.value.setRGB(+$('wR').value, +$('wG').value, +$('wB').value);
-    $('wR').addEventListener('change', setWTint);
-    $('wG').addEventListener('change', setWTint);
-    $('wB').addEventListener('change', setWTint);
-    setWTint();
-
-    // Global FX
-    bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{ CONFIG.post.pixelSize = v|0; fsMat.uniforms.pixelSize.value = Math.max(1, v|0); });
-    bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{ CONFIG.post.ditherStrength = Math.max(0, v); fsMat.uniforms.ditherStrength.value = CONFIG.post.ditherStrength; });
-
-    // Vase effects (glass)
-    bindRange('glassTransNum','glassTrans', ()=>CONFIG.glass.transmission, v=>{ CONFIG.glass.transmission=v; applyGlassConfigToMaterials(); });
-    bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness,    v=>{ CONFIG.glass.thickness=v;    applyGlassConfigToMaterials(); });
-    bindRange('glassIorNum','glassIor',     ()=>CONFIG.glass.ior,          v=>{ CONFIG.glass.ior=v;          applyGlassConfigToMaterials(); });
-    bindRange('glassRoughNum','glassRough', ()=>CONFIG.glass.roughness,    v=>{ CONFIG.glass.roughness=v;    applyGlassConfigToMaterials(); });
-    bindRange('glassCCNum','glassCC',       ()=>CONFIG.glass.clearcoat,    v=>{ CONFIG.glass.clearcoat=v;    applyGlassConfigToMaterials(); });
-    bindRange('glassCCRNum','glassCCR',     ()=>CONFIG.glass.ccRough,      v=>{ CONFIG.glass.ccRough=v;      applyGlassConfigToMaterials(); });
-    bindRange('glassEnvNum','glassEnv',     ()=>CONFIG.glass.envIntensity, v=>{ CONFIG.glass.envIntensity=v; applyGlassConfigToMaterials(); });
-    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness,    v=>{ CONFIG.glass.metalness=Math.max(0, Math.min(1, v)); applyGlassConfigToMaterials(); });
-
-    $('glassColR').value = CONFIG.glass.color[0];
-    $('glassColG').value = CONFIG.glass.color[1];
-    $('glassColB').value = CONFIG.glass.color[2];
-    function setGlassBaseColor(){
-      CONFIG.glass.color[0] = THREE.MathUtils.clamp(+$('glassColR').value, 0, 1);
-      CONFIG.glass.color[1] = THREE.MathUtils.clamp(+$('glassColG').value, 0, 1);
-      CONFIG.glass.color[2] = THREE.MathUtils.clamp(+$('glassColB').value, 0, 1);
-      applyGlassConfigToMaterials();
-    }
-    $('glassColR').addEventListener('change', setGlassBaseColor);
-    $('glassColG').addEventListener('change', setGlassBaseColor);
-    $('glassColB').addEventListener('change', setGlassBaseColor);
-
-    $('glassAttR').value = CONFIG.glass.attnColor[0];
-    $('glassAttG').value = CONFIG.glass.attnColor[1];
-    $('glassAttB').value = CONFIG.glass.attnColor[2];
-    function setGlassAttnColor(){
-      CONFIG.glass.attnColor[0] = THREE.MathUtils.clamp(+$('glassAttR').value, 0, 1);
-      CONFIG.glass.attnColor[1] = THREE.MathUtils.clamp(+$('glassAttG').value, 0, 1);
-      CONFIG.glass.attnColor[2] = THREE.MathUtils.clamp(+$('glassAttB').value, 0, 1);
-      applyGlassConfigToMaterials();
-    }
-    $('glassAttR').addEventListener('change', setGlassAttnColor);
-    $('glassAttG').addEventListener('change', setGlassAttnColor);
-    $('glassAttB').addEventListener('change', setGlassAttnColor);
-
-    /* ---- init visible values ---- */
-    function initUIValues(){
-      // Vase
-      setVal('vase', CONFIG.vase.userScaleMult); setVal('vaseNum', CONFIG.vase.userScaleMult);
-      setVal('vaseY', CONFIG.vase.userTallY); setVal('vaseYNum', CONFIG.vase.userTallY);
-      setVal('vaseZ', CONFIG.vase.z); setVal('vaseZNum', CONFIG.vase.z);
-      setVal('vaseYPos', CONFIG.vase.y); setVal('vaseYPosNum', CONFIG.vase.y);
-      // Spin
-      setVal('damp', CONFIG.spin.damping); setVal('dampNum', CONFIG.spin.damping);
-      setVal('min', CONFIG.spin.minSpin); setVal('minNum', CONFIG.spin.minSpin);
-      setVal('imp', CONFIG.spin.swipeImpulse); setVal('impNum', CONFIG.spin.swipeImpulse);
-      // Room (depth + z)
-      setVal('d', ROOM_D); setVal('dNum', ROOM_D);
-      setVal('z', room.position.z); setVal('zNum', room.position.z);
-      // Wall image
-      setVal('zoom', CONFIG.room.imageZoom); setVal('zoomNum', CONFIG.room.imageZoom);
-      setVal('edge', edges.material.opacity); setVal('edgeNum', edges.material.opacity);
-      // Lights
-      setVal('exp', CONFIG.lights.exposure); setVal('expNum', CONFIG.lights.exposure);
-      setVal('amb', CONFIG.lights.ambient); setVal('ambNum', CONFIG.lights.ambient);
-      setVal('hem', CONFIG.lights.hemisphere); setVal('hemNum', CONFIG.lights.hemisphere);
-      setVal('rim', CONFIG.lights.rim); setVal('rimNum', CONFIG.lights.rim);
-      setVal('key', CONFIG.lights.key); setVal('keyNum', CONFIG.lights.key);
-      setVal('vlI', CONFIG.lights.vaseLight.intensity); setVal('vlINum', CONFIG.lights.vaseLight.intensity);
-      setVal('vlD', CONFIG.lights.vaseLight.distance);  setVal('vlDNum', CONFIG.lights.vaseLight.distance);
-      setVal('vlDec', CONFIG.lights.vaseLight.decay);   setVal('vlDecNum', CONFIG.lights.vaseLight.decay);
-      setVal('vlY', CONFIG.lights.vaseLight.y);         setVal('vlYNum', CONFIG.lights.vaseLight.y);
-      // Room FX
-      setVal('emis', CONFIG.room.wallEmissive); setVal('emisNum', CONFIG.room.wallEmissive);
-      setVal('disp', CONFIG.room.wallDispAmp);  setVal('dispNum', CONFIG.room.wallDispAmp);
-      setVal('ds',   CONFIG.room.wallDispSpeed);setVal('dsNum', CONFIG.room.wallDispSpeed);
-      // Water
-      setVal('wAmp', CONFIG.water.amp);   setVal('wAmpNum', CONFIG.water.amp);
-      setVal('wFreq', CONFIG.water.freq); setVal('wFreqNum', CONFIG.water.freq);
-      setVal('wSpeed', CONFIG.water.speed); setVal('wSpeedNum', CONFIG.water.speed);
-      setVal('wFall', CONFIG.water.falloff); setVal('wFallNum', CONFIG.water.falloff);
-      setVal('wAlpha', CONFIG.water.alpha); setVal('wAlphaNum', CONFIG.water.alpha);
-      setVal('wRad', CONFIG.water.radius); setVal('wRadNum', CONFIG.water.radius);
-      setVal('wPix', CONFIG.water.pixel); setVal('wPixNum', CONFIG.water.pixel);
-      setVal('wY', CONFIG.water.yOffset); setVal('wYNum', CONFIG.water.yOffset);
-      // Global FX
-      setVal('pix', CONFIG.post.pixelSize); setVal('pixNum', CONFIG.post.pixelSize);
-      setVal('dith', CONFIG.post.ditherStrength); setVal('dithNum', CONFIG.post.ditherStrength);
-      // Vase FX
-      setVal('glassTrans', CONFIG.glass.transmission); setVal('glassTransNum', CONFIG.glass.transmission);
-      setVal('glassThick', CONFIG.glass.thickness); setVal('glassThickNum', CONFIG.glass.thickness);
-      setVal('glassIor', CONFIG.glass.ior); setVal('glassIorNum', CONFIG.glass.ior);
-      setVal('glassRough', CONFIG.glass.roughness); setVal('glassRoughNum', CONFIG.glass.roughness);
-      setVal('glassCC', CONFIG.glass.clearcoat); setVal('glassCCNum', CONFIG.glass.clearcoat);
-      setVal('glassCCR', CONFIG.glass.ccRough); setVal('glassCCRNum', CONFIG.glass.ccRough);
-      setVal('glassEnv', CONFIG.glass.envIntensity); setVal('glassEnvNum', CONFIG.glass.envIntensity);
-      setVal('glassMetal', CONFIG.glass.metalness); setVal('glassMetalNum', CONFIG.glass.metalness);
-      $('glassColR').value = CONFIG.glass.color[0];
-      $('glassColG').value = CONFIG.glass.color[1];
-      $('glassColB').value = CONFIG.glass.color[2];
-      $('glassAttR').value = CONFIG.glass.attnColor[0];
-      $('glassAttG').value = CONFIG.glass.attnColor[1];
-      $('glassAttB').value = CONFIG.glass.attnColor[2];
-    }
-    initUIValues();
-
-    // Motion hint (show only for iOS permission path)
-    (function initMotionButton(){
-      if (isPortrait() && (presetChoice==='phone') && window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
-        document.getElementById('enableMotion').style.display = 'block';
+    // Glass
+    function applyGlass(){
+      for(const m of glassMaterials){
+        m.transmission=CONFIG.glass.transmission; m.thickness=CONFIG.glass.thickness; m.ior=CONFIG.glass.ior;
+        m.roughness=CONFIG.glass.roughness; m.clearcoat=CONFIG.glass.clearcoat; m.clearcoatRoughness=CONFIG.glass.ccRough;
+        m.envMapIntensity=CONFIG.glass.envIntensity; m.metalness=CONFIG.glass.metalness;
+        m.color.setRGB(...CONFIG.glass.color); m.attenuationColor.setRGB(...CONFIG.glass.attnColor); m.envMap=cubeRT.texture; m.needsUpdate=true;
       }
-    })();
+    }
+    bindRange('glassTransNum','glassTrans', ()=>CONFIG.glass.transmission, v=>{CONFIG.glass.transmission=v; applyGlass();});
+    bindRange('glassThickNum','glassThick', ()=>CONFIG.glass.thickness, v=>{CONFIG.glass.thickness=v; applyGlass();});
+    bindRange('glassIorNum','glassIor', ()=>CONFIG.glass.ior, v=>{CONFIG.glass.ior=v; applyGlass();});
+    bindRange('glassRoughNum','glassRough', ()=>CONFIG.glass.roughness, v=>{CONFIG.glass.roughness=v; applyGlass();});
+    bindRange('glassCCNum','glassCC', ()=>CONFIG.glass.clearcoat, v=>{CONFIG.glass.clearcoat=v; applyGlass();});
+    bindRange('glassCCRNum','glassCCR', ()=>CONFIG.glass.ccRough, v=>{CONFIG.glass.ccRough=v; applyGlass();});
+    bindRange('glassEnvNum','glassEnv', ()=>CONFIG.glass.envIntensity, v=>{CONFIG.glass.envIntensity=v; applyGlass();});
+    bindRange('glassMetalNum','glassMetal', ()=>CONFIG.glass.metalness, v=>{CONFIG.glass.metalness=v; applyGlass();});
 
-    /* ----- controls printer ----- */
-    function snapshotConfig(){
-      const snap = structuredClone(CONFIG);
-      snap.room.width = ROOM_W;
-      snap.room.height = ROOM_H;
-      snap.room.depth = ROOM_D;
-      snap.room.positionZ = room.position.z;
-      snap.vase.z = vaseGroup.position.z;
-      snap.vase.y = vaseGroup.position.y;
-      snap.post.pixelSize = fsMat.uniforms.pixelSize.value;
-      snap.post.ditherStrength = fsMat.uniforms.ditherStrength.value;
-      snap._internal = { WATER_RADIUS_FACTOR, TILT_MARGIN };
-      snap._preset = presetChoice;
+    // Header + badges UI
+    function bindHeaderUI(){
+      const upd=()=>{ if(headerMat) headerMat.needsUpdate=true; };
+      bindRange('hdrSizeNum','hdrSize', ()=>headerCfg.sizeMul, v=>{headerCfg.sizeMul=Math.max(0.2,Math.min(3,v)); rebuildHeaderGeometry();});
+      bindRange('hdrXNum','hdrX', ()=>headerCfg.x, v=>{headerCfg.x=v; applyHeaderTransform();});
+      bindRange('hdrYNum','hdrY', ()=>headerCfg.y, v=>{headerCfg.y=v; applyHeaderTransform();});
+      bindRange('hdrZNum','hdrZ', ()=>headerCfg.z, v=>{headerCfg.z=v; applyHeaderTransform();});
+      bindRange('hdrMetalNum','hdrMetal', ()=>headerCfg.metalness, v=>{headerCfg.metalness=v; if(headerMat){headerMat.metalness=v; upd();}});
+      bindRange('hdrRoughNum','hdrRough', ()=>headerCfg.roughness, v=>{headerCfg.roughness=v; if(headerMat){headerMat.roughness=v; upd();}});
+      bindRange('hdrCCNum','hdrCC', ()=>headerCfg.clearcoat, v=>{headerCfg.clearcoat=v; if(headerMat){headerMat.clearcoat=v; upd();}});
+      bindRange('hdrCCRNum','hdrCCR', ()=>headerCfg.clearcoatRoughness, v=>{headerCfg.clearcoatRoughness=v; if(headerMat){headerMat.clearcoatRoughness=v; upd();}});
+      bindRange('hdrEnvNum','hdrEnv', ()=>headerCfg.envIntensity, v=>{headerCfg.envIntensity=v; if(headerMat){headerMat.envMapIntensity=v; upd();}});
+      bindRange('hdrTransNum','hdrTrans', ()=>headerCfg.transmission, v=>{headerCfg.transmission=v; if(headerMat){headerMat.transmission=v; upd();}});
+      bindRange('hdrThickNum','hdrThick', ()=>headerCfg.thickness, v=>{headerCfg.thickness=v; if(headerMat){headerMat.thickness=v; upd();} rebuildHeaderGeometry();});
+      bindRange('hdrEmissNum','hdrEmiss', ()=>headerCfg.emissiveIntensity, v=>{headerCfg.emissiveIntensity=v; if(headerMat){headerMat.emissiveIntensity=v; upd();}});
+
+      const badgesCfgLocal = badgesCfg;
+      bindRange('bdgSizeNum','bdgSize', ()=>badgesCfgLocal.sizeMul, v=>{
+        badgesCfgLocal.sizeMul = Math.max(0.3, Math.min(3,v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgXOffNum','bdgXOff', ()=>badgesCfgLocal.offsetXMul, v=>{
+        badgesCfgLocal.offsetXMul = Math.max(0, Math.min(2,v));
+        updateBadgesTransform();
+      });
+      bindRange('bdgYPosNum','bdgYPos', ()=>badgesCfgLocal.yPos, v=>{
+        badgesCfgLocal.yPos = v;
+        updateBadgesTransform();
+      });
+      bindRange('bdgZOffNum','bdgZOff', ()=>badgesCfgLocal.zOffset, v=>{
+        badgesCfgLocal.zOffset = v;
+        updateBadgesTransform();
+      });
+    }
+    bindHeaderUI();
+
+    // Post
+    bindRange('pixNum','pix', ()=>CONFIG.post.pixelSize, v=>{CONFIG.post.pixelSize=v; fsMat.uniforms.pixelSize.value=v;});
+    bindRange('dithNum','dith', ()=>CONFIG.post.ditherStrength, v=>{CONFIG.post.ditherStrength=v; fsMat.uniforms.ditherStrength.value=v;});
+
+    // Init UI
+    function initUI(){
+      const set=(id,v)=>{ setVal(id,v); setVal(id+'Num',v); };
+      set('vase',CONFIG.vase.userScaleMult); set('vaseY',CONFIG.vase.userTallY); set('vaseZ',CONFIG.vase.z); set('vaseYPos',CONFIG.vase.y);
+      set('damp',CONFIG.spin.damping); set('min',CONFIG.spin.minSpin); set('imp',CONFIG.spin.swipeImpulse);
+      set('d',ROOM_D); set('z',room.position.z); set('zoom',CONFIG.room.imageZoom); set('edge',CONFIG.room.borderOpacity);
+      set('exp',CONFIG.lights.exposure); set('amb',CONFIG.lights.ambient); set('hem',CONFIG.lights.hemisphere); set('rim',CONFIG.lights.rim); set('key',CONFIG.lights.key);
+      set('vlI',CONFIG.lights.vaseLight.intensity); set('vlD',CONFIG.lights.vaseLight.distance); set('vlDec',CONFIG.lights.vaseLight.decay); set('vlY',CONFIG.lights.vaseLight.y);
+      set('wAmp',CONFIG.water.amp); set('wFreq',CONFIG.water.freq); set('wSpeed',CONFIG.water.speed); set('wFall',CONFIG.water.falloff); set('wAlpha',CONFIG.water.alpha); set('wRad',CONFIG.water.radius); set('wPix',CONFIG.water.pixel); set('wY',CONFIG.water.yOffset);
+      set('glassTrans',CONFIG.glass.transmission); set('glassThick',CONFIG.glass.thickness); set('glassIor',CONFIG.glass.ior); set('glassRough',CONFIG.glass.roughness); set('glassCC',CONFIG.glass.clearcoat); set('glassCCR',CONFIG.glass.ccRough); set('glassEnv',CONFIG.glass.envIntensity); set('glassMetal',CONFIG.glass.metalness);
+      set('hdrSize',headerCfg.sizeMul); set('hdrX',headerCfg.x); set('hdrY',headerCfg.y); set('hdrZ',headerCfg.z); set('hdrMetal',headerCfg.metalness); set('hdrRough',headerCfg.roughness); set('hdrCC',headerCfg.clearcoat); set('hdrCCR',headerCfg.clearcoatRoughness); set('hdrEnv',headerCfg.envIntensity); set('hdrTrans',headerCfg.transmission); set('hdrThick',headerCfg.thickness); set('hdrEmiss',headerCfg.emissiveIntensity);
+      set('bdgSize',badgesCfg.sizeMul); set('bdgXOff',badgesCfg.offsetXMul); set('bdgYPos',badgesCfg.yPos); set('bdgZOff',badgesCfg.zOffset);
+      set('pix',CONFIG.post.pixelSize); set('dith',CONFIG.post.ditherStrength);
+    }
+    initUI();
+
+    function snapshot(){
+      const snap=structuredClone(CONFIG);
+      snap.room.width=ROOM_W; snap.room.height=ROOM_H; snap.room.depth=ROOM_D; snap.room.positionZ=room.position.z;
+      snap.vase.z=vaseGroup.position.z; snap.vase.y=vaseGroup.position.y;
+      snap._internal={WATER_RADIUS_FACTOR,TILT_MARGIN}; snap._preset=presetChoice;
+      snap.header={
+        opacity:headerMat?headerMat.opacity:0,
+        sizeMul:headerCfg.sizeMul,
+        x:headerCfg.x,y:headerCfg.y,z:headerCfg.z,
+        locked:headerOpacityLocked,
+        metalness:headerCfg.metalness,
+        roughness:headerCfg.roughness,
+        clearcoat:headerCfg.clearcoat,
+        clearcoatRoughness:headerCfg.clearcoatRoughness,
+        envIntensity:headerCfg.envIntensity,
+        transmission:headerCfg.transmission,
+        thickness:headerCfg.thickness,
+        emissiveIntensity:headerCfg.emissiveIntensity
+      };
+      snap.badges = {
+        sizeMul:badgesCfg.sizeMul,
+        offsetXMul:badgesCfg.offsetXMul,
+        yPos:badgesCfg.yPos,
+        zOffset:badgesCfg.zOffset,
+        activated:badgesActivated
+      };
       return snap;
     }
-    function printControls(){ console.log(JSON.stringify(snapshotConfig(), null, 2)); }
-    async function copyControls(){
-      const text = JSON.stringify(snapshotConfig(), null, 2);
-      try { await navigator.clipboard.writeText(text); console.log('Controls copied to clipboard.'); }
-      catch(e){ console.warn('Clipboard copy failed:', e); }
-    }
-    window.printControls = printControls;
-    window.copyControls  = copyControls;
-    document.getElementById('printControlsBtn').onclick = printControls;
-    document.getElementById('copyControlsBtn').onclick  = copyControls;
 
+    window.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='p') console.log(JSON.stringify(snapshot(),null,2)); });
+    $('printControlsBtn').onclick=()=>console.log(JSON.stringify(snapshot(),null,2));
+    $('copyControlsBtn').onclick=async()=>{const text=JSON.stringify(snapshot(),null,2); try{await navigator.clipboard.writeText(text);}catch{}};
   </script>
 </body>
 </html>
