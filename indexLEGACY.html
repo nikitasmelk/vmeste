@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Random Image and Phrase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    img {
+      height: 30vh;
+      width: auto;
+      cursor: pointer;
+    }
+
+    .phrase {
+      margin-top: 20px;
+      font-size: 2em;
+    }
+
+    @media (max-width: 768px) {
+      img {
+        width: 50vw;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<img id="randomImage" src="images/image1.png" alt="Random Image">
+<div class="phrase" id="phrase">Excited Galaxy</div>
+
+<script>
+  const imagePaths = [
+    "images/image1.png",
+    "images/image2.png",
+    "images/image3.png",
+    "images/image4.png",
+    "images/image5.png",
+    "images/image6.png",
+    "images/image7.png"
+  ];
+
+  const nouns = [
+    "Dog",
+    "Pleasant",
+    "Drome Strike",
+    "Sadness",
+    "Jupiter",
+    "Galaxy",
+    "Gnomes",
+    "Story",
+    "Flight",
+    "Mango",
+    "Dog",
+    "Truck Orgy",
+    "Machines",
+    "Songularity"
+  ];
+
+  const adjectives = [
+    "Numbingly",
+    "Nuclear",
+    "A Snippet of",
+    "Council on",
+    "Detuned",
+    "Free",
+    "Emo",
+    "Low",
+    "Square",
+    "Chasing",
+    "Pickup",
+    "Excited",
+    "Possiblimente"
+  ];
+
+  const imageElement = document.getElementById('randomImage');
+  const phraseElement = document.getElementById('phrase');
+
+  function getRandomPhrase() {
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${adj} ${noun}`;
+  }
+
+  imageElement.addEventListener('click', () => {
+    const currentSrc = imageElement.getAttribute('src');
+    const availableImages = imagePaths.filter(path => path !== currentSrc);
+    const newImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+    imageElement.src = newImage;
+    phraseElement.textContent = getRandomPhrase();
+  });
+</script>
+
+</body>
+</html>

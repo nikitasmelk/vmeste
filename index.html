@@ -1,49 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Random Image and Phrase</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fourier Trace + Random Phrase</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      background-color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-      font-family: 'Fredoka', sans-serif;
+    :root{
+      /* =========================
+         EASY TWEAK SPOTS (UI STYLE)
+         ========================= */
+      --bg: #003332;
+      --text: #111111;
     }
 
-    img {
-      height: 30vh;
-      width: auto;
-      cursor: pointer;
+    html, body { margin:0; height:100%; }
+    body{
+      background: var(--bg);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      text-align:center;
+      font-family:'Fredoka', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
     }
 
-    .phrase {
-      margin-top: 20px;
-      font-size: 2em;
+    /* The Fourier drawing area */
+    #wrap{
+      width:min(74vmin, 760px);
+      height:min(74vmin, 760px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
 
-    @media (max-width: 768px) {
-      img {
-        width: 50vw;
-        height: auto;
-      }
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      cursor:pointer;
+      touch-action:manipulation;
+      background: transparent;
     }
+
+    .phrase{
+      margin-top: 18px;
+      font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+      line-height: 1.1;
+      user-select:none;
+      /* phrase color is set dynamically to match trace color */
+      color: var(--text);
+      max-width: min(92vw, 920px);
+    }
+
+    @media (max-width: 768px){
+      #wrap{ width:min(86vmin, 820px); height:min(86vmin, 820px); }
+      .phrase{ margin-top: 14px; }
+    }
+
+    /* Controls are intentionally hidden in this integrated version */
+    .hidden { display:none !important; }
   </style>
 </head>
 <body>
 
-<img id="randomImage" src="images/image1.png" alt="Random Image">
-<div class="phrase" id="phrase">Excited Galaxy</div>
+  <div id="wrap">
+    <canvas id="c"></canvas>
+  </div>
+  <div class="phrase" id="phrase">Excited Galaxy</div>
 
 <script>
-  const imagePaths = [
+/* ============================================================
+   EASY TWEAK SPOTS (DEFAULT SETTINGS)
+   Change these in one place.
+============================================================ */
+const SETTINGS = {
+  // Assets (same as your original page)
+  imagePaths: [
     "images/image1.png",
     "images/image2.png",
     "images/image3.png",
@@ -51,57 +86,706 @@
     "images/image5.png",
     "images/image6.png",
     "images/image7.png"
-  ];
+  ],
 
-  const nouns = [
-    "Dog",
-    "Pleasant",
-    "Drome Strike",
-    "Sadness",
-    "Jupiter",
-    "Galaxy",
-    "Gnomes",
-    "Story",
-    "Flight",
-    "Mango",
-    "Dog",
-    "Truck Orgy",
-    "Machines",
-    "Songularity"
-  ];
+  // Phrase generator
+  nouns: [
+    "Dog","Pleasant","Drome Strike","Sadness","Jupiter","Galaxy","Gnomes",
+    "Story","Flight","Mango","Dog","Truck Orgy","Machines","Songularity"
+  ],
+  adjectives: [
+    "Numbingly","Nuclear","A Snippet of","Council on","Detuned","Free",
+    "Emo","Low","Square","Chasing","Pickup","Excited","Possiblimente"
+  ],
 
-  const adjectives = [
-    "Numbingly",
-    "Nuclear",
-    "A Snippet of",
-    "Council on",
-    "Detuned",
-    "Free",
-    "Emo",
-    "Low",
-    "Square",
-    "Chasing",
-    "Pickup",
-    "Excited",
-    "Possiblimente"
-  ];
+  // Look & motion
+  backgroundColor: "#003332",   // page background
+  flipUpsideDown: true,         // keep your previous flip behavior
 
-  const imageElement = document.getElementById('randomImage');
-  const phraseElement = document.getElementById('phrase');
+  // Fourier defaults (your favorite settings)
+  K: 188,                       // vectors
+  speed: 100,                   // speed slider maxed in your screenshot
+  threshold: 179,               // threshold
+  sampleStep: 2,                // sample step
+  trailLength: 1200,            // trail length
+  arrowAlpha: 0.4,             // arrow alpha
 
-  function getRandomPhrase() {
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${adj} ${noun}`;
+  // Styling: phrase color matches traceColor automatically
+  traceColorVariants: [
+    // Pick any palettes you love; click shuffles among these
+    { trace:"#d43b2a", arrow:"#42ff00" }, // screenshot vibe
+    { trace:"#ffe600", arrow:"#008cff" }, // classic yellow/blue
+    { trace:"#00e5ff", arrow:"#ff3bff" },
+    { trace:"#7CFF00", arrow:"#00A3FF" },
+    { trace:"#FF4D00", arrow:"#55FF77" },
+    { trace:"#FF2E88", arrow:"#00FFB2" },
+    { trace:"#A8FF00", arrow:"#8A2EFF" }
+  ],
+
+  // Multi-block behavior
+  maxComponents: 24,            // max disconnected regions to draw
+  minComponentPixels: 25,       // ignore tiny specks
+  maskMaxDim: 520,              // internal mask resolution cap (perf)
+};
+
+/* ============================================================
+   Phrase logic (from your original file)
+============================================================ */
+const phraseElement = document.getElementById("phrase");
+function getRandomPhrase(){
+  const adj = SETTINGS.adjectives[Math.floor(Math.random()*SETTINGS.adjectives.length)];
+  const noun = SETTINGS.nouns[Math.floor(Math.random()*SETTINGS.nouns.length)];
+  return `${adj} ${noun}`;
+}
+
+/* ============================================================
+   Fourier / Epicycles Engine (multi-block)
+   (Controls are removed; all settings come from SETTINGS.)
+============================================================ */
+
+/* Complex */
+class C {
+  constructor(re=0, im=0){ this.re=re; this.im=im; }
+  add(b){ return new C(this.re+b.re, this.im+b.im); }
+  mul(b){ return new C(this.re*b.re - this.im*b.im, this.re*b.im + this.im*b.re); }
+  scale(s){ return new C(this.re*s, this.im*s); }
+  mag(){ return Math.hypot(this.re, this.im); }
+  static expi(theta){ return new C(Math.cos(theta), Math.sin(theta)); }
+}
+
+/* Canvas */
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d", { alpha: false });
+
+let paused = false;
+let ready = false;
+let t = 0;
+let Nbase = 900;
+
+let invertInk = false; // optional manual override, kept for debugging
+let components = [];   // [{ coeffs, trail, pointsN }]
+let loadedImgs = [];   // [{img, src}]
+let currentIdx = -1;
+
+// current palette
+let palette = SETTINGS.traceColorVariants[Math.floor(Math.random()*SETTINGS.traceColorVariants.length)];
+applyPalette(palette);
+
+function applyPalette(p){
+  palette = p;
+  // phrase matches trace
+  phraseElement.style.color = palette.trace;
+}
+
+function resize(){
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(2, Math.floor(rect.width * dpr));
+  const h = Math.max(2, Math.floor(rect.height * dpr));
+  canvas.width = w;
+  canvas.height = h;
+  ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
+  // Rebuild to re-scale shape
+  if(ready) rebuildFromImage(loadedImgs[currentIdx]?.img || null);
+}
+addEventListener("resize", resize);
+
+/* Helpers */
+function rgba(hex, a){
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((hex||"#000").trim());
+  let h = (m ? m[1] : "000000");
+  if(h.length===3) h = h.split("").map(ch=>ch+ch).join("");
+  const n = parseInt(h, 16);
+  const r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* DFT */
+function computeDFT(samples, K){
+  const N = samples.length;
+  if(N < 2) return [];
+  const maxK = Math.min(K, Math.floor((N-1)/2));
+  const out = [];
+  for(let k=-maxK; k<=maxK; k++){
+    let sum = new C(0,0);
+    for(let n=0; n<N; n++){
+      const theta = -2*Math.PI*k*n/N;
+      sum = sum.add(samples[n].mul(C.expi(theta)));
+    }
+    const ck = sum.scale(1/N);
+    out.push({freq:k, c:ck, amp:ck.mag()});
+  }
+  out.sort((a,b)=>b.amp-a.amp);
+  return out;
+}
+
+function epicycleSum(coeffs, time01){
+  let p = new C(0,0);
+  const arrows = [];
+  for(const term of coeffs){
+    const prev = p;
+    const v = term.c.mul(C.expi(2*Math.PI*term.freq*time01));
+    p = p.add(v);
+    arrows.push({from:prev, to:p});
+  }
+  return {p, arrows};
+}
+
+function drawArrow(x1,y1,x2,y2, style){
+  const dx=x2-x1, dy=y2-y1;
+  const len = Math.hypot(dx,dy);
+  if(len < 0.0001) return;
+
+  ctx.strokeStyle = style;
+  ctx.fillStyle = style;
+  ctx.lineWidth = 1.4;
+
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+
+  const head = Math.min(10, 0.22*len);
+  const ang = Math.atan2(dy,dx);
+  const a1 = ang + Math.PI*0.85;
+  const a2 = ang - Math.PI*0.85;
+
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2 + head*Math.cos(a1), y2 + head*Math.sin(a1));
+  ctx.lineTo(x2 + head*Math.cos(a2), y2 + head*Math.sin(a2));
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ===========================
+   Multi-block scan (AUTO POLARITY)
+   Fixes your "needs I on start" issue by:
+   - trying dark-as-ink and light-as-ink
+   - scoring boundary richness / ink fraction
+   - picking best automatically
+=========================== */
+function buildMaskFromImage(img, threshold, sampleStep){
+  const w0 = img.naturalWidth || img.width;
+  const h0 = img.naturalHeight || img.height;
+
+  const baseW = Math.max(4, Math.floor(w0 / sampleStep));
+  const baseH = Math.max(4, Math.floor(h0 / sampleStep));
+
+  const maxDim = SETTINGS.maskMaxDim;
+  const s = Math.min(1, maxDim / Math.max(baseW, baseH));
+  const w = Math.max(4, Math.floor(baseW * s));
+  const h = Math.max(4, Math.floor(baseH * s));
+
+  const off = document.createElement("canvas");
+  off.width = w; off.height = h;
+  const octx = off.getContext("2d", { willReadFrequently:true });
+
+  octx.clearRect(0,0,w,h);
+  octx.drawImage(img, 0,0,w,h);
+
+  let im;
+  try{
+    im = octx.getImageData(0,0,w,h);
+  }catch(err){
+    return { ok:false, reason:"Pixel read blocked (tainted canvas). Use same-origin images." };
   }
 
-  imageElement.addEventListener('click', () => {
-    const currentSrc = imageElement.getAttribute('src');
-    const availableImages = imagePaths.filter(path => path !== currentSrc);
-    const newImage = availableImages[Math.floor(Math.random() * availableImages.length)];
-    imageElement.src = newImage;
-    phraseElement.textContent = getRandomPhrase();
+  const data = im.data;
+  const total = w*h;
+  const lum = new Float32Array(total);
+  const alp = new Uint8Array(total);
+
+  let opaqueCount = 0;
+  for(let i=0;i<total;i++){
+    const r=data[i*4+0], g=data[i*4+1], b=data[i*4+2], a=data[i*4+3];
+    alp[i]=a;
+    lum[i]=0.2126*r + 0.7152*g + 0.0722*b;
+    if(a>=16) opaqueCount++;
+  }
+  if(opaqueCount < 20) return { ok:false, reason:"Image empty/transparent after sampling." };
+
+  function makeCandidate(darkIsInk){
+    const mask = new Uint8Array(total);
+    let inkCount = 0;
+
+    for(let i=0;i<total;i++){
+      if(alp[i] < 16) continue;
+      const isDark = lum[i] < threshold;
+      const ink = darkIsInk ? isDark : !isDark;
+      if(ink){ mask[i]=1; inkCount++; }
+    }
+
+    if(inkCount < 30) return { valid:false, mask, inkCount, boundary:0, score:-1, darkIsInk };
+
+    // boundary count (4-neighbor)
+    let boundary = 0;
+    for(let y=0;y<h;y++){
+      const row=y*w;
+      for(let x=0;x<w;x++){
+        const i=row+x;
+        if(mask[i]!==1) continue;
+        if(x===0||x===w-1||y===0||y===h-1){ boundary++; continue; }
+        if(mask[i-1]===0||mask[i+1]===0||mask[i-w]===0||mask[i+w]===0) boundary++;
+      }
+    }
+
+    const inkFrac = inkCount / opaqueCount;
+    const score = (boundary + 1) / (0.02 + inkFrac); // penalize "background is ink"
+    return { valid:true, mask, inkCount, boundary, score, darkIsInk };
+  }
+
+  const candDark = makeCandidate(true);
+  const candLight = makeCandidate(false);
+
+  let chosen = candDark;
+  if(candLight.valid && (!candDark.valid || candLight.score > candDark.score)) chosen = candLight;
+  if(!chosen.valid) return { ok:false, reason:"No ink detected. Try adjusting threshold." };
+
+  // manual override if you ever want it (not required for normal use)
+  if(invertInk){
+    const flipped = chosen.darkIsInk ? candLight : candDark;
+    if(flipped.valid) chosen = flipped;
+  }
+
+  return { ok:true, w, h, mask: chosen.mask };
+}
+
+/* Connected components + contour tracing */
+function idx(x,y,w){ return y*w + x; }
+const N8 = [
+  {dx: 1, dy: 0}, {dx: 1, dy: 1}, {dx: 0, dy: 1}, {dx:-1, dy: 1},
+  {dx:-1, dy: 0}, {dx:-1, dy:-1}, {dx: 0, dy:-1}, {dx: 1, dy:-1},
+];
+
+function labelComponents(mask, w, h){
+  const labels = new Int32Array(w*h);
+  labels.fill(-1);
+
+  const comps = [];
+  let cid = 0;
+
+  const maxStack = Math.min(w*h, 1_200_000);
+  const stackX = new Int32Array(maxStack);
+  const stackY = new Int32Array(maxStack);
+
+  const MIN_PIXELS = SETTINGS.minComponentPixels;
+
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const i = idx(x,y,w);
+      if(mask[i] !== 1 || labels[i] !== -1) continue;
+
+      let sp = 0;
+      let count = 0;
+      let minX=x, maxX=x, minY=y, maxY=y;
+
+      labels[i] = cid;
+      stackX[sp]=x; stackY[sp]=y; sp++;
+
+      while(sp>0){
+        sp--;
+        const cx = stackX[sp], cy = stackY[sp];
+        count++;
+
+        if(cx<minX) minX=cx; if(cx>maxX) maxX=cx;
+        if(cy<minY) minY=cy; if(cy>maxY) maxY=cy;
+
+        for(const d of N8){
+          const nx=cx+d.dx, ny=cy+d.dy;
+          if(nx<0||ny<0||nx>=w||ny>=h) continue;
+          const ni = idx(nx,ny,w);
+          if(mask[ni]===1 && labels[ni]===-1){
+            labels[ni]=cid;
+            if(sp < maxStack){
+              stackX[sp]=nx; stackY[sp]=ny; sp++;
+            }
+          }
+        }
+      }
+
+      if(count >= MIN_PIXELS){
+        comps.push({ id:cid, count, minX, maxX, minY, maxY });
+      } else {
+        for(let yy=minY; yy<=maxY; yy++){
+          for(let xx=minX; xx<=maxX; xx++){
+            const ii = idx(xx,yy,w);
+            if(labels[ii]===cid) labels[ii]=-2;
+          }
+        }
+      }
+
+      cid++;
+    }
+  }
+
+  comps.sort((a,b)=>b.count-a.count);
+  return { labels, comps };
+}
+
+function isBoundaryPixel(mask, labels, w, h, x, y, compId){
+  const i = idx(x,y,w);
+  if(mask[i] !== 1 || labels[i] !== compId) return false;
+  for(const d of N8){
+    const nx=x+d.dx, ny=y+d.dy;
+    if(nx<0||ny<0||nx>=w||ny>=h) return true;
+    const ni=idx(nx,ny,w);
+    if(mask[ni]===0 || labels[ni]!==compId) return true;
+  }
+  return false;
+}
+
+function traceContour(mask, labels, w, h, comp){
+  let sx=-1, sy=-1;
+  for(let y=comp.minY; y<=comp.maxY && sy===-1; y++){
+    for(let x=comp.minX; x<=comp.maxX; x++){
+      if(isBoundaryPixel(mask, labels, w, h, x, y, comp.id)){
+        sx=x; sy=y; break;
+      }
+    }
+  }
+  if(sx===-1) return [];
+
+  const DIRS=N8;
+  function dirIndex(dx,dy){
+    for(let i=0;i<8;i++) if(DIRS[i].dx===dx && DIRS[i].dy===dy) return i;
+    return 0;
+  }
+
+  let cx=sx, cy=sy;
+  let px=cx-1, py=cy;
+  const startPX=px, startPY=py;
+
+  const contour=[{x:cx,y:cy}];
+  const MAX = w*h*2;
+
+  for(let steps=0; steps<MAX; steps++){
+    const bd = dirIndex(px-cx, py-cy);
+    let found=false;
+
+    for(let k=1;k<=8;k++){
+      const d=(bd+k)&7;
+      const nx=cx+DIRS[d].dx;
+      const ny=cy+DIRS[d].dy;
+      if(nx<0||ny<0||nx>=w||ny>=h) continue;
+      const ni=idx(nx,ny,w);
+      if(mask[ni]===1 && labels[ni]===comp.id){
+        const prevDir=(d+7)&7;
+        px=cx+DIRS[prevDir].dx;
+        py=cy+DIRS[prevDir].dy;
+
+        cx=nx; cy=ny;
+        contour.push({x:cx,y:cy});
+        found=true;
+        break;
+      }
+    }
+
+    if(!found) break;
+    if(cx===sx && cy===sy && px===startPX && py===startPY) break;
+  }
+
+  return contour;
+}
+
+function chaikinClosed(pts, iterations=2){
+  if(pts.length < 4) return pts;
+  let cur = pts;
+  for(let it=0; it<iterations; it++){
+    const out=[];
+    const n=cur.length;
+    for(let i=0;i<n;i++){
+      const p0=cur[i], p1=cur[(i+1)%n];
+      out.push({ x:0.75*p0.x+0.25*p1.x, y:0.75*p0.y+0.25*p1.y });
+      out.push({ x:0.25*p0.x+0.75*p1.x, y:0.25*p0.y+0.75*p1.y });
+    }
+    cur=out;
+  }
+  return cur;
+}
+
+function polylineLengthClosed(pts){
+  let L=0;
+  for(let i=1;i<pts.length;i++) L += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+  L += Math.hypot(pts[0].x-pts[pts.length-1].x, pts[0].y-pts[pts.length-1].y);
+  return L;
+}
+
+function resampleClosed(pts, targetN){
+  if(pts.length < 2) return pts;
+  const n = pts.length;
+  const dist = new Float32Array(n+1);
+  dist[0]=0;
+  let total=0;
+
+  for(let i=1;i<=n;i++){
+    const a=pts[i-1], b=pts[i%n];
+    total += Math.hypot(b.x-a.x, b.y-a.y);
+    dist[i]=total;
+  }
+  if(total < 1e-6) return pts.slice(0, Math.min(targetN, pts.length));
+
+  const out=[];
+  let j=1;
+  for(let k=0;k<targetN;k++){
+    const tt=(k/targetN)*total;
+    while(j < dist.length-1 && dist[j] < tt) j++;
+
+    const t0=dist[j-1], t1=dist[j];
+    const a=(t1-t0)>1e-6 ? (tt-t0)/(t1-t0) : 0;
+
+    const p0=pts[(j-1)%n], p1=pts[j%n];
+    out.push({ x:p0.x + a*(p1.x-p0.x), y:p0.y + a*(p1.y-p0.y) });
+  }
+  return out;
+}
+
+function normalizeAllToCanvas(allContours){
+  let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+  for(const pts of allContours){
+    for(const p of pts){
+      if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+      if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+    }
+  }
+  const bw=Math.max(1, maxX-minX);
+  const bh=Math.max(1, maxY-minY);
+  const cx=(minX+maxX)/2;
+  const cy=(minY+maxY)/2;
+
+  // fit inside square canvas area
+  const size = Math.min(canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
+  const target = 0.78 * size;
+  const scale = target / Math.max(bw, bh);
+
+  return allContours.map(pts => {
+    const out=[];
+    for(const p of pts){
+      const x=(p.x-cx)*scale;
+      const y=(p.y-cy)*scale;
+      out.push(new C(x, -y)); // Y up (math-like)
+    }
+    return out;
   });
+}
+
+/* Build components from an image */
+function rebuildFromImage(img){
+  components = [];
+  if(!img){
+    ready = false;
+    return;
+  }
+
+  const maskRes = buildMaskFromImage(img, SETTINGS.threshold, SETTINGS.sampleStep);
+  if(!maskRes.ok){
+    ready=false;
+    return;
+  }
+
+  const { w, h, mask } = maskRes;
+  const { labels, comps } = labelComponents(mask, w, h);
+
+  if(!comps.length){
+    ready=false;
+    return;
+  }
+
+  const contours = [];
+  const perim = [];
+
+  const MAX = SETTINGS.maxComponents;
+  for(const comp of comps.slice(0, MAX)){
+    let contour = traceContour(mask, labels, w, h, comp);
+    if(contour.length < 25) continue;
+    contour = chaikinClosed(contour, 2);
+    const L = polylineLengthClosed(contour);
+    contours.push(contour);
+    perim.push(L);
+  }
+
+  if(!contours.length){
+    ready=false;
+    return;
+  }
+
+  // allocate point counts per block
+  const maxL = Math.max(...perim);
+  const baseN = 900, minN = 220, maxN = 1100;
+  const resampled = contours.map((pts,i)=>{
+    const ratio = perim[i]/maxL;
+    const Ni = Math.max(minN, Math.min(maxN, Math.floor(baseN*Math.sqrt(ratio))));
+    return resampleClosed(pts, Ni);
+  });
+
+  const complexContours = normalizeAllToCanvas(resampled);
+
+  Nbase = 1;
+  for(const pts of complexContours){
+    const coeffs = computeDFT(pts, SETTINGS.K);
+    if(!coeffs.length) continue;
+    components.push({ coeffs, trail: [], pointsN: pts.length });
+    if(pts.length > Nbase) Nbase = pts.length;
+  }
+
+  ready = components.length > 0;
+  t = 0;
+}
+
+/* Draw */
+function draw(){
+  // clear bg
+  ctx.fillStyle = SETTINGS.backgroundColor;
+  ctx.fillRect(0,0,canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
+
+  if(!ready) return;
+
+  ctx.save();
+  if(SETTINGS.flipUpsideDown){
+    const H = canvas.getBoundingClientRect().height;
+    ctx.translate(0, H);
+    ctx.scale(1, -1);
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width, H = rect.height;
+  const cx = W*0.5, cy = H*0.5;
+
+  const arrowStyle = rgba(palette.arrow, SETTINGS.arrowAlpha);
+  const pathStyle = palette.trace;
+
+  for(const comp of components){
+    const {p, arrows} = epicycleSum(comp.coeffs, t);
+
+    for(const a of arrows){
+      drawArrow(cx + a.from.re, cy + a.from.im, cx + a.to.re, cy + a.to.im, arrowStyle);
+    }
+
+    const tipX = cx + p.re;
+    const tipY = cy + p.im;
+
+    comp.trail.push({x:tipX, y:tipY});
+    if(comp.trail.length > SETTINGS.trailLength){
+      comp.trail.splice(0, comp.trail.length - SETTINGS.trailLength);
+    }
+
+    ctx.lineWidth = 2.2;
+    for(let i=1;i<comp.trail.length;i++){
+      const a = i/(comp.trail.length-1);
+      const alpha = Math.pow(a, 1.8);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = pathStyle;
+      ctx.beginPath();
+      ctx.moveTo(comp.trail[i-1].x, comp.trail[i-1].y);
+      ctx.lineTo(comp.trail[i].x, comp.trail[i].y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = pathStyle;
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 2.6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+function tick(){
+  if(!paused && ready){
+    const denom = Math.max(1, Nbase);
+    t = (t + (SETTINGS.speed / denom) * (1/60)) % 1;
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+/* ============================================================
+   Images + click-to-random shuffle (replaces <img> click)
+   Clicking the canvas:
+     - picks a new random image (not same as current)
+     - picks a random palette
+     - updates phrase
+     - resets trails
+============================================================ */
+function loadImage(url){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load " + url));
+    img.src = url;
+  });
+}
+
+function pickNewIndex(){
+  if(loadedImgs.length <= 1) return 0;
+  let idx = currentIdx;
+  while(idx === currentIdx){
+    idx = Math.floor(Math.random() * loadedImgs.length);
+  }
+  return idx;
+}
+
+function resetTrails(){
+  for(const comp of components) comp.trail.length = 0;
+  t = 0;
+}
+
+function shuffleAll(){
+  // palette
+  const p = SETTINGS.traceColorVariants[Math.floor(Math.random()*SETTINGS.traceColorVariants.length)];
+  applyPalette(p);
+
+  // phrase
+  phraseElement.textContent = getRandomPhrase();
+
+  // image
+  const next = pickNewIndex();
+  currentIdx = next;
+  rebuildFromImage(loadedImgs[currentIdx].img);
+  resetTrails();
+}
+
+canvas.addEventListener("click", shuffleAll);
+canvas.addEventListener("touchend", (e)=>{ e.preventDefault(); shuffleAll(); }, {passive:false});
+
+/* ============================================================
+   Init
+============================================================ */
+(async function init(){
+  // page bg
+  document.documentElement.style.background = SETTINGS.backgroundColor;
+  document.body.style.background = SETTINGS.backgroundColor;
+
+  // initial phrase + palette
+  phraseElement.textContent = getRandomPhrase();
+
+  // load all images
+  const results = [];
+  for(const src of SETTINGS.imagePaths){
+    try{
+      const img = await loadImage(src);
+      results.push({img, src});
+    }catch(e){
+      // if one image is missing, just skip it
+    }
+  }
+  loadedImgs = results;
+
+  // pick random start image (as requested)
+  if(loadedImgs.length){
+    currentIdx = Math.floor(Math.random()*loadedImgs.length);
+    rebuildFromImage(loadedImgs[currentIdx].img);
+  }
+
+  // fit canvas pixels
+  resize();
+
+  // start anim
+  requestAnimationFrame(tick);
+})();
 </script>
 
 </body>
